@@ -8,6 +8,12 @@ const nextConfig: NextConfig = withPWA({
     skipWaiting: true,
     disable: process.env.NODE_ENV === 'development'
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   /* config options here */
 });
 

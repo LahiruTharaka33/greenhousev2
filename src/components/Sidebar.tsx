@@ -25,7 +25,7 @@ const navigation: NavItem[] = [
     description: 'Manage customer information'
   },
   {
-    name: 'Inventory',
+    name: 'Main Inventory',
     href: '/inventory',
     icon: '📦',
     description: 'Main inventory management'
