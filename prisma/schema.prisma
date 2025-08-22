@@ -80,6 +80,7 @@ model Customer {
   // Relations
   tunnels     Tunnel[]
   inventories CustomerInventory[]
+  tasks       Task[]
 }
 
 model Tunnel {
@@ -165,16 +166,19 @@ model Task {
   id          String   @id @default(cuid())
   title       String
   description String?
-  status      String   @default("pending")
+  status      String   @default("todo")
   priority    String   @default("medium")
+  assignedTo  String?
   dueDate     DateTime?
   completedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   // Relations
-  tunnelId    String
-  tunnel      Tunnel @relation(fields: [tunnelId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tunnelId    String?
+  tunnel      Tunnel? @relation(fields: [tunnelId], references: [id], onDelete: SetNull)
   scheduleId  String?
   schedule    Schedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
 }

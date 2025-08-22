@@ -67,7 +67,7 @@ export default function Sidebar() {
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="p-2 rounded-md bg-white shadow-lg hover:bg-gray-100"
+          className="p-2 rounded-md bg-white shadow-lg hover:bg-gray-50 border border-gray-200"
         >
           <span className="block w-6 h-0.5 bg-gray-600 mb-1"></span>
           <span className="block w-6 h-0.5 bg-gray-600 mb-1"></span>
@@ -96,7 +96,7 @@ export default function Sidebar() {
         )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 rounded-md hover:bg-gray-100 transition-colors hidden lg:block"
+          className="p-2 rounded-md hover:bg-gray-50 transition-colors hidden lg:block"
           title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {isCollapsed ? '→' : '←'}
@@ -114,8 +114,8 @@ export default function Sidebar() {
                   href={item.href}
                   className={`flex items-center p-3 rounded-lg transition-all duration-200 group ${
                     isActive
-                      ? 'bg-green-100 text-green-700 border-l-4 border-green-500'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-emerald-50 text-emerald-700 border-l-4 border-emerald-500 shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                   title={isCollapsed ? item.name : undefined}
                 >

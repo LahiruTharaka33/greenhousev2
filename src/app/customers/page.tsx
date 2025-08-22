@@ -126,170 +126,173 @@ export default function CustomersPage() {
 
   return (
     <Layout>
-      <main className="p-6">
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Customers
-              </h1>
-              <p className="text-lg text-gray-600">
-                Manage customer information and relationships
-              </p>
+      <main className="min-h-screen bg-gray-50 text-gray-900">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-4 py-6 shadow-sm">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                  Customers
+                </h1>
+                <p className="text-gray-600">
+                  Manage customer information and relationships
+                </p>
+              </div>
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 shadow-sm"
+              >
+                <span>+</span>
+                <span>Add Customer</span>
+              </button>
             </div>
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-            >
-              Add Customer
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <div className="mb-6">
-            <input
-              type="text"
-              placeholder="Search customers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
           </div>
         </div>
 
-        {/* Customers Table */}
-        {loading ? (
-          <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading customers...</p>
-          </div>
-        ) : filteredCustomers.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-            <div className="text-6xl mb-4">👥</div>
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              {searchTerm ? 'No customers found' : 'No customers yet'}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              {searchTerm 
-                ? 'Try adjusting your search terms'
-                : 'Get started by adding your first customer'
-              }
-            </p>
-            {!searchTerm && (
-              <button
-                onClick={() => setShowForm(true)}
-                className="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors"
-              >
-                Add Your First Customer
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Customer ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Customer Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Company
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Cultivation
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Tunnels
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Location
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Contact
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredCustomers.map((customer) => (
-                    <tr key={customer.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {customer.customerId}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {customer.customerName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {customer.company || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        <div>
-                          {customer.cultivationType && (
-                            <div className="text-xs text-gray-600">{customer.cultivationType}</div>
-                          )}
-                          {customer.cultivationName || '-'}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {customer.noOfTunnel}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {customer.location || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        <div>
-                          {customer.email && (
-                            <div className="text-xs text-gray-600">{customer.email}</div>
-                          )}
-                          {customer.phone && (
-                            <div className="text-xs text-gray-600">{customer.phone}</div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2">
-                          <button
-                            onClick={() => handleEdit(customer)}
-                            className="text-indigo-600 hover:text-indigo-900 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(customer.id)}
-                            disabled={deleteLoading === customer.id}
-                            className="text-red-600 hover:text-red-900 transition-colors disabled:opacity-50"
-                          >
-                            {deleteLoading === customer.id ? 'Deleting...' : 'Delete'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {/* Search Bar */}
+        <div className="px-4 py-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search customers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 placeholder-gray-500"
+              />
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Customers Content */}
+        <div className="px-4 pb-6">
+          <div className="max-w-7xl mx-auto">
+            {loading ? (
+              <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading customers...</p>
+              </div>
+            ) : filteredCustomers.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
+                <div className="text-6xl mb-4">👥</div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                  {searchTerm ? 'No customers found' : 'No customers yet'}
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  {searchTerm 
+                    ? 'Try adjusting your search terms'
+                    : 'Get started by adding your first customer'
+                  }
+                </p>
+                {!searchTerm && (
+                  <button
+                    onClick={() => setShowForm(true)}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg transition-colors shadow-sm"
+                  >
+                    Add Your First Customer
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredCustomers.map((customer) => (
+                  <div
+                    key={customer.id}
+                    className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {customer.customerName}
+                          </h3>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                            {customer.customerId}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                          {customer.company && (
+                            <div>
+                              <span className="font-medium text-gray-700">Company:</span>
+                              <span className="ml-1 text-gray-600">{customer.company}</span>
+                            </div>
+                          )}
+                          
+                          <div>
+                            <span className="font-medium text-gray-700">Tunnels:</span>
+                            <span className="ml-1 text-gray-600">{customer.noOfTunnel}</span>
+                          </div>
+                          
+                          {customer.location && (
+                            <div>
+                              <span className="font-medium text-gray-700">Location:</span>
+                              <span className="ml-1 text-gray-600">{customer.location}</span>
+                            </div>
+                          )}
+                          
+                          {customer.cultivationType && (
+                            <div>
+                              <span className="font-medium text-gray-700">Cultivation:</span>
+                              <span className="ml-1 text-gray-600">{customer.cultivationType}</span>
+                            </div>
+                          )}
+                          
+                          {customer.email && (
+                            <div>
+                              <span className="font-medium text-gray-700">Email:</span>
+                              <span className="ml-1 text-gray-600">{customer.email}</span>
+                            </div>
+                          )}
+                          
+                          {customer.phone && (
+                            <div>
+                              <span className="font-medium text-gray-700">Phone:</span>
+                              <span className="ml-1 text-gray-600">{customer.phone}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                        <button
+                          onClick={() => handleEdit(customer)}
+                          className="px-4 py-2 text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors font-medium"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(customer.id)}
+                          disabled={deleteLoading === customer.id}
+                          className="px-4 py-2 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors font-medium disabled:opacity-50"
+                        >
+                          {deleteLoading === customer.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Customer Form Modal */}
         {showForm && (
-          <CustomerForm
-            customer={editingCustomer || undefined}
-            onSubmit={handleSubmit}
-            onCancel={() => {
-              setShowForm(false);
-              setEditingCustomer(null);
-            }}
-            isLoading={formLoading}
-          />
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl border border-gray-200">
+              <CustomerForm
+                customer={editingCustomer || undefined}
+                onSubmit={handleSubmit}
+                onCancel={() => {
+                  setShowForm(false);
+                  setEditingCustomer(null);
+                }}
+                isLoading={formLoading}
+              />
+            </div>
+          </div>
         )}
       </main>
     </Layout>
