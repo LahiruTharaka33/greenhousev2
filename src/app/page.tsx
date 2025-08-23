@@ -2,21 +2,49 @@
 
 import Layout from '@/components/Layout';
 import Image from 'next/image';
+import { useSession, signOut } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 
 export default function DashboardPage() {
+  const { data: session, status } = useSession();
+
+  if (status === 'loading') {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!session || session.user.role !== 'admin') {
+    redirect('/login');
+  }
   return (
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-4 py-6 shadow-sm">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center">
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                Greenhouse Dashboard
-              </h1>
-              <p className="text-gray-600">
-                Monitor your greenhouse environment and inventory
-              </p>
+            <div className="flex justify-between items-center">
+              <div className="text-center flex-1">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                  Greenhouse Dashboard
+                </h1>
+                <p className="text-gray-600">
+                  Monitor your greenhouse environment and inventory
+                </p>
+              </div>
+              
+              {/* Quick Logout Button */}
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <p className="text-sm font-medium text-gray-900">Welcome, {session?.user?.name}</p>
+                  <p className="text-xs text-emerald-600">Administrator</p>
+                </div>
+                <button
+                  onClick={() => signOut({ callbackUrl: '/login' })}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-gray-300"
+                >
+                  <span className="mr-2">🚪</span>
+                  Sign Out
+                </button>
+              </div>
             </div>
           </div>
         </div>

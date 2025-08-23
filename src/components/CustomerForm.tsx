@@ -14,6 +14,8 @@ interface Customer {
   email?: string;
   phone?: string;
   address?: string;
+  password?: string;
+  confirmPassword?: string;
 }
 
 interface CustomerFormProps {
@@ -34,7 +36,9 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
     location: '',
     email: '',
     phone: '',
-    address: ''
+    address: '',
+    password: '',
+    confirmPassword: ''
   });
 
   const [errors, setErrors] = useState<Partial<Customer>>({});
@@ -58,6 +62,21 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
 
     if (formData.noOfTunnel < 0) {
       newErrors.noOfTunnel = 'Number of tunnels cannot be negative';
+    }
+
+    // Only validate password for new customers (when creating a user account)
+    if (!customer && formData.email) {
+      if (!formData.password || formData.password.length < 6) {
+        newErrors.password = 'Password must be at least 6 characters';
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = 'Passwords do not match';
+      }
+
+      if (!formData.email.trim()) {
+        newErrors.email = 'Email is required for user account creation';
+      }
     }
 
     setErrors(newErrors);
@@ -256,6 +275,53 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                   placeholder="Enter phone number"
                 />
               </div>
+
+              {/* Password - only show for new customers with email */}
+              {!customer && formData.email && (
+                <>
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                      Password *
+                    </label>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                        errors.password ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Enter password (min 6 characters)"
+                      minLength={6}
+                    />
+                    {errors.password && (
+                      <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                      Confirm Password *
+                    </label>
+                    <input
+                      type="password"
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                        errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Confirm password"
+                      minLength={6}
+                    />
+                    {errors.confirmPassword && (
+                      <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Address */}

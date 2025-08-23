@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import CustomerForm from '@/components/CustomerForm';
+import { useSession } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 
 interface Customer {
   id: string;
@@ -21,6 +23,7 @@ interface Customer {
 }
 
 export default function CustomersPage() {
+  const { data: session, status } = useSession();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -28,6 +31,14 @@ export default function CustomersPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  if (status === 'loading') {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!session || session.user.role !== 'admin') {
+    redirect('/login');
+  }
 
   // Fetch customers
   const fetchCustomers = async () => {

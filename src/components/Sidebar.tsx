@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { signOut, useSession } from 'next-auth/react';
 
 interface NavItem {
   name: string;
@@ -60,6 +61,11 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  const handleSignOut = async () => {
+    await signOut({ callbackUrl: '/login' });
+  };
 
   return (
     <>
@@ -103,6 +109,23 @@ export default function Sidebar() {
         </button>
       </div>
 
+      {/* Admin user info */}
+      {!isCollapsed && session && (
+        <div className="p-4 bg-emerald-50 border-b border-gray-200">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+              <span className="text-emerald-600 font-medium">
+                {session.user?.name?.charAt(0).toUpperCase() || 'A'}
+              </span>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-900">{session.user?.name}</p>
+              <p className="text-xs text-emerald-600">Administrator</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <nav className="p-4">
         <ul className="space-y-2">
@@ -135,14 +158,26 @@ export default function Sidebar() {
         </ul>
       </nav>
 
-      {/* Footer */}
-      {!isCollapsed && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
-          <div className="text-xs text-gray-500 text-center">
-            GreenHouseV2 v1.0
-          </div>
-        </div>
-      )}
+      {/* Sign out button */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        {!isCollapsed ? (
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center p-3 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
+          >
+            <span className="text-lg mr-3">🚪</span>
+            Sign Out
+          </button>
+        ) : (
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center justify-center p-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
+            title="Sign Out"
+          >
+            <span className="text-lg">🚪</span>
+          </button>
+        )}
+      </div>
     </div>
     </>
   );

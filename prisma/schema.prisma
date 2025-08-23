@@ -47,8 +47,11 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  password      String?   // For credentials-based authentication
+  role          String    @default("user") // "admin" or "user"
   accounts      Account[]
   sessions      Session[]
+  customer      Customer? // Link to customer if user is a customer
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -78,39 +81,9 @@ model Customer {
   updatedAt       DateTime @updatedAt
   
   // Relations
-  tunnels     Tunnel[]
-  inventories CustomerInventory[]
-  tasks       Task[]
-}
-
-model Tunnel {
-  id          String   @id @default(cuid())
-  name        String
-  location    String?
-  description String?
-  status      String   @default("active")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  customerId  String
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  schedules   Schedule[]
-  tasks       Task[]
-}
-
-model CustomerInventory {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  quantity    Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  customerId  String
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  items       Item[]
+  userId          String?  @unique // Link to User account
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tasks           Task[]
 }
 
 model MainInventory {
@@ -123,43 +96,6 @@ model MainInventory {
   storedDate  DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  // Relations
-  items       Item[]
-}
-
-model Item {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  sku         String?  @unique
-  quantity    Int      @default(0)
-  unit        String?
-  price       Decimal? @db.Decimal(10, 2)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  customerInventoryId String?
-  customerInventory   CustomerInventory? @relation(fields: [customerInventoryId], references: [id], onDelete: SetNull)
-  mainInventoryId     String?
-  mainInventory       MainInventory? @relation(fields: [mainInventoryId], references: [id], onDelete: SetNull)
-}
-
-model Schedule {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  startDate   DateTime
-  endDate     DateTime?
-  status      String   @default("pending")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
-  tunnelId    String
-  tunnel      Tunnel @relation(fields: [tunnelId], references: [id], onDelete: Cascade)
-  tasks       Task[]
 }
 
 model Task {
@@ -177,8 +113,4 @@ model Task {
   // Relations
   customerId  String
   customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  tunnelId    String?
-  tunnel      Tunnel? @relation(fields: [tunnelId], references: [id], onDelete: SetNull)
-  scheduleId  String?
-  schedule    Schedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
 }

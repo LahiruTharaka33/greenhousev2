@@ -138,7 +138,7 @@ export default function TasksPage() {
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                   Task Management
-                </h1>
+          </h1>
                 <p className="text-gray-600">
                   Assign and track tasks for your customers
                 </p>
