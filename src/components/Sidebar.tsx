@@ -44,6 +44,12 @@ const navigation: NavItem[] = [
     description: 'Individual items and SKUs'
   },
   {
+    name: 'Customer Inventory',
+    href: '/customer-inventory',
+    icon: '📋',
+    description: 'Customer-specific inventory'
+  },
+  {
     name: 'Schedules',
     href: '/schedules',
     icon: '📅',

@@ -84,6 +84,8 @@ model Customer {
   userId          String?  @unique // Link to User account
   user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   tasks           Task[]
+  tunnels         Tunnel[]
+  customerInventories CustomerInventory[]
 }
 
 model MainInventory {
@@ -96,6 +98,22 @@ model MainInventory {
   storedDate  DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  // Relations
+  item        Item     @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
+}
+
+model Item {
+  id            String   @id @default(cuid())
+  itemId        String   @unique
+  itemName      String
+  itemCategory  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  mainInventory MainInventory?
+  customerInventories CustomerInventory[]
 }
 
 model Task {
@@ -113,4 +131,38 @@ model Task {
   // Relations
   customerId  String
   customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model Tunnel {
+  id             String   @id @default(cuid())
+  tunnelId       String   @unique
+  tunnelName     String
+  description    String?
+  cultivationType String?
+  location       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Relations
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+}
+
+model CustomerInventory {
+  id          String   @id @default(cuid())
+  itemId      String
+  itemType    String
+  itemName    String
+  description String?
+  quantity    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  item        Item     @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
+  
+  // Unique constraint to prevent duplicate entries for same item and customer
+  @@unique([itemId, customerId])
 }

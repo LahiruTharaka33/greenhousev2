@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import InventoryForm from '@/components/InventoryForm';
+import MoveToCustomerInventoryForm from '@/components/MoveToCustomerInventoryForm';
 
 interface InventoryItem {
   id: string;
@@ -25,6 +26,9 @@ export default function InventoryPage() {
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [showMoveForm, setShowMoveForm] = useState(false);
+  const [movingItem, setMovingItem] = useState<InventoryItem | null>(null);
+  const [moveLoading, setMoveLoading] = useState(false);
 
   // Fetch inventory
   const fetchInventory = async () => {
@@ -111,6 +115,48 @@ export default function InventoryPage() {
   const handleEdit = (item: InventoryItem) => {
     setEditingItem(item);
     setShowForm(true);
+  };
+
+  // Handle move to customer inventory
+  const handleMove = (item: InventoryItem) => {
+    setMovingItem(item);
+    setShowMoveForm(true);
+  };
+
+  // Handle move submission
+  const handleMoveSubmit = async (moveData: { customerId: string; quantity: number }) => {
+    if (!movingItem) return;
+    
+    setMoveLoading(true);
+    try {
+      const response = await fetch('/api/inventory/move-to-customer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inventoryId: movingItem.id,
+          customerId: moveData.customerId,
+          quantity: moveData.quantity,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert(result.message);
+        await fetchInventory(); // Refresh inventory to show updated quantities
+        setShowMoveForm(false);
+        setMovingItem(null);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to move inventory to customer');
+      }
+    } catch (error) {
+      console.error('Error moving inventory to customer:', error);
+      alert('Failed to move inventory to customer');
+    } finally {
+      setMoveLoading(false);
+    }
   };
 
   // Filter inventory based on search term and type
@@ -308,6 +354,14 @@ export default function InventoryPage() {
                       
                       <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                         <button
+                          onClick={() => handleMove(item)}
+                          disabled={item.quantity <= 0}
+                          className="px-4 py-2 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={item.quantity <= 0 ? 'No quantity available to move' : 'Move to Customer Inventory'}
+                        >
+                          Move
+                        </button>
+                        <button
                           onClick={() => handleEdit(item)}
                           className="px-4 py-2 text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors font-medium"
                         >
@@ -341,6 +395,23 @@ export default function InventoryPage() {
                   setEditingItem(null);
                 }}
                 isLoading={formLoading}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Move to Customer Inventory Form Modal */}
+        {showMoveForm && movingItem && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl border border-gray-200">
+              <MoveToCustomerInventoryForm
+                inventoryItem={movingItem}
+                onSubmit={handleMoveSubmit}
+                onCancel={() => {
+                  setShowMoveForm(false);
+                  setMovingItem(null);
+                }}
+                isLoading={moveLoading}
               />
             </div>
           </div>

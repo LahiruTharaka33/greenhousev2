@@ -8,6 +8,9 @@ export async function GET() {
       orderBy: {
         createdAt: 'desc',
       },
+      include: {
+        item: true,
+      },
     });
     
     return NextResponse.json(inventory);
@@ -34,14 +37,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if itemId already exists
-    const existingItem = await prisma.mainInventory.findUnique({
+    // Check if itemId already exists in inventory
+    const existingInventoryItem = await prisma.mainInventory.findUnique({
       where: { itemId },
     });
 
-    if (existingItem) {
+    if (existingInventoryItem) {
       return NextResponse.json(
-        { error: 'Item ID already exists' },
+        { error: 'This item is already in inventory' },
+        { status: 400 }
+      );
+    }
+
+    // Verify that the item exists in the Item table
+    const itemExists = await prisma.item.findUnique({
+      where: { itemId },
+    });
+
+    if (!itemExists) {
+      return NextResponse.json(
+        { error: 'Selected item does not exist' },
         { status: 400 }
       );
     }
@@ -54,6 +69,9 @@ export async function POST(request: NextRequest) {
         description,
         quantity: parseInt(quantity),
         storedDate: new Date(),
+      },
+      include: {
+        item: true,
       },
     });
 

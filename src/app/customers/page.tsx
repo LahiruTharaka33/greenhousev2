@@ -32,14 +32,6 @@ export default function CustomersPage() {
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (status === 'loading') {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
-  if (!session || session.user.role !== 'admin') {
-    redirect('/login');
-  }
-
   // Fetch customers
   const fetchCustomers = async () => {
     try {
@@ -58,8 +50,18 @@ export default function CustomersPage() {
   };
 
   useEffect(() => {
-    fetchCustomers();
-  }, []);
+    if (session && session.user.role === 'admin') {
+      fetchCustomers();
+    }
+  }, [session]);
+
+  if (status === 'loading') {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!session || session.user.role !== 'admin') {
+    redirect('/login');
+  }
 
   // Handle form submission
   const handleSubmit = async (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => {
