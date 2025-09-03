@@ -43,13 +43,25 @@ vercel --prod
 ## 🔧 MQTT Configuration
 
 - **Broker**: `mqtt.eclipseprojects.io`
-- **Web Port**: `9002` (WebSocket Secure)
+- **Web Port**: `9001` (WebSocket)
 - **Device Port**: `1883` (TCP)
 - **Topics**:
   - `lights` - LED control (ON/OFF)
   - `servo` - Servo position (0-180)
   - `lights/neopixel` - RGB color (R,G,B)
   - `Tempdata` - Sensor data (temperature,humidity)
+
+## 🚀 **New Architecture**
+
+```
+ESP32 (IoT Devices) ←→ mqtt.eclipseprojects.io:1883 (MQTT Broker) ←→ Web App (Eclipse Paho WS)
+```
+
+**Key Improvements:**
+- **Eclipse Paho WebSocket Client** - Designed specifically for web browsers
+- **No CORS Issues** - Native browser compatibility
+- **Auto-reconnection** - Stable connections with automatic recovery
+- **Better Error Handling** - Improved connection reliability
 
 ## 🛠️ Development
 

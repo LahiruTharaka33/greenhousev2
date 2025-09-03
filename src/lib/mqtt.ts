@@ -1,29 +1,21 @@
-import mqtt, { MqttClient, IClientOptions } from 'mqtt';
+import Paho from 'paho-mqtt';
 
 class MQTTService {
-  private client: MqttClient | null = null;
+  private client: Paho.Client | null = null;
   private isConnected = false;
-  private reconnectInterval: NodeJS.Timeout | null = null;
   private messageCallbacks: Map<string, (message: string) => void> = new Map();
+  private reconnectInterval: NodeJS.Timeout | null = null;
 
   // MQTT Configuration for Production (HTTPS Compatible)
-  private config: IClientOptions = {
-    // Eclipse Paho WebSocket Broker - Secure WebSocket for HTTPS
+  private config = {
+    // Eclipse Paho WebSocket Broker - Designed for web browsers
     host: 'mqtt.eclipseprojects.io',
-    port: 9002,
-    protocol: 'wss',
+    port: 9001, // WebSocket port (not WSS for better compatibility)
     clientId: `greenhouse_prod_${Math.random().toString(16).slice(3)}`,
     clean: true,
-    reconnectPeriod: 5000,
-    connectTimeout: 30000,
-    
-    // WebSocket-specific options for browser compatibility
-    keepalive: 60,
-    reschedulePings: true,
-    
-    // Fallback brokers for production reliability
-    // host: 'test.mosquitto.org', port: 8081, protocol: 'ws'
-    // host: 'broker.hivemq.com', port: 8884, protocol: 'wss'
+    keepAliveInterval: 60,
+    connectTimeout: 30,
+    useSSL: false, // Use plain WebSocket for better compatibility
   };
 
   // Connect to MQTT broker
@@ -33,30 +25,36 @@ class MQTTService {
         return true;
       }
 
-      this.client = mqtt.connect(this.config);
+      // Create new Paho client
+      this.client = new Paho.Client(
+        this.config.host,
+        this.config.port,
+        this.config.clientId
+      );
 
       return new Promise((resolve) => {
-        this.client!.on('connect', () => {
-          console.log('Connected to MQTT broker');
-          this.isConnected = true;
-          this.setupEventHandlers();
-          resolve(true);
-        });
+        // Set up connection options
+        const connectOptions = {
+          useSSL: this.config.useSSL,
+          cleanSession: this.config.clean,
+          keepAliveInterval: this.config.keepAliveInterval,
+          connectTimeout: this.config.connectTimeout,
+          onSuccess: () => {
+            console.log('Connected to MQTT broker via Eclipse Paho');
+            this.isConnected = true;
+            this.setupEventHandlers();
+            this.startReconnection();
+            resolve(true);
+          },
+          onFailure: (error: any) => {
+            console.error('MQTT connection failed:', error);
+            this.isConnected = false;
+            resolve(false);
+          }
+        };
 
-        this.client!.on('error', (error) => {
-          console.error('MQTT connection error:', error);
-          this.isConnected = false;
-          resolve(false);
-        });
-
-        this.client!.on('close', () => {
-          console.log('MQTT connection closed');
-          this.isConnected = false;
-        });
-
-        this.client!.on('reconnect', () => {
-          console.log('MQTT reconnecting...');
-        });
+        // Connect to broker
+        this.client!.connect(connectOptions);
       });
     } catch (error) {
       console.error('Failed to connect to MQTT:', error);
@@ -68,8 +66,24 @@ class MQTTService {
   private setupEventHandlers() {
     if (!this.client) return;
 
-    this.client.on('message', (topic, message) => {
-      const messageStr = message.toString();
+    // Handle connection lost
+    this.client.onConnectionLost = (responseObject) => {
+      console.log('MQTT connection lost:', responseObject);
+      this.isConnected = false;
+      this.stopReconnection();
+      
+      // Auto-reconnect after 5 seconds
+      setTimeout(() => {
+        if (!this.isConnected) {
+          this.connect();
+        }
+      }, 5000);
+    };
+
+    // Handle incoming messages
+    this.client.onMessageArrived = (message) => {
+      const topic = message.destinationName;
+      const messageStr = message.payloadString;
       console.log(`Message received on topic ${topic}: ${messageStr}`);
       
       // Call registered callback for this topic
@@ -77,7 +91,7 @@ class MQTTService {
       if (callback) {
         callback(messageStr);
       }
-    });
+    };
   }
 
   // Subscribe to a topic
@@ -88,14 +102,9 @@ class MQTTService {
     }
 
     try {
-      this.client.subscribe(topic, (err) => {
-        if (err) {
-          console.error(`Failed to subscribe to ${topic}:`, err);
-        } else {
-          console.log(`Subscribed to ${topic}`);
-          this.messageCallbacks.set(topic, callback);
-        }
-      });
+      this.client.subscribe(topic);
+      console.log(`Subscribed to ${topic}`);
+      this.messageCallbacks.set(topic, callback);
       return true;
     } catch (error) {
       console.error(`Error subscribing to ${topic}:`, error);
@@ -127,13 +136,12 @@ class MQTTService {
     }
 
     try {
-      this.client.publish(topic, message, { qos: 1 }, (err) => {
-        if (err) {
-          console.error(`Failed to publish to ${topic}:`, err);
-        } else {
-          console.log(`Published to ${topic}: ${message}`);
-        }
-      });
+      const mqttMessage = new Paho.Message(message);
+      mqttMessage.destinationName = topic;
+      mqttMessage.qos = 1;
+      
+      this.client.send(mqttMessage);
+      console.log(`Published to ${topic}: ${message}`);
       return true;
     } catch (error) {
       console.error(`Error publishing to ${topic}:`, error);
@@ -146,14 +154,37 @@ class MQTTService {
     return this.isConnected;
   }
 
+  // Start reconnection logic
+  private startReconnection() {
+    if (this.reconnectInterval) return;
+    
+    this.reconnectInterval = setInterval(() => {
+      if (!this.isConnected && this.client) {
+        console.log('Attempting to reconnect...');
+        this.connect();
+      }
+    }, 30000); // Try every 30 seconds
+  }
+
+  // Stop reconnection logic
+  private stopReconnection() {
+    if (this.reconnectInterval) {
+      clearInterval(this.reconnectInterval);
+      this.reconnectInterval = null;
+    }
+  }
+
   // Disconnect from MQTT broker
   disconnect(): void {
-    if (this.client) {
-      this.client.end();
-      this.client = null;
-      this.isConnected = false;
-      this.messageCallbacks.clear();
+    this.stopReconnection();
+    
+    if (this.client && this.isConnected) {
+      this.client.disconnect();
     }
+    
+    this.client = null;
+    this.isConnected = false;
+    this.messageCallbacks.clear();
   }
 }
 

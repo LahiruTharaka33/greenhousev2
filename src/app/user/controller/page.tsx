@@ -94,8 +94,8 @@ export default function ControllerPage() {
                <h4 className="font-medium text-gray-900 dark:text-white mb-2">MQTT Configuration</h4>
                                <div className="space-y-1 text-gray-600 dark:text-gray-400">
                   <div>Broker: mqtt.eclipseprojects.io</div>
-                  <div>Port: 9002 (WebSocket Secure)</div>
-                  <div>Protocol: MQTT 3.1.1 over WSS</div>
+                  <div>Port: 9001 (WebSocket)</div>
+                  <div>Protocol: MQTT 3.1.1 over WS</div>
                   <div>QoS: 1</div>
                 </div>
              </div>
