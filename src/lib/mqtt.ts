@@ -8,8 +8,8 @@ class MQTTService {
 
   // MQTT Configuration for Production (HTTPS Compatible)
   private config: IClientOptions = {
-    // Production MQTT Broker - Secure WebSocket for HTTPS
-    host: 'broker.emqx.io',
+    // HiveMQ Public Broker - Reliable and documented ports
+    host: 'broker.hivemq.com',
     port: 8884,
     protocol: 'wss',
     clientId: `greenhouse_prod_${Math.random().toString(16).slice(3)}`,

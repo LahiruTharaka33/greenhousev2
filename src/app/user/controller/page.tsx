@@ -93,7 +93,7 @@ export default function ControllerPage() {
                          <div>
                <h4 className="font-medium text-gray-900 dark:text-white mb-2">MQTT Configuration</h4>
                                <div className="space-y-1 text-gray-600 dark:text-gray-400">
-                  <div>Broker: broker.emqx.io</div>
+                  <div>Broker: broker.hivemq.com</div>
                   <div>Port: 8884 (WebSocket Secure)</div>
                   <div>Protocol: MQTT 3.1.1 over WSS</div>
                   <div>QoS: 1</div>

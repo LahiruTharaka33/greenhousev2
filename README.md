@@ -42,8 +42,8 @@ vercel --prod
 
 ## 🔧 MQTT Configuration
 
-- **Broker**: `broker.emqx.io`
-- **Web Port**: `8083` (WebSocket)
+- **Broker**: `broker.hivemq.com`
+- **Web Port**: `8884` (WebSocket Secure)
 - **Device Port**: `1883` (TCP)
 - **Topics**:
   - `lights` - LED control (ON/OFF)
