@@ -6,12 +6,12 @@ class MQTTService {
   private reconnectInterval: NodeJS.Timeout | null = null;
   private messageCallbacks: Map<string, (message: string) => void> = new Map();
 
-  // MQTT Configuration for Production
+  // MQTT Configuration for Production (HTTPS Compatible)
   private config: IClientOptions = {
-    // Production MQTT Broker - Reliable and fast
+    // Production MQTT Broker - Secure WebSocket for HTTPS
     host: 'broker.emqx.io',
-    port: 8083,
-    protocol: 'ws',
+    port: 8084,
+    protocol: 'wss',
     clientId: `greenhouse_prod_${Math.random().toString(16).slice(3)}`,
     clean: true,
     reconnectPeriod: 5000,
