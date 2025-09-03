@@ -10,7 +10,7 @@ class MQTTService {
   private config: IClientOptions = {
     // Production MQTT Broker - Secure WebSocket for HTTPS
     host: 'broker.emqx.io',
-    port: 8084,
+    port: 8884,
     protocol: 'wss',
     clientId: `greenhouse_prod_${Math.random().toString(16).slice(3)}`,
     clean: true,
