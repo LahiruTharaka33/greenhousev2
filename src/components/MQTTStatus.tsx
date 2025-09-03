@@ -96,7 +96,7 @@ export default function MQTTStatus({ className = '' }: MQTTStatusProps) {
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600 dark:text-gray-400">Broker:</span>
                          <span className="font-medium text-gray-900 dark:text-white">
-               mqtt.eclipseprojects.io:9001 (WS)
+               mqtt.eclipseprojects.io:9002 (WSS)
              </span>
           </div>
           

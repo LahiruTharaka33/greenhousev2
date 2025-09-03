@@ -8,10 +8,10 @@ class MQTTService {
 
   // MQTT Configuration for Production (HTTPS Compatible)
   private config: IClientOptions = {
-    // Eclipse Paho WebSocket Broker - Designed for web browsers
+    // Eclipse Paho WebSocket Broker - Secure WebSocket for HTTPS
     host: 'mqtt.eclipseprojects.io',
-    port: 9001,
-    protocol: 'ws',
+    port: 9002,
+    protocol: 'wss',
     clientId: `greenhouse_prod_${Math.random().toString(16).slice(3)}`,
     clean: true,
     reconnectPeriod: 5000,
