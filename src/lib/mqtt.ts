@@ -8,18 +8,22 @@ class MQTTService {
 
   // MQTT Configuration for Production (HTTPS Compatible)
   private config: IClientOptions = {
-    // HiveMQ Public Broker - Reliable and documented ports
-    host: 'broker.hivemq.com',
-    port: 8884,
-    protocol: 'wss',
+    // Eclipse Paho WebSocket Broker - Designed for web browsers
+    host: 'mqtt.eclipseprojects.io',
+    port: 9001,
+    protocol: 'ws',
     clientId: `greenhouse_prod_${Math.random().toString(16).slice(3)}`,
     clean: true,
     reconnectPeriod: 5000,
     connectTimeout: 30000,
     
+    // WebSocket-specific options for browser compatibility
+    keepalive: 60,
+    reschedulePings: true,
+    
     // Fallback brokers for production reliability
     // host: 'test.mosquitto.org', port: 8081, protocol: 'ws'
-    // host: 'mqtt.eclipseprojects.io', port: 9001, protocol: 'ws'
+    // host: 'broker.hivemq.com', port: 8884, protocol: 'wss'
   };
 
   // Connect to MQTT broker

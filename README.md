@@ -42,8 +42,8 @@ vercel --prod
 
 ## 🔧 MQTT Configuration
 
-- **Broker**: `broker.hivemq.com`
-- **Web Port**: `8884` (WebSocket Secure)
+- **Broker**: `mqtt.eclipseprojects.io`
+- **Web Port**: `9001` (WebSocket)
 - **Device Port**: `1883` (TCP)
 - **Topics**:
   - `lights` - LED control (ON/OFF)
