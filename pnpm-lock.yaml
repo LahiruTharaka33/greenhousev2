@@ -17,9 +17,6 @@ importers:
       '@types/bcrypt':
         specifier: ^6.0.0
         version: 6.0.0
-      aedes:
-        specifier: ^0.51.3
-        version: 0.51.3
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0
@@ -63,9 +60,6 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.1.7(@types/react@19.1.10)
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       eslint:
         specifier: ^9
         version: 9.33.0(jiti@2.5.1)
@@ -1340,18 +1334,6 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
-  aedes-packet@3.0.0:
-    resolution: {integrity: sha512-swASey0BxGs4/npZGWoiVDmnEyPvVFIRY6l2LVKL4rbiW8IhcIGDLfnb20Qo8U20itXlitAKPQ3MVTEbOGG5ZA==}
-    engines: {node: '>=14'}
-
-  aedes-persistence@9.1.2:
-    resolution: {integrity: sha512-2Wlr5pwIK0eQOkiTwb8ZF6C20s8UPUlnsJ4kXYePZ3JlQl0NbBA176mzM8wY294BJ5wybpNc9P5XEQxqadRNcQ==}
-    engines: {node: '>=14'}
-
-  aedes@0.51.3:
-    resolution: {integrity: sha512-aQfiI9w3RbqnowNCdcGMmCtxBFXN9bhJFcuZm24U5/NU06V3MCl42jWK2GUnu8rOypR2Ahi/aEcgq3w7CMcycg==}
-    engines: {node: '>=16'}
-
   ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
     peerDependencies:
@@ -1492,9 +1474,6 @@ packages:
   big.js@5.2.2:
     resolution: {integrity: sha512-vyL2OymJxmarO8gxMr0mhChsO9QGwhynfuu4+MHTAW6czfq9humCB7rKpUjDd9YUiDPU4mzpyupFSvOClAwbmQ==}
 
-  bl@4.1.0:
-    resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
-
   bl@6.1.2:
     resolution: {integrity: sha512-6J3oG82fpJ71WF4l0W6XslkwAPMr+Zcp+AmdxJ0L8LsXNzFeO8GYesV2J9AzGArBjrsb2xR50Ocbn/CL1B44TA==}
 
@@ -1518,9 +1497,6 @@ packages:
 
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
-
-  buffer@5.7.1:
-    resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
 
   buffer@6.0.3:
     resolution: {integrity: sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==}
@@ -1749,9 +1725,6 @@ packages:
     resolution: {integrity: sha512-i6UzDscO/XfAcNYD75CfICkmfLedpyPDdozrLMmQc5ORaQcdMoc21OnlEylMIqI7U8eniKrPMxxtj8k0vhmJhA==}
     engines: {node: '>=14'}
 
-  end-of-stream@1.4.5:
-    resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
-
   enhanced-resolve@5.18.3:
     resolution: {integrity: sha512-d4lC8xfavMeBjzGr2vECC3fsGXziXZQyJxD868h2M/mBI3PwAuODxAkLkq5HYuvrPYcUtiLzsTo8U3PgX3Ocww==}
     engines: {node: '>=10.13.0'}
@@ -1958,10 +1931,6 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
-  fast-unique-numbers@8.0.13:
-    resolution: {integrity: sha512-7OnTFAVPefgw2eBJ1xj2PGGR9FwYzSUso9decayHgCDX4sJkHLdcsYTytTg+tYv+wKF3U8gJuSBz2jJpQV4u/g==}
-    engines: {node: '>=16.1.0'}
-
   fast-unique-numbers@9.0.23:
     resolution: {integrity: sha512-jcRIaHo46nfvyvKRMaFSKXmez4jALQ3Qw49gxM5F4siz8HqkyKPPEexpCOYwBSJI1HovrDr4fEedM8QAJ7oX3w==}
     engines: {node: '>=18.2.0'}
@@ -1969,18 +1938,8 @@ packages:
   fast-uri@3.0.6:
     resolution: {integrity: sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw==}
 
-  fastfall@1.5.1:
-    resolution: {integrity: sha512-KH6p+Z8AKPXnmA7+Iz2Lh8ARCMr+8WNPVludm1LGkZoD2MjY6LVnRMtTKhkdzI+jr0RzQWXKzKyBJm1zoHEL4Q==}
-    engines: {node: '>=0.10.0'}
-
-  fastparallel@2.4.1:
-    resolution: {integrity: sha512-qUmhxPgNHmvRjZKBFUNI0oZuuH9OlSIOXmJ98lhKPxMZZ7zS/Fi0wRHOihDSz0R1YiIOjxzOY4bq65YTcdBi2Q==}
-
   fastq@1.19.1:
     resolution: {integrity: sha512-GwLTyxkCXjXbxqIhTsMI2Nui8huMPtnxg7krajPJAjnEG/iiOS7i+zCtWGZR9G0NBKbXKh6X9m9UIsYX/N6vvQ==}
-
-  fastseries@2.0.0:
-    resolution: {integrity: sha512-XBU9RXeoYc2/VnvMhplAxEmZLfIk7cvTBu+xwoBuTI8pL19E03cmca17QQycKIdxgwCeFA/a4u27gv1h3ya5LQ==}
 
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
@@ -2143,9 +2102,6 @@ packages:
 
   help-me@5.0.0:
     resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
-
-  hyperid@3.3.0:
-    resolution: {integrity: sha512-7qhCVT4MJIoEsNcbhglhdmBKb09QtcmJNiIQGq7js/Khf5FtQQ9bzcAuloeqBeee7XD7JqDeve9KNlQya5tSGQ==}
 
   idb@7.1.1:
     resolution: {integrity: sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==}
@@ -2592,13 +2548,6 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
-  mqemitter@6.0.2:
-    resolution: {integrity: sha512-8RGlznQx/Nb1xC3xKUFXHWov7pn7JdH++YVwlr6SLT6k3ft1h+ImGqZdVudbdKruFckIq9wheq9s4hgCivJDow==}
-    engines: {node: '>=16'}
-
-  mqtt-packet@7.1.2:
-    resolution: {integrity: sha512-FFZbcZ2omsf4c5TxEQfcX9hI+JzDpDKPT46OmeIBpVA7+t32ey25UNqlqNXTmeZOr5BLsSIERpQQLsFWJS94SQ==}
-
   mqtt-packet@9.0.2:
     resolution: {integrity: sha512-MvIY0B8/qjq7bKxdN1eD+nrljoeaai+qjLJgfRn3TiMuz0pamsIWY2bFODPZMSNmabsLANXsLl4EMoWvlaTZWA==}
 
@@ -2907,14 +2856,6 @@ packages:
   pure-rand@6.1.0:
     resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
 
-  qlobber@7.0.1:
-    resolution: {integrity: sha512-FsFg9lMuMEFNKmTO9nV7tlyPhx8BmskPPjH2akWycuYVTtWaVwhW5yCHLJQ6Q+3mvw5cFX2vMfW2l9z2SiYAbg==}
-    engines: {node: '>= 14'}
-
-  qlobber@8.0.1:
-    resolution: {integrity: sha512-O+Wd1chXj5YE1DwmD+ae0bXiSLehmnS3czlC1R9FL/Nt/3q8uMS1bIHmg2lJfCoiimCxClWM8AAuJrF0EvNiog==}
-    engines: {node: '>= 16'}
-
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
@@ -2993,9 +2934,6 @@ packages:
   resolve@2.0.0-next.5:
     resolution: {integrity: sha512-U7WjGVG9sH8tvjW5SmGbQuui75FiyjAX72HX15DwBBwF9dNiQZRQAg9nnPhYy+TUnE0+VcrttuvNI8oSxZcocA==}
     hasBin: true
-
-  retimer@4.0.0:
-    resolution: {integrity: sha512-fZIVtvbOsQsxNSDhpdPOX4lx5Ss2ni+S72AUBitARpFhtA3UzrAjQ6gDtypB2/+l7L+1VQgAgpvAKY66mElH0w==}
 
   reusify@1.1.0:
     resolution: {integrity: sha512-g6QUff04oZpHs0eG5p83rFLhHeV00ug/Yf9nZM6fLeUrPguBTkTQOdpAWWspMh55TZfVQDPaN3NQJfbVRAxdIw==}
@@ -3368,13 +3306,6 @@ packages:
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
-  uuid-parse@1.1.0:
-    resolution: {integrity: sha512-OdmXxA8rDsQ7YpNVbKSJkNzTw2I+S5WsbMDnCtIWSQaosNAcWtFuI/YK1TjzUI6nbkgiqEyh8gWngfcv8Asd9A==}
-
-  uuid@10.0.0:
-    resolution: {integrity: sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==}
-    hasBin: true
-
   uuid@8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
@@ -3491,20 +3422,11 @@ packages:
   worker-factory@7.0.45:
     resolution: {integrity: sha512-FFPCiSv7MD6ZDEfiik/ErM8IrIAWajaXhezLyCo3v0FjhUWud6GXnG2BiTE91jLywXGAVCT8IF48Hhr+D/omMw==}
 
-  worker-timers-broker@6.1.8:
-    resolution: {integrity: sha512-FUCJu9jlK3A8WqLTKXM9E6kAmI/dR1vAJ8dHYLMisLNB/n3GuaFIjJ7pn16ZcD1zCOf7P6H62lWIEBi+yz/zQQ==}
-
   worker-timers-broker@8.0.10:
     resolution: {integrity: sha512-xvo/9GiuduENbJNdWnvZtkriIkjBKKVbMyw7GXvrBu3n1JHemzZgxqaCcCBNlpfXnRXXF4ekqvXWLh1gb65b8w==}
 
-  worker-timers-worker@7.0.71:
-    resolution: {integrity: sha512-ks/5YKwZsto1c2vmljroppOKCivB/ma97g9y77MAAz2TBBjPPgpoOiS1qYQKIgvGTr2QYPT3XhJWIB6Rj2MVPQ==}
-
   worker-timers-worker@9.0.10:
     resolution: {integrity: sha512-cfCmAkuoN+nGGJShta/g7CQVP3h7rvQA642EQg72fOHCWP5S2P83rLxDiaGv811Hd+19Cgdqt/tpRBIZ5kj/dw==}
-
-  worker-timers@7.1.8:
-    resolution: {integrity: sha512-R54psRKYVLuzff7c1OTFcq/4Hue5Vlz4bFtNEIarpSiCYhpifHU3aIQI29S84o1j87ePCYqbmEJPqwBTf+3sfw==}
 
   worker-timers@8.0.24:
     resolution: {integrity: sha512-Ydu/7TRHlxIRjYSGDge1F92L7y9kzInpwR4CkocRVObPE0eRqC6d+0GFh52Hm+m520RHVKiytOERtCUu5sQDVQ==}
@@ -3523,10 +3445,6 @@ packages:
         optional: true
       utf-8-validate:
         optional: true
-
-  xtend@4.0.2:
-    resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
-    engines: {node: '>=0.4'}
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
@@ -4936,36 +4854,6 @@ snapshots:
 
   acorn@8.15.0: {}
 
-  aedes-packet@3.0.0:
-    dependencies:
-      mqtt-packet: 7.1.2
-    transitivePeerDependencies:
-      - supports-color
-
-  aedes-persistence@9.1.2:
-    dependencies:
-      aedes-packet: 3.0.0
-      qlobber: 7.0.1
-    transitivePeerDependencies:
-      - supports-color
-
-  aedes@0.51.3:
-    dependencies:
-      aedes-packet: 3.0.0
-      aedes-persistence: 9.1.2
-      end-of-stream: 1.4.5
-      fastfall: 1.5.1
-      fastparallel: 2.4.1
-      fastseries: 2.0.0
-      hyperid: 3.3.0
-      mqemitter: 6.0.2
-      mqtt-packet: 9.0.2
-      retimer: 4.0.0
-      reusify: 1.1.0
-      uuid: 10.0.0
-    transitivePeerDependencies:
-      - supports-color
-
   ajv-formats@2.1.1(ajv@8.17.1):
     optionalDependencies:
       ajv: 8.17.1
@@ -5136,12 +5024,6 @@ snapshots:
 
   big.js@5.2.2: {}
 
-  bl@4.1.0:
-    dependencies:
-      buffer: 5.7.1
-      inherits: 2.0.4
-      readable-stream: 3.6.2
-
   bl@6.1.2:
     dependencies:
       '@types/readable-stream': 4.0.21
@@ -5177,11 +5059,6 @@ snapshots:
       update-browserslist-db: 1.1.3(browserslist@4.25.2)
 
   buffer-from@1.1.2: {}
-
-  buffer@5.7.1:
-    dependencies:
-      base64-js: 1.5.1
-      ieee754: 1.2.1
 
   buffer@6.0.3:
     dependencies:
@@ -5401,10 +5278,6 @@ snapshots:
   emojis-list@3.0.0: {}
 
   empathic@2.0.0: {}
-
-  end-of-stream@1.4.5:
-    dependencies:
-      once: 1.4.0
 
   enhanced-resolve@5.18.3:
     dependencies:
@@ -5756,11 +5629,6 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
-  fast-unique-numbers@8.0.13:
-    dependencies:
-      '@babel/runtime': 7.28.3
-      tslib: 2.8.1
-
   fast-unique-numbers@9.0.23:
     dependencies:
       '@babel/runtime': 7.28.3
@@ -5768,20 +5636,9 @@ snapshots:
 
   fast-uri@3.0.6: {}
 
-  fastfall@1.5.1:
-    dependencies:
-      reusify: 1.1.0
-
-  fastparallel@2.4.1:
-    dependencies:
-      reusify: 1.1.0
-      xtend: 4.0.2
-
   fastq@1.19.1:
     dependencies:
       reusify: 1.1.0
-
-  fastseries@2.0.0: {}
 
   fdir@6.5.0(picomatch@4.0.3):
     optionalDependencies:
@@ -5964,12 +5821,6 @@ snapshots:
       function-bind: 1.1.2
 
   help-me@5.0.0: {}
-
-  hyperid@3.3.0:
-    dependencies:
-      buffer: 5.7.1
-      uuid: 8.3.2
-      uuid-parse: 1.1.0
 
   idb@7.1.1: {}
 
@@ -6366,19 +6217,6 @@ snapshots:
 
   mkdirp@3.0.1: {}
 
-  mqemitter@6.0.2:
-    dependencies:
-      fastparallel: 2.4.1
-      qlobber: 8.0.1
-
-  mqtt-packet@7.1.2:
-    dependencies:
-      bl: 4.1.0
-      debug: 4.4.1
-      process-nextick-args: 2.0.1
-    transitivePeerDependencies:
-      - supports-color
-
   mqtt-packet@9.0.2:
     dependencies:
       bl: 6.1.2
@@ -6699,10 +6537,6 @@ snapshots:
 
   pure-rand@6.1.0: {}
 
-  qlobber@7.0.1: {}
-
-  qlobber@8.0.1: {}
-
   queue-microtask@1.2.3: {}
 
   randombytes@2.1.0:
@@ -6797,10 +6631,6 @@ snapshots:
       is-core-module: 2.16.1
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
-
-  retimer@4.0.0:
-    dependencies:
-      worker-timers: 7.1.8
 
   reusify@1.1.0: {}
 
@@ -7256,10 +7086,6 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  uuid-parse@1.1.0: {}
-
-  uuid@10.0.0: {}
-
   uuid@8.3.2: {}
 
   watchpack@2.4.4:
@@ -7492,13 +7318,6 @@ snapshots:
       fast-unique-numbers: 9.0.23
       tslib: 2.8.1
 
-  worker-timers-broker@6.1.8:
-    dependencies:
-      '@babel/runtime': 7.28.3
-      fast-unique-numbers: 8.0.13
-      tslib: 2.8.1
-      worker-timers-worker: 7.0.71
-
   worker-timers-broker@8.0.10:
     dependencies:
       '@babel/runtime': 7.28.3
@@ -7507,23 +7326,11 @@ snapshots:
       tslib: 2.8.1
       worker-timers-worker: 9.0.10
 
-  worker-timers-worker@7.0.71:
-    dependencies:
-      '@babel/runtime': 7.28.3
-      tslib: 2.8.1
-
   worker-timers-worker@9.0.10:
     dependencies:
       '@babel/runtime': 7.28.3
       tslib: 2.8.1
       worker-factory: 7.0.45
-
-  worker-timers@7.1.8:
-    dependencies:
-      '@babel/runtime': 7.28.3
-      tslib: 2.8.1
-      worker-timers-broker: 6.1.8
-      worker-timers-worker: 7.0.71
 
   worker-timers@8.0.24:
     dependencies:
@@ -7535,8 +7342,6 @@ snapshots:
   wrappy@1.0.2: {}
 
   ws@8.18.3: {}
-
-  xtend@4.0.2: {}
 
   yallist@3.1.1: {}
 
