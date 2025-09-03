@@ -1,183 +1,76 @@
-# GreenHouseV2
+# Smart Greenhouse Controller
 
-A comprehensive Progressive Web App (PWA) for greenhouse management, built with Next.js 14, TypeScript, and Prisma ORM.
+A Next.js web application for controlling IoT devices in a smart greenhouse system via MQTT.
 
-## Features
+## 🚀 Production Features
 
-- **Progressive Web App (PWA)** - Installable and works offline
-- **Authentication** - NextAuth.js integration
-- **Database** - PostgreSQL with Prisma ORM
-- **Modern UI** - Tailwind CSS with responsive design
-- **TypeScript** - Full type safety
+- **Real-time IoT Control**: Control LED lights, servo motors, and NeoPixel RGB strips
+- **Sensor Monitoring**: Real-time temperature and humidity data from DHT22 sensors
+- **MQTT Integration**: Uses EMQX public broker for reliable device communication
+- **Responsive UI**: Modern, mobile-friendly interface built with Tailwind CSS
+- **Production Ready**: Deployed on Vercel with global CDN
 
-## Entity Structure
+## 🏗️ Architecture
 
-The application manages the following entities:
-
-- **Customer** - Customer information and relationships
-- **Tunnel** - Greenhouse tunnels and their status
-- **CustomerInventory** - Customer-specific inventory
-- **MainInventory** - Main inventory management
-- **Item** - Individual items with SKUs
-- **Schedule** - Maintenance and task schedules
-- **Task** - Individual tasks and their status
-
-## Tech Stack
-
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Authentication**: NextAuth.js
-- **Database**: PostgreSQL
-- **ORM**: Prisma
-- **PWA**: next-pwa
-- **Package Manager**: pnpm
-
-## Prerequisites
-
-- Node.js 18+ 
-- pnpm (recommended) or npm
-- PostgreSQL database (Neon, Supabase, or local)
-
-## Getting Started
-
-### 1. Clone and Install
-
-```bash
-cd greenhousev2
-pnpm install
+```
+ESP32 (IoT Devices) ←→ broker.emqx.io:1883 (MQTT Broker) ←→ Web App (Vercel)
 ```
 
-### 2. Environment Setup
+## 📱 Supported Devices
 
-Create a `.env` file in the root directory:
+- **DHT22**: Temperature and humidity sensor
+- **LED**: On/Off light control
+- **Servo Motor**: 0-180° position control
+- **WS2812 RGB Strip**: Full color control
 
-```env
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/greenhousev2"
-
-# NextAuth.js
-NEXTAUTH_SECRET="your-secret-key-here"
-NEXTAUTH_URL="http://localhost:3000"
-```
-
-### 3. Database Setup
-
-```bash
-# Generate Prisma client
-npx prisma generate
-
-# Create and apply migrations
-npx prisma migrate dev --name init
-
-# (Optional) Seed the database
-npx prisma db seed
-```
-
-### 4. Development
-
-```bash
-# Start development server
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the application.
-
-## Database Providers
-
-### Neon (Recommended for Vercel)
-1. Create account at [neon.tech](https://neon.tech)
-2. Create a new project
-3. Copy the connection string to your `.env` file
-
-### Supabase
-1. Create account at [supabase.com](https://supabase.com)
-2. Create a new project
-3. Go to Settings > Database
-4. Copy the connection string to your `.env` file
-
-### Local PostgreSQL
-1. Install PostgreSQL locally
-2. Create a database named `greenhousev2`
-3. Update the `DATABASE_URL` in your `.env` file
-
-## PWA Features
-
-The application is configured as a Progressive Web App with:
-
-- **Installable** - Can be installed on mobile and desktop
-- **Offline Support** - Service worker for offline functionality
-- **App-like Experience** - Full-screen mode and native feel
-- **Push Notifications** - Ready for push notification implementation
-
-## Deployment
+## 🚀 Deployment
 
 ### Vercel (Recommended)
+1. **Connect your GitHub repository** to Vercel
+2. **Automatic deployment** on every push
+3. **Global CDN** for fast access worldwide
+4. **HTTPS enabled** by default
 
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy
+### Manual Deployment
+```bash
+# Build the application
+pnpm build
 
-### Other Platforms
-
-The application can be deployed to any platform that supports Next.js:
-
-- Netlify
-- Railway
-- DigitalOcean App Platform
-- AWS Amplify
-
-## Project Structure
-
-```
-greenhousev2/
-├── src/
-│   ├── app/                 # Next.js App Router
-│   │   ├── api/            # API routes
-│   │   │   └── auth/       # NextAuth.js routes
-│   │   ├── globals.css     # Global styles
-│   │   ├── layout.tsx      # Root layout
-│   │   └── page.tsx        # Home page
-│   ├── lib/                # Utility functions
-│   │   ├── auth.ts         # NextAuth.js config
-│   │   └── prisma.ts       # Prisma client
-│   └── components/         # Reusable components
-├── prisma/
-│   └── schema.prisma       # Database schema
-├── public/
-│   ├── manifest.json       # PWA manifest
-│   └── icons/              # PWA icons
-├── next.config.ts          # Next.js config
-└── package.json
+# Deploy to Vercel
+vercel --prod
 ```
 
-## Development
+## 🔧 MQTT Configuration
 
-### Adding New Features
+- **Broker**: `broker.emqx.io`
+- **Web Port**: `8083` (WebSocket)
+- **Device Port**: `1883` (TCP)
+- **Topics**:
+  - `lights` - LED control (ON/OFF)
+  - `servo` - Servo position (0-180)
+  - `lights/neopixel` - RGB color (R,G,B)
+  - `Tempdata` - Sensor data (temperature,humidity)
 
-1. **Database Changes**: Update `prisma/schema.prisma` and run migrations
-2. **API Routes**: Add new routes in `src/app/api/`
-3. **Components**: Create reusable components in `src/components/`
-4. **Pages**: Add new pages in `src/app/`
+## 🛠️ Development
 
-### Code Style
+```bash
+# Install dependencies
+pnpm install
 
-- Use TypeScript for all files
-- Follow Next.js 14 conventions
-- Use Tailwind CSS for styling
-- Implement proper error handling
-- Add TypeScript types for all data structures
+# Run development server
+pnpm dev
 
-## Contributing
+# Build for production
+pnpm build
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+# Start production server
+pnpm start
+```
 
-## License
+## 🌐 Live Demo
 
-This project is licensed under the MIT License.
-"# greenhousev2" 
+Visit: [Your Vercel URL]
+
+## 📄 License
+
+MIT License - see LICENSE file for details. 

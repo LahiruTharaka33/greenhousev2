@@ -20,6 +20,12 @@ const navigation: NavItem[] = [
     description: 'Overview and statistics'
   },
   {
+    name: 'Controller',
+    href: '/user/controller',
+    icon: '🎮',
+    description: 'IoT device control and monitoring'
+  },
+  {
     name: 'Customers',
     href: '/customers',
     icon: '👥',

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,22 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// NextAuth.js Models
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -47,13 +39,13 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  password      String?   // For credentials-based authentication
-  role          String    @default("user") // "admin" or "user"
-  accounts      Account[]
-  sessions      Session[]
-  customer      Customer? // Link to customer if user is a customer
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  password      String?
+  role          String    @default("user")
+  accounts      Account[]
+  customer      Customer?
+  sessions      Session[]
 }
 
 model VerificationToken {
@@ -64,88 +56,79 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Business Entities
 model Customer {
-  id              String   @id @default(cuid())
-  customerId      String   @unique
-  customerName    String
-  company         String?
-  cultivationType String?
-  cultivationName String?
-  noOfTunnel      Int      @default(0)
-  location        String?
-  email           String?
-  phone           String?
-  address         String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  // Relations
-  userId          String?  @unique // Link to User account
-  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  tasks           Task[]
-  tunnels         Tunnel[]
+  id                  String              @id @default(cuid())
+  email               String?
+  phone               String?
+  address             String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  company             String?
+  cultivationName     String?
+  cultivationType     String?
+  customerId          String              @unique
+  customerName        String
+  location            String?
+  noOfTunnel          Int                 @default(0)
+  userId              String?             @unique
+  user                User?               @relation(fields: [userId], references: [id])
   customerInventories CustomerInventory[]
+  tasks               Task[]
+  tunnels             Tunnel[]
+  schedules           Schedule[]
 }
 
 model MainInventory {
   id          String   @id @default(cuid())
-  itemId      String   @unique
-  itemType    String
-  itemName    String
   description String?
   quantity    Int      @default(0)
-  storedDate  DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  // Relations
+  itemId      String   @unique
+  itemName    String
+  itemType    String
+  storedDate  DateTime @default(now())
   item        Item     @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
 }
 
 model Item {
-  id            String   @id @default(cuid())
-  itemId        String   @unique
-  itemName      String
-  itemCategory  String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  // Relations
-  mainInventory MainInventory?
+  id                  String              @id @default(cuid())
+  itemId              String              @unique
+  itemName            String
+  itemCategory        String
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   customerInventories CustomerInventory[]
+  mainInventory       MainInventory?
+  schedules           Schedule[]
 }
 
 model Task {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   description String?
-  status      String   @default("todo")
-  priority    String   @default("medium")
-  assignedTo  String?
+  status      String    @default("todo")
+  priority    String    @default("medium")
   dueDate     DateTime?
   completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relations
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  assignedTo  String?
   customerId  String
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model Tunnel {
-  id             String   @id @default(cuid())
-  tunnelId       String   @unique
-  tunnelName     String
-  description    String?
+  id              String   @id @default(cuid())
+  tunnelId        String   @unique
+  tunnelName      String
+  description     String?
   cultivationType String?
-  location       String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  // Relations
-  customerId     String
-  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  location        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model CustomerInventory {
@@ -157,12 +140,25 @@ model CustomerInventory {
   quantity    Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  // Relations
   customerId  String
   customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   item        Item     @relation(fields: [itemId], references: [itemId], onDelete: Cascade)
-  
-  // Unique constraint to prevent duplicate entries for same item and customer
+
   @@unique([itemId, customerId])
+}
+
+model Schedule {
+  id          String   @id @default(cuid())
+  customerId  String
+  itemId      String
+  scheduledDate DateTime
+  scheduledTime String
+  quantity    Int      @default(1)
+  notes       String?
+  status      String   @default("pending") // pending, completed, cancelled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  item        Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
 }

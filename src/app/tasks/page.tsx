@@ -80,11 +80,15 @@ export default function TasksPage() {
       });
 
       if (response.ok) {
+        // Update local state immediately for better UX
         setTasks(prev =>
           prev.map(task =>
             task.id === taskId ? { ...task, status: newStatus } : task
           )
         );
+        
+        // Also refresh from server to ensure consistency
+        await fetchTasks();
       }
     } catch (error) {
       console.error('Error updating task status:', error);
