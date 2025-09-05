@@ -1,21 +1,20 @@
-import Paho from 'paho-mqtt';
+import mqtt, { MqttClient } from 'mqtt';
 
 class MQTTService {
-  private client: Paho.Client | null = null;
+  private client: MqttClient | null = null;
   private isConnected = false;
   private messageCallbacks: Map<string, (message: string) => void> = new Map();
   private reconnectInterval: NodeJS.Timeout | null = null;
 
   // MQTT Configuration for Production (HTTPS Compatible)
   private config = {
-    // Eclipse Paho WebSocket Broker - Designed for web browsers
-    host: 'mqtt.eclipseprojects.io',
-    port: 9001, // WebSocket port (not WSS for better compatibility)
-    clientId: `greenhouse_prod_${Math.random().toString(16).slice(3)}`,
+    // HiveMQ Public WebSocket Broker - Secure WebSocket
+    host: 'wss://broker.hivemq.com:8884/mqtt',
+    clientId: `greenhouse_web_${Math.random().toString(16).slice(3)}`,
     clean: true,
-    keepAliveInterval: 60,
-    connectTimeout: 30,
-    useSSL: false, // Use plain WebSocket for better compatibility
+    keepalive: 60,
+    connectTimeout: 30 * 1000,
+    reconnectPeriod: 1000,
   };
 
   // Connect to MQTT broker
@@ -25,36 +24,35 @@ class MQTTService {
         return true;
       }
 
-      // Create new Paho client
-      this.client = new Paho.Client(
-        this.config.host,
-        this.config.port,
-        this.config.clientId
-      );
+      // Create new MQTT client
+      this.client = mqtt.connect(this.config.host, {
+        clientId: this.config.clientId,
+        clean: this.config.clean,
+        keepalive: this.config.keepalive,
+        connectTimeout: this.config.connectTimeout,
+        reconnectPeriod: this.config.reconnectPeriod,
+      });
 
       return new Promise((resolve) => {
-        // Set up connection options
-        const connectOptions = {
-          useSSL: this.config.useSSL,
-          cleanSession: this.config.clean,
-          keepAliveInterval: this.config.keepAliveInterval,
-          connectTimeout: this.config.connectTimeout,
-          onSuccess: () => {
-            console.log('Connected to MQTT broker via Eclipse Paho');
-            this.isConnected = true;
-            this.setupEventHandlers();
-            this.startReconnection();
-            resolve(true);
-          },
-          onFailure: (error: any) => {
-            console.error('MQTT connection failed:', error);
-            this.isConnected = false;
-            resolve(false);
-          }
-        };
+        if (!this.client) {
+          resolve(false);
+          return;
+        }
 
-        // Connect to broker
-        this.client!.connect(connectOptions);
+        // Handle successful connection
+        this.client.on('connect', () => {
+          console.log('Connected to MQTT broker via HiveMQ');
+          this.isConnected = true;
+          this.setupEventHandlers();
+          resolve(true);
+        });
+
+        // Handle connection errors
+        this.client.on('error', (error) => {
+          console.error('MQTT connection failed:', error);
+          this.isConnected = false;
+          resolve(false);
+        });
       });
     } catch (error) {
       console.error('Failed to connect to MQTT:', error);
@@ -67,23 +65,23 @@ class MQTTService {
     if (!this.client) return;
 
     // Handle connection lost
-    this.client.onConnectionLost = (responseObject) => {
-      console.log('MQTT connection lost:', responseObject);
+    this.client.on('offline', () => {
+      console.log('MQTT connection lost');
       this.isConnected = false;
-      this.stopReconnection();
-      
-      // Auto-reconnect after 5 seconds
-      setTimeout(() => {
-        if (!this.isConnected) {
-          this.connect();
-        }
-      }, 5000);
-    };
+    });
+
+    this.client.on('reconnect', () => {
+      console.log('MQTT reconnecting...');
+    });
+
+    this.client.on('connect', () => {
+      console.log('MQTT reconnected');
+      this.isConnected = true;
+    });
 
     // Handle incoming messages
-    this.client.onMessageArrived = (message) => {
-      const topic = message.destinationName;
-      const messageStr = message.payloadString;
+    this.client.on('message', (topic, message) => {
+      const messageStr = message.toString();
       console.log(`Message received on topic ${topic}: ${messageStr}`);
       
       // Call registered callback for this topic
@@ -91,7 +89,7 @@ class MQTTService {
       if (callback) {
         callback(messageStr);
       }
-    };
+    });
   }
 
   // Subscribe to a topic
@@ -102,9 +100,14 @@ class MQTTService {
     }
 
     try {
-      this.client.subscribe(topic);
-      console.log(`Subscribed to ${topic}`);
-      this.messageCallbacks.set(topic, callback);
+      this.client.subscribe(topic, (error) => {
+        if (error) {
+          console.error(`Error subscribing to ${topic}:`, error);
+        } else {
+          console.log(`Subscribed to ${topic}`);
+          this.messageCallbacks.set(topic, callback);
+        }
+      });
       return true;
     } catch (error) {
       console.error(`Error subscribing to ${topic}:`, error);
@@ -119,8 +122,13 @@ class MQTTService {
     }
 
     try {
-      this.client.unsubscribe(topic);
-      this.messageCallbacks.delete(topic);
+      this.client.unsubscribe(topic, (error) => {
+        if (error) {
+          console.error(`Error unsubscribing from ${topic}:`, error);
+        } else {
+          this.messageCallbacks.delete(topic);
+        }
+      });
       return true;
     } catch (error) {
       console.error(`Error unsubscribing from ${topic}:`, error);
@@ -136,12 +144,13 @@ class MQTTService {
     }
 
     try {
-      const mqttMessage = new Paho.Message(message);
-      mqttMessage.destinationName = topic;
-      mqttMessage.qos = 1;
-      
-      this.client.send(mqttMessage);
-      console.log(`Published to ${topic}: ${message}`);
+      this.client.publish(topic, message, { qos: 1 }, (error) => {
+        if (error) {
+          console.error(`Error publishing to ${topic}:`, error);
+        } else {
+          console.log(`Published to ${topic}: ${message}`);
+        }
+      });
       return true;
     } catch (error) {
       console.error(`Error publishing to ${topic}:`, error);
@@ -151,35 +160,18 @@ class MQTTService {
 
   // Get connection status
   getConnectionStatus(): boolean {
-    return this.isConnected;
-  }
-
-  // Start reconnection logic
-  private startReconnection() {
-    if (this.reconnectInterval) return;
-    
-    this.reconnectInterval = setInterval(() => {
-      if (!this.isConnected && this.client) {
-        console.log('Attempting to reconnect...');
-        this.connect();
-      }
-    }, 30000); // Try every 30 seconds
-  }
-
-  // Stop reconnection logic
-  private stopReconnection() {
-    if (this.reconnectInterval) {
-      clearInterval(this.reconnectInterval);
-      this.reconnectInterval = null;
-    }
+    return this.isConnected && this.client?.connected === true;
   }
 
   // Disconnect from MQTT broker
   disconnect(): void {
-    this.stopReconnection();
+    if (this.reconnectInterval) {
+      clearInterval(this.reconnectInterval);
+      this.reconnectInterval = null;
+    }
     
-    if (this.client && this.isConnected) {
-      this.client.disconnect();
+    if (this.client) {
+      this.client.end();
     }
     
     this.client = null;

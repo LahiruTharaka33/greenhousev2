@@ -1,6 +1,7 @@
 'use client';
 
 import Layout from '@/components/Layout';
+import LEDController from '@/components/LEDController';
 import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { redirect } from 'next/navigation';
@@ -112,6 +113,11 @@ export default function DashboardPage() {
                   <p className="text-3xl font-bold text-emerald-600">1,247</p>
                   <p className="text-sm text-gray-500 mt-1">Total items</p>
                 </div>
+              </div>
+
+              {/* LED Controller */}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2">
+                <LEDController />
               </div>
 
             </div>
