@@ -58,7 +58,7 @@ export default function ScheduleList({ schedules, onEdit, onDelete, onStatusChan
       case 'cancelled':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-100 text-black border-gray-200';
     }
   };
 
@@ -108,19 +108,19 @@ export default function ScheduleList({ schedules, onEdit, onDelete, onStatusChan
               placeholder="Search by customer, item, or company..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
             />
           </div>
           <div>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
             >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="all" className="text-black">All Status</option>
+              <option value="pending" className="text-black">Pending</option>
+              <option value="completed" className="text-black">Completed</option>
+              <option value="cancelled" className="text-black">Cancelled</option>
             </select>
           </div>
         </div>
@@ -133,11 +133,11 @@ export default function ScheduleList({ schedules, onEdit, onDelete, onStatusChan
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-medium text-gray-900">
+                  <h3 className="text-lg font-medium text-black">
                     {schedule.customer.customerName}
                   </h3>
                   {schedule.customer.company && (
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-black">
                       ({schedule.customer.company})
                     </span>
                   )}
@@ -146,23 +146,23 @@ export default function ScheduleList({ schedules, onEdit, onDelete, onStatusChan
                   </span>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                   <div>
-                    <span className="font-medium text-gray-700">Item:</span> {schedule.item.itemName}
-                    <span className="text-gray-500 ml-1">({schedule.item.itemCategory})</span>
+                    <span className="font-medium text-black">Item:</span> {schedule.item.itemName}
+                    <span className="text-black ml-1">({schedule.item.itemCategory})</span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700">Quantity:</span> {schedule.quantity}
+                    <span className="font-medium text-black">Quantity:</span> {schedule.quantity}
                   </div>
                   <div>
-                    <span className="font-medium text-gray-700">Scheduled:</span> {formatDate(schedule.scheduledDate)} at {formatTime(schedule.scheduledTime)}
+                    <span className="font-medium text-black">Scheduled:</span> {formatDate(schedule.scheduledDate)} at {formatTime(schedule.scheduledTime)}
                   </div>
                 </div>
 
                 {schedule.notes && (
                   <div className="mt-2">
-                    <span className="font-medium text-gray-700 text-sm">Notes:</span>
-                    <p className="text-gray-600 text-sm mt-1">{schedule.notes}</p>
+                    <span className="font-medium text-black text-sm">Notes:</span>
+                    <p className="text-black text-sm mt-1">{schedule.notes}</p>
                   </div>
                 )}
               </div>
@@ -215,4 +215,3 @@ export default function ScheduleList({ schedules, onEdit, onDelete, onStatusChan
     </div>
   );
 }
-

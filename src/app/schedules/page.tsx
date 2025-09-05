@@ -173,10 +173,10 @@ export default function SchedulesPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-black mb-2">
                 Schedules
               </h1>
-              <p className="text-lg text-gray-600">
+              <p className="text-lg text-black">
                 Manage maintenance and task schedules for customers
               </p>
             </div>
@@ -188,6 +188,12 @@ export default function SchedulesPage() {
             </button>
           </div>
         </div>
+
+        {schedules.length === 0 && !loading && (
+          <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
+            <p className="text-black">No schedules found. Create your first schedule to get started.</p>
+          </div>
+        )}
 
         {showForm ? (
           <div className="mb-8">

@@ -145,25 +145,25 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6">
-      <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+      <h2 className="text-2xl font-semibold text-black mb-6">
         {initialData ? 'Edit Schedule' : 'Create New Schedule'}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Customer Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-black mb-2">
             Customer *
           </label>
           <select
             value={selectedCustomerId}
             onChange={(e) => setSelectedCustomerId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
             required
           >
-            <option value="">Select a customer</option>
+            <option value="" className="text-black">Select a customer</option>
             {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
+              <option key={customer.id} value={customer.id} className="text-black">
                 {customer.customerName} {customer.company ? `(${customer.company})` : ''}
               </option>
             ))}
@@ -173,7 +173,7 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
         {/* Schedule Items */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-black">
               Schedule Items *
             </label>
             <button
@@ -189,7 +189,7 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
             {scheduleItems.map((item, index) => (
               <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-medium text-gray-700">Item {index + 1}</h4>
+                  <h4 className="text-sm font-medium text-black">Item {index + 1}</h4>
                   {scheduleItems.length > 1 && (
                     <button
                       type="button"
@@ -204,19 +204,17 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* Item Selection */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Item *
-                    </label>
+                    <label className="block text-sm text-black mb-1">Item *</label>
                     <select
                       value={item.itemId}
                       onChange={(e) => updateScheduleItem(index, 'itemId', e.target.value)}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                       required
                     >
-                      <option value="">Select item</option>
-                      {items.map((inventoryItem) => (
-                        <option key={inventoryItem.id} value={inventoryItem.id}>
-                          {inventoryItem.itemName} ({inventoryItem.itemCategory})
+                      <option value="" className="text-black">Select an item</option>
+                      {items.map((itm) => (
+                        <option key={itm.id} value={itm.id} className="text-black">
+                          {itm.itemName} ({itm.itemCategory})
                         </option>
                       ))}
                     </select>
@@ -224,42 +222,36 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
 
                   {/* Quantity */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Quantity
-                    </label>
+                    <label className="block text-sm text-black mb-1">Quantity</label>
                     <input
                       type="number"
                       min="1"
                       value={item.quantity}
-                      onChange={(e) => updateScheduleItem(index, 'quantity', parseInt(e.target.value))}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      onChange={(e) => updateScheduleItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     />
                   </div>
 
                   {/* Date */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Date *
-                    </label>
+                    <label className="block text-sm text-black mb-1">Date *</label>
                     <input
                       type="date"
                       value={item.scheduledDate}
                       onChange={(e) => updateScheduleItem(index, 'scheduledDate', e.target.value)}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                       required
                     />
                   </div>
 
                   {/* Time */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Time *
-                    </label>
+                    <label className="block text-sm text-black mb-1">Time *</label>
                     <input
                       type="time"
                       value={item.scheduledTime}
                       onChange={(e) => updateScheduleItem(index, 'scheduledTime', e.target.value)}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                       required
                     />
                   </div>
@@ -267,15 +259,12 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
 
                 {/* Notes */}
                 <div className="mt-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Notes
-                  </label>
+                  <label className="block text-sm text-black mb-1">Notes</label>
                   <textarea
                     value={item.notes}
                     onChange={(e) => updateScheduleItem(index, 'notes', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     rows={2}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Additional notes for this item..."
                   />
                 </div>
               </div>
@@ -288,7 +277,7 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 text-sm font-medium text-black bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Cancel
           </button>
@@ -304,4 +293,3 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
     </div>
   );
 }
-
