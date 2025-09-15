@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 // GET /api/schedules - Fetch all schedules
 export async function GET() {
@@ -15,6 +13,9 @@ export async function GET() {
     }
 
     const schedules = await prisma.schedule.findMany({
+      orderBy: {
+        scheduledDate: 'desc',
+      },
       include: {
         customer: {
           select: {
@@ -22,7 +23,7 @@ export async function GET() {
             customerId: true,
             customerName: true,
             company: true,
-          }
+          },
         },
         item: {
           select: {
@@ -30,18 +31,26 @@ export async function GET() {
             itemId: true,
             itemName: true,
             itemCategory: true,
-          }
-        }
+          },
+        },
+        tunnel: {
+          select: {
+            id: true,
+            tunnelId: true,
+            tunnelName: true,
+            description: true,
+          },
+        },
       },
-      orderBy: {
-        scheduledDate: 'asc'
-      }
     });
-
+    
     return NextResponse.json(schedules);
   } catch (error) {
     console.error('Error fetching schedules:', error);
-    return NextResponse.json({ error: 'Failed to fetch schedules' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to fetch schedules' },
+      { status: 500 }
+    );
   }
 }
 
@@ -55,40 +64,66 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { customerId, itemId, scheduledDate, scheduledTime, quantity, notes } = body;
+    const { customerId, itemId, tunnelId, scheduledDate, scheduledTime, quantity, notes } = body;
 
-    // Validation
+    // Validate required fields
     if (!customerId || !itemId || !scheduledDate || !scheduledTime) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
     }
 
-    // Check if customer exists
-    const customer = await prisma.customer.findUnique({
-      where: { id: customerId }
+    // Verify that the customer exists
+    const customerExists = await prisma.customer.findUnique({
+      where: { id: customerId },
     });
 
-    if (!customer) {
-      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    if (!customerExists) {
+      return NextResponse.json(
+        { error: 'Selected customer does not exist' },
+        { status: 400 }
+      );
     }
 
-    // Check if item exists
-    const item = await prisma.item.findUnique({
-      where: { id: itemId }
+    // Verify that the item exists
+    const itemExists = await prisma.item.findUnique({
+      where: { id: itemId },
     });
 
-    if (!item) {
-      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+    if (!itemExists) {
+      return NextResponse.json(
+        { error: 'Selected item does not exist' },
+        { status: 400 }
+      );
     }
 
-    // Create schedule
+    // If tunnelId is provided, verify it exists and belongs to the customer
+    if (tunnelId) {
+      const tunnelExists = await prisma.tunnel.findFirst({
+        where: { 
+          id: tunnelId,
+          customerId: customerId,
+        },
+      });
+
+      if (!tunnelExists) {
+        return NextResponse.json(
+          { error: 'Selected tunnel does not exist or does not belong to the customer' },
+          { status: 400 }
+        );
+      }
+    }
+
     const schedule = await prisma.schedule.create({
       data: {
         customerId,
         itemId,
+        tunnelId: tunnelId || null,
         scheduledDate: new Date(scheduledDate),
         scheduledTime,
         quantity: quantity || 1,
-        notes: notes || null,
+        notes: notes || '',
         status: 'pending'
       },
       include: {
@@ -98,7 +133,7 @@ export async function POST(request: NextRequest) {
             customerId: true,
             customerName: true,
             company: true,
-          }
+          },
         },
         item: {
           select: {
@@ -106,15 +141,25 @@ export async function POST(request: NextRequest) {
             itemId: true,
             itemName: true,
             itemCategory: true,
-          }
-        }
-      }
+          },
+        },
+        tunnel: {
+          select: {
+            id: true,
+            tunnelId: true,
+            tunnelName: true,
+            description: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(schedule, { status: 201 });
   } catch (error) {
     console.error('Error creating schedule:', error);
-    return NextResponse.json({ error: 'Failed to create schedule' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to create schedule' },
+      { status: 500 }
+    );
   }
 }
-

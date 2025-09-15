@@ -129,6 +129,7 @@ model Tunnel {
   updatedAt       DateTime @updatedAt
   customerId      String
   customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  schedules       Schedule[]
 }
 
 model CustomerInventory {
@@ -151,14 +152,16 @@ model Schedule {
   id          String   @id @default(cuid())
   customerId  String
   itemId      String
+  tunnelId    String?  
   scheduledDate DateTime
   scheduledTime String
   quantity    Int      @default(1)
   notes       String?
-  status      String   @default("pending") // pending, completed, cancelled
+  status      String   @default("pending") 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   item        Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  tunnel      Tunnel?  @relation(fields: [tunnelId], references: [id], onDelete: Cascade)
 }

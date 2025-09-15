@@ -6,7 +6,7 @@ import LEDController from '@/components/LEDController';
 import ServoController from '@/components/ServoController';
 import NeoPixelController from '@/components/NeoPixelController';
 import SensorDisplay from '@/components/SensorDisplay';
-
+ 
 export default function ControllerPage() {
   useEffect(() => {
     // Set page title
