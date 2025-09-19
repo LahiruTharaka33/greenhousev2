@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
@@ -40,6 +40,38 @@ interface ScheduleItem {
   notes?: string;
 }
 
+interface SavedSchedule {
+  id: string;
+  customerId: string;
+  itemId: string;
+  tunnelId?: string;
+  scheduledDate: string;
+  scheduledTime: string;
+  quantity: number;
+  notes?: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  customer: {
+    id: string;
+    customerId: string;
+    customerName: string;
+    company?: string;
+  };
+  item: {
+    id: string;
+    itemId: string;
+    itemName: string;
+    itemCategory: string;
+  };
+  tunnel?: {
+    id: string;
+    tunnelId: string;
+    tunnelName: string;
+    description?: string;
+  };
+}
+
 export default function SchedulesPage() {
   const { data: session, status } = useSession();
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -52,14 +84,70 @@ export default function SchedulesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Saved schedules state
+  const [savedSchedules, setSavedSchedules] = useState<SavedSchedule[]>([]);
+  const [loadingSavedSchedules, setLoadingSavedSchedules] = useState(false);
+  const [activeTab, setActiveTab] = useState<'create' | 'view'>('create');
+  const [filterTunnels, setFilterTunnels] = useState<Tunnel[]>([]);
+
+  // Filter state
+  const [filters, setFilters] = useState({
+    customer: '',
+    tunnel: '',
+    fertilizer: '',
+    status: '',
+    dateFrom: '',
+    dateTo: ''
+  });
+
   // Form state
   const [formData, setFormData] = useState({
     date: '',
+    endDate: '', // Add end date for range selection
     fertilizerId: '',
     quantity: 1,
     time: '',
     notes: ''
   });
+
+  // Fetch saved schedules with optional filtering
+  const fetchSavedSchedules = useCallback(async (useFilters = false) => {
+    setLoadingSavedSchedules(true);
+    try {
+      let url = '/api/schedules';
+      
+      if (useFilters) {
+        const params = new URLSearchParams();
+        if (filters.customer) params.append('customerId', filters.customer);
+        if (filters.tunnel) params.append('tunnelId', filters.tunnel);
+        if (filters.fertilizer) params.append('itemId', filters.fertilizer);
+        if (filters.status) params.append('status', filters.status);
+        if (filters.dateFrom) params.append('dateFrom', filters.dateFrom);
+        if (filters.dateTo) params.append('dateTo', filters.dateTo);
+        
+        if (params.toString()) {
+          url += `?${params.toString()}`;
+        }
+      }
+      
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        setSavedSchedules(data);
+      } else {
+        console.error('Failed to fetch saved schedules');
+      }
+    } catch (error) {
+      console.error('Error fetching saved schedules:', error);
+    } finally {
+      setLoadingSavedSchedules(false);
+    }
+  }, [filters]);
+
+  // Apply filters (now using server-side filtering)
+  const applyFilters = useCallback(() => {
+    fetchSavedSchedules(true);
+  }, [fetchSavedSchedules]);
 
   // Fetch initial data
   useEffect(() => {
@@ -94,8 +182,9 @@ export default function SchedulesPage() {
 
     if (session && session.user.role === 'admin') {
       fetchData();
+      fetchSavedSchedules(false);
     }
-  }, [session]);
+  }, [session, fetchSavedSchedules]);
 
   // Fetch tunnels when customer is selected
   useEffect(() => {
@@ -120,12 +209,40 @@ export default function SchedulesPage() {
     fetchTunnels();
   }, [selectedCustomerId]);
 
+  // Load schedules when switching to view tab
+  useEffect(() => {
+    if (activeTab === 'view' && savedSchedules.length === 0) {
+      fetchSavedSchedules(false);
+    }
+  }, [activeTab, fetchSavedSchedules, savedSchedules.length]);
+
+  // Fetch tunnels for filter when customer filter changes
+  const selectedCustomerFilter = filters.customer;
+  
+  useEffect(() => {
+    const fetchFilterTunnels = async () => {
+      if (selectedCustomerFilter) {
+        const tunnelsData = await getFilterTunnels(selectedCustomerFilter);
+        setFilterTunnels(tunnelsData);
+      } else {
+        setFilterTunnels([]);
+      }
+    };
+
+    fetchFilterTunnels();
+  }, [selectedCustomerFilter]);
+
+  // Early returns after all hooks
   if (status === 'loading') {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   if (!session || session.user.role !== 'admin') {
     redirect('/login');
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   const handleCustomerChange = (customerId: string) => {
@@ -149,6 +266,16 @@ export default function SchedulesPage() {
       return;
     }
 
+    // Validate date range if end date is provided
+    if (formData.endDate && formData.date) {
+      const startDate = new Date(formData.date);
+      const endDate = new Date(formData.endDate);
+      if (endDate < startDate) {
+        alert('End date cannot be earlier than start date');
+        return;
+      }
+    }
+
     const customer = customers.find(c => c.id === selectedCustomerId);
     const tunnel = tunnels.find(t => t.id === selectedTunnelId);
     const item = items.find(i => i.id === formData.fertilizerId);
@@ -158,23 +285,52 @@ export default function SchedulesPage() {
       return;
     }
 
-    const newScheduleItem: ScheduleItem = {
-      id: Date.now().toString(),
-      customerId: selectedCustomerId,
-      customerName: customer.customerName,
-      tunnelId: selectedTunnelId,
-      tunnelName: tunnel.tunnelName,
-      itemId: formData.fertilizerId,
-      itemName: item.itemName,
-      scheduledDate: formData.date,
-      scheduledTime: formData.time,
-      quantity: formData.quantity,
-      notes: formData.notes
-    };
+    // Create schedule items for date range or single date
+    const newScheduleItems: ScheduleItem[] = [];
+    
+    if (formData.endDate && formData.date) {
+      // Create schedules for date range
+      const startDate = new Date(formData.date);
+      const endDate = new Date(formData.endDate);
+      
+      const currentDate = new Date(startDate);
+      while (currentDate <= endDate) {
+        newScheduleItems.push({
+          id: `${Date.now()}_${currentDate.toISOString().split('T')[0]}`,
+          customerId: selectedCustomerId,
+          customerName: customer.customerName,
+          tunnelId: selectedTunnelId,
+          tunnelName: tunnel.tunnelName,
+          itemId: formData.fertilizerId,
+          itemName: item.itemName,
+          scheduledDate: currentDate.toISOString().split('T')[0],
+          scheduledTime: formData.time,
+          quantity: formData.quantity,
+          notes: formData.notes
+        });
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    } else {
+      // Single date schedule
+      newScheduleItems.push({
+        id: Date.now().toString(),
+        customerId: selectedCustomerId,
+        customerName: customer.customerName,
+        tunnelId: selectedTunnelId,
+        tunnelName: tunnel.tunnelName,
+        itemId: formData.fertilizerId,
+        itemName: item.itemName,
+        scheduledDate: formData.date,
+        scheduledTime: formData.time,
+        quantity: formData.quantity,
+        notes: formData.notes
+      });
+    }
 
-    setScheduleItems([...scheduleItems, newScheduleItem]);
+    setScheduleItems([...scheduleItems, ...newScheduleItems]);
     setFormData({
       date: '',
+      endDate: '',
       fertilizerId: '',
       quantity: 1,
       time: '',
@@ -191,34 +347,43 @@ export default function SchedulesPage() {
 
     setSaving(true);
     try {
-      const promises = scheduleItems.map(item => 
-        fetch('/api/schedules', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            customerId: item.customerId,
-            itemId: item.itemId,
-            tunnelId: item.tunnelId,
-            scheduledDate: item.scheduledDate,
-            scheduledTime: item.scheduledTime,
-            quantity: item.quantity,
-            notes: item.notes
-          }),
-        })
-      );
+      // Prepare batch data
+      const batchData = scheduleItems.map(item => ({
+        customerId: item.customerId,
+        itemId: item.itemId,
+        tunnelId: item.tunnelId,
+        scheduledDate: item.scheduledDate,
+        scheduledTime: item.scheduledTime,
+        quantity: item.quantity,
+        notes: item.notes
+      }));
 
-      const responses = await Promise.all(promises);
-      const hasError = responses.some(response => !response.ok);
+      const response = await fetch('/api/schedules', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(batchData),
+      });
 
-      if (hasError) {
-        alert('Some schedules failed to save. Please try again.');
-      } else {
-        alert('All schedules saved successfully!');
+      const result = await response.json();
+
+      if (response.ok) {
+        if (response.status === 207) {
+          // Partial success
+          alert(`${result.message}\n\nSuccessfully created: ${result.success.length}\nFailed: ${result.errors.length}`);
+        } else {
+          // Full success
+          alert(`All ${batchData.length} schedules saved successfully!`);
+        }
         setScheduleItems([]);
         setSelectedCustomerId('');
         setSelectedTunnelId('');
+        // Refresh saved schedules to show the newly created ones
+        fetchSavedSchedules(false);
+      } else {
+        console.error('Error response:', result);
+        alert(result.error || 'Failed to save schedules');
       }
     } catch (error) {
       console.error('Error saving schedules:', error);
@@ -232,9 +397,54 @@ export default function SchedulesPage() {
     setScheduleItems(scheduleItems.filter(item => item.id !== id));
   };
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
+  // Get unique tunnels for the selected customer in filters
+  const getFilterTunnels = async (customerId: string) => {
+    if (!customerId) return [];
+    try {
+      const response = await fetch(`/api/tunnels/by-customer/${customerId}`);
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (error) {
+      console.error('Error fetching filter tunnels:', error);
+    }
+    return [];
+  };
+
+
+  const resetFilters = () => {
+    setFilters({
+      customer: '',
+      tunnel: '',
+      fertilizer: '',
+      status: '',
+      dateFrom: '',
+      dateTo: ''
+    });
+    // Fetch all schedules without filters
+    fetchSavedSchedules(false);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'completed':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
 
   return (
     <Layout>
@@ -248,8 +458,37 @@ export default function SchedulesPage() {
           </p>
         </div>
 
-        {/* Customer and Tunnel Selection */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <nav className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('create')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'create'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              📝 Create Schedules
+            </button>
+            <button
+              onClick={() => setActiveTab('view')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'view'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              📋 View & Manage Schedules ({savedSchedules.length})
+            </button>
+          </nav>
+        </div>
+
+        {/* Create Schedules Tab */}
+        {activeTab === 'create' && (
+          <>
+            {/* Customer and Tunnel Selection */}
+            <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
               <label className="block text-sm font-medium text-black mb-2">
@@ -305,10 +544,10 @@ export default function SchedulesPage() {
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
             <h2 className="text-xl font-semibold text-black mb-4">New Schedule</h2>
             <form onSubmit={handleFormSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-black mb-1">
-                    📅 Date *
+                    📅 Start Date *
                   </label>
                   <input
                     type="date"
@@ -316,6 +555,19 @@ export default function SchedulesPage() {
                     onChange={(e) => setFormData({...formData, date: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">
+                    📅 End Date <span className="text-gray-500">(Optional)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    min={formData.date || undefined}
                   />
                 </div>
 
@@ -376,6 +628,22 @@ export default function SchedulesPage() {
                   rows={2}
                 />
               </div>
+
+              {/* Date Range Preview */}
+              {formData.date && formData.endDate && (
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                  <div className="text-sm text-blue-800">
+                    <strong>📊 Schedule Preview:</strong>
+                    {(() => {
+                      const startDate = new Date(formData.date);
+                      const endDate = new Date(formData.endDate);
+                      const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                      return ` ${diffDays} schedule(s) will be created from ${formData.date} to ${formData.endDate} at ${formData.time || '[time not set]'}`;
+                    })()}
+                  </div>
+                </div>
+              )}
 
               <div className="flex justify-end space-x-3">
                 <button
@@ -475,6 +743,232 @@ export default function SchedulesPage() {
           <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
             <p className="text-black">Select a customer and tunnel, then click "Create Schedule" to get started.</p>
           </div>
+        )}
+          </>
+        )}
+
+        {/* View & Manage Schedules Tab */}
+        {activeTab === 'view' && (
+          <>
+            {/* Filters */}
+            <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+              <h2 className="text-xl font-semibold text-black mb-4">🔍 Filter Schedules</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {/* Customer Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">Customer</label>
+                  <select
+                    value={filters.customer}
+                    onChange={(e) => setFilters({...filters, customer: e.target.value, tunnel: ''})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                  >
+                    <option value="">All Customers</option>
+                    {customers.map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.customerName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Tunnel Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">Tunnel</label>
+                  <select
+                    value={filters.tunnel}
+                    onChange={(e) => setFilters({...filters, tunnel: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    disabled={!filters.customer}
+                  >
+                    <option value="">All Tunnels</option>
+                    {filterTunnels.map((tunnel) => (
+                      <option key={tunnel.id} value={tunnel.id}>
+                        {tunnel.tunnelName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Fertilizer Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">Fertilizer</label>
+                  <select
+                    value={filters.fertilizer}
+                    onChange={(e) => setFilters({...filters, fertilizer: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                  >
+                    <option value="">All Fertilizers</option>
+                    {items.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.itemName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">Status</label>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => setFilters({...filters, status: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+
+                {/* Date From */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">Date From</label>
+                  <input
+                    type="date"
+                    value={filters.dateFrom}
+                    onChange={(e) => setFilters({...filters, dateFrom: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                  />
+                </div>
+
+                {/* Date To */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-1">Date To</label>
+                  <input
+                    type="date"
+                    value={filters.dateTo}
+                    onChange={(e) => setFilters({...filters, dateTo: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    min={filters.dateFrom || undefined}
+                  />
+                </div>
+              </div>
+
+              {/* Filter Actions */}
+              <div className="flex justify-between items-center mt-4">
+                <div className="text-sm text-gray-600">
+                  Showing {savedSchedules.length} schedule{savedSchedules.length !== 1 ? 's' : ''}
+                  {(filters.customer || filters.tunnel || filters.fertilizer || filters.status || filters.dateFrom || filters.dateTo) && ' (filtered)'}
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={resetFilters}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    🔄 Reset Filters
+                  </button>
+                  <button
+                    onClick={applyFilters}
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
+                    disabled={loadingSavedSchedules}
+                  >
+                    {loadingSavedSchedules ? '⏳ Applying...' : '🔍 Apply Filters'}
+                  </button>
+                  <button
+                    onClick={() => fetchSavedSchedules(false)}
+                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                    disabled={loadingSavedSchedules}
+                  >
+                    {loadingSavedSchedules ? '⏳ Refreshing...' : '🔄 Refresh All'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Saved Schedules List */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <h2 className="text-xl font-semibold text-black mb-4">📋 Saved Schedules</h2>
+              
+              {loadingSavedSchedules ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">Loading schedules...</p>
+                </div>
+              ) : savedSchedules.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-600">No schedules found matching the current filters.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Customer
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Tunnel
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Fertilizer
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date & Time
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Quantity
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {savedSchedules.map((schedule) => (
+                        <tr key={schedule.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                            <div>
+                              <div className="font-medium">{schedule.customer.customerName}</div>
+                              {schedule.customer.company && (
+                                <div className="text-gray-500">{schedule.customer.company}</div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                            {schedule.tunnel ? schedule.tunnel.tunnelName : 'No Tunnel'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                            <div>
+                              <div className="font-medium">{schedule.item.itemName}</div>
+                              <div className="text-gray-500">{schedule.item.itemCategory}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                            <div>
+                              <div>{formatDate(schedule.scheduledDate)}</div>
+                              <div className="text-gray-500">at {schedule.scheduledTime}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                            {schedule.quantity}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(schedule.status)}`}>
+                              {schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <button className="text-blue-600 hover:text-blue-900">
+                                Edit
+                              </button>
+                              <button className="text-red-600 hover:text-red-900">
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </main>
     </Layout>

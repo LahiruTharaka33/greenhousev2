@@ -20,6 +20,7 @@ interface ScheduleItem {
   id: string;
   itemId: string;
   scheduledDate: string;
+  scheduledEndDate?: string; // Optional end date for date range
   scheduledTime: string;
   quantity: number;
   notes: string;
@@ -41,6 +42,7 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
       id: '',
       itemId: '',
       scheduledDate: '',
+      scheduledEndDate: '',
       scheduledTime: '',
       quantity: 1,
       notes: ''
@@ -97,6 +99,7 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
         id: '',
         itemId: '',
         scheduledDate: '',
+        scheduledEndDate: '',
         scheduledTime: '',
         quantity: 1,
         notes: ''
@@ -133,9 +136,49 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
       return;
     }
 
+    // Validate date ranges
+    for (const item of validItems) {
+      if (item.scheduledEndDate && item.scheduledDate) {
+        const startDate = new Date(item.scheduledDate);
+        const endDate = new Date(item.scheduledEndDate);
+        if (endDate < startDate) {
+          alert('End date cannot be earlier than start date');
+          return;
+        }
+      }
+    }
+
+    // Expand date ranges into individual schedule items
+    const expandedItems: ScheduleItem[] = [];
+    
+    validItems.forEach(item => {
+      if (item.scheduledEndDate && item.scheduledDate) {
+        // Create schedule for date range
+        const startDate = new Date(item.scheduledDate);
+        const endDate = new Date(item.scheduledEndDate);
+        
+        const currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+          expandedItems.push({
+            ...item,
+            id: `${item.id}_${currentDate.toISOString().split('T')[0]}`,
+            scheduledDate: currentDate.toISOString().split('T')[0],
+            scheduledEndDate: undefined // Remove end date for individual items
+          });
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      } else {
+        // Single date schedule
+        expandedItems.push({
+          ...item,
+          scheduledEndDate: undefined // Remove end date for single items
+        });
+      }
+    });
+
     onSubmit({
       customerId: selectedCustomerId,
-      items: validItems
+      items: expandedItems
     });
   };
 
@@ -201,9 +244,9 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {/* Item Selection */}
-                  <div>
+                  <div className="lg:col-span-3">
                     <label className="block text-sm text-black mb-1">Item *</label>
                     <select
                       value={item.itemId}
@@ -220,27 +263,29 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
                     </select>
                   </div>
 
-                  {/* Quantity */}
+                  {/* Start Date */}
                   <div>
-                    <label className="block text-sm text-black mb-1">Quantity</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => updateScheduleItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
-                    />
-                  </div>
-
-                  {/* Date */}
-                  <div>
-                    <label className="block text-sm text-black mb-1">Date *</label>
+                    <label className="block text-sm text-black mb-1">Start Date *</label>
                     <input
                       type="date"
                       value={item.scheduledDate}
                       onChange={(e) => updateScheduleItem(index, 'scheduledDate', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                       required
+                    />
+                  </div>
+
+                  {/* End Date (Optional) */}
+                  <div>
+                    <label className="block text-sm text-black mb-1">
+                      End Date <span className="text-gray-500">(Optional - for date range)</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={item.scheduledEndDate || ''}
+                      onChange={(e) => updateScheduleItem(index, 'scheduledEndDate', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                      min={item.scheduledDate || undefined}
                     />
                   </div>
 
@@ -255,6 +300,37 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
                       required
                     />
                   </div>
+                </div>
+                
+                {/* Second row for Quantity */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                  {/* Quantity */}
+                  <div>
+                    <label className="block text-sm text-black mb-1">Quantity</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateScheduleItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    />
+                  </div>
+                  
+                  {/* Date Range Preview */}
+                  {item.scheduledDate && item.scheduledEndDate && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm text-black mb-1">Date Range Preview</label>
+                      <div className="px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+                        {(() => {
+                          const startDate = new Date(item.scheduledDate);
+                          const endDate = new Date(item.scheduledEndDate);
+                          const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+                          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                          return `${diffDays} schedule(s) will be created from ${item.scheduledDate} to ${item.scheduledEndDate}`;
+                        })()}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Notes */}
