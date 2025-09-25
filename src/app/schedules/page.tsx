@@ -358,11 +358,15 @@ export default function SchedulesPage() {
         notes: item.notes
       }));
 
+      console.log('Making API call to:', window.location.origin + '/api/schedules');
+      console.log('Current window location:', window.location.href);
+      
       const response = await fetch('/api/schedules', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(batchData),
       });
 

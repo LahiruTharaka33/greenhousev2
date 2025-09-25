@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import UserLayout from '@/components/UserLayout';
+import { formatQuantityWithUnit } from '@/utils/units';
 
 interface Schedule {
   id: string;
@@ -27,6 +28,7 @@ interface Schedule {
     itemId: string;
     itemName: string;
     itemCategory: string;
+    unit: string;
   };
 }
 
@@ -210,7 +212,7 @@ export default function UserSchedules() {
                           </div>
                           <div>
                             <span className="font-medium text-gray-700">Quantity:</span>
-                            <span className="ml-1">{schedule.quantity}</span>
+                            <span className="ml-1">{formatQuantityWithUnit(schedule.quantity, schedule.item.unit)}</span>
                           </div>
                           <div>
                             <span className="font-medium text-gray-700">Scheduled:</span>

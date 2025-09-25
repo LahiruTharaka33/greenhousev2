@@ -34,6 +34,7 @@ export async function GET(
             itemId: true,
             itemName: true,
             itemCategory: true,
+            unit: true,
           }
         }
       }
@@ -101,6 +102,7 @@ export async function PUT(
             itemId: true,
             itemName: true,
             itemCategory: true,
+            unit: true,
           }
         }
       }

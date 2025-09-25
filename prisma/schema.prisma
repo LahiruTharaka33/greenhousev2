@@ -96,6 +96,7 @@ model Item {
   itemId              String              @unique
   itemName            String
   itemCategory        String
+  unit                String              @default("pieces")
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   customerInventories CustomerInventory[]

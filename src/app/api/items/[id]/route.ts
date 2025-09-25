@@ -8,10 +8,10 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { itemId, itemName, itemCategory } = body;
+    const { itemId, itemName, itemCategory, unit } = body;
 
     // Validate required fields
-    if (!itemId || !itemName || !itemCategory) {
+    if (!itemId || !itemName || !itemCategory || !unit) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -39,6 +39,7 @@ export async function PUT(
         itemId,
         itemName,
         itemCategory,
+        unit,
       },
     });
 

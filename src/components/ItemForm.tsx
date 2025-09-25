@@ -7,6 +7,7 @@ interface Item {
   itemId: string;
   itemName: string;
   itemCategory: string;
+  unit: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -23,6 +24,7 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading = false }
     itemId: '',
     itemName: '',
     itemCategory: '',
+    unit: 'pieces',
   });
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading = false }
         itemId: item.itemId,
         itemName: item.itemName,
         itemCategory: item.itemCategory,
+        unit: item.unit || 'pieces',
       });
     }
   }, [item]);
@@ -118,6 +121,28 @@ export default function ItemForm({ item, onSubmit, onCancel, isLoading = false }
             <option value="Containers">Containers</option>
             <option value="Soil">Soil</option>
             <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-1">
+            Unit of Measurement *
+          </label>
+          <select
+            id="unit"
+            name="unit"
+            value={formData.unit}
+            onChange={handleChange}
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+          >
+            <option value="pieces">Pieces (Countable Units)</option>
+            <option value="liters">Liters (L)</option>
+            <option value="milliliters">Milliliters (mL)</option>
+            <option value="kilograms">Kilograms (kg)</option>
+            <option value="grams">Grams (g)</option>
+            <option value="meters">Meters (m)</option>
+            <option value="centimeters">Centimeters (cm)</option>
           </select>
         </div>
 

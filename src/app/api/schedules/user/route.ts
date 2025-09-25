@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
             itemId: true,
             itemName: true,
             itemCategory: true,
+            unit: true,
           }
         },
       },

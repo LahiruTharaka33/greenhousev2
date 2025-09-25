@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import InventoryForm from '@/components/InventoryForm';
 import MoveToCustomerInventoryForm from '@/components/MoveToCustomerInventoryForm';
+import { formatQuantityWithUnit } from '@/utils/units';
 
 interface InventoryItem {
   id: string;
@@ -15,6 +16,15 @@ interface InventoryItem {
   storedDate: string;
   createdAt: string;
   updatedAt: string;
+  item: {
+    id: string;
+    itemId: string;
+    itemName: string;
+    itemCategory: string;
+    unit: string;
+    createdAt: string;
+    updatedAt: string;
+  };
 }
 
 export default function InventoryPage() {
@@ -335,7 +345,7 @@ export default function InventoryPage() {
                           
                           <div>
                             <span className="font-medium text-gray-700">Quantity:</span>
-                            <span className="ml-1 text-gray-600">{item.quantity}</span>
+                            <span className="ml-1 px-2 py-1 bg-emerald-100 text-emerald-800 rounded-md font-semibold text-lg">{formatQuantityWithUnit(item.quantity, item.item.unit)}</span>
                           </div>
                           
                           <div>

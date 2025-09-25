@@ -9,6 +9,7 @@ interface Item {
   itemId: string;
   itemName: string;
   itemCategory: string;
+  unit: string;
   createdAt: string;
   updatedAt: string;
 }

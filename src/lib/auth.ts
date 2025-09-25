@@ -20,6 +20,9 @@ async function getUser(email: string) {
 }
 
 export const authOptions: NextAuthOptions = {
+  session: {
+    strategy: 'jwt',
+  },
   pages: {
     signIn: '/login',
   },

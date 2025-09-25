@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { formatQuantityWithUnit } from '@/utils/units';
 
 interface Schedule {
   id: string;
@@ -24,6 +25,7 @@ interface Schedule {
     itemId: string;
     itemName: string;
     itemCategory: string;
+    unit: string;
   };
 }
 
@@ -152,7 +154,7 @@ export default function ScheduleList({ schedules, onEdit, onDelete, onStatusChan
                     <span className="text-black ml-1">({schedule.item.itemCategory})</span>
                   </div>
                   <div>
-                    <span className="font-medium text-black">Quantity:</span> {schedule.quantity}
+                    <span className="font-medium text-black">Quantity:</span> {formatQuantityWithUnit(schedule.quantity, schedule.item.unit)}
                   </div>
                   <div>
                     <span className="font-medium text-black">Scheduled:</span> {formatDate(schedule.scheduledDate)} at {formatTime(schedule.scheduledTime)}
