@@ -26,7 +26,6 @@ interface Tunnel {
   customerId: string;
   cultivationType?: string;
   location?: string;
-  clientId?: string;
   createdAt: string;
   updatedAt: string;
   customer: Customer;
@@ -58,7 +57,6 @@ export default function TunnelForm({ tunnel, onSubmit, onCancel, isLoading = fal
     customerId: '',
     cultivationType: '',
     location: '',
-    clientId: '',
   });
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loadingCustomers, setLoadingCustomers] = useState(true);
@@ -91,7 +89,6 @@ export default function TunnelForm({ tunnel, onSubmit, onCancel, isLoading = fal
         customerId: tunnel.customerId,
         cultivationType: tunnel.cultivationType || '',
         location: tunnel.location || '',
-        clientId: tunnel.clientId || '',
       });
     }
   }, [tunnel]);
@@ -185,24 +182,6 @@ export default function TunnelForm({ tunnel, onSubmit, onCancel, isLoading = fal
               No customers available. Please add customers first in the Customers page.
             </p>
           )}
-        </div>
-
-        <div>
-          <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">
-            Client ID
-          </label>
-          <input
-            type="text"
-            id="clientId"
-            name="clientId"
-            value={formData.clientId}
-            onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            placeholder="Enter client ID for device communication"
-          />
-          <p className="text-sm text-gray-500 mt-1">
-            Optional: Used for MQTT device communication. Can be assigned later by admin.
-          </p>
         </div>
 
         <div>

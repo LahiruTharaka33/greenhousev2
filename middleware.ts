@@ -6,6 +6,8 @@ export default withAuth(
     const token = req.nextauth.token;
     const { pathname } = req.nextUrl;
 
+    console.log('Middleware - Path:', pathname, 'Token:', !!token, 'Role:', token?.role);
+
     // Allow access to login page
     if (pathname.startsWith('/login')) {
       return NextResponse.next();
@@ -13,10 +15,12 @@ export default withAuth(
 
     // If user is not logged in, redirect to login
     if (!token) {
+      console.log('No token, redirecting to login');
       return NextResponse.redirect(new URL('/login', req.url));
     }
 
     const userRole = token.role as string;
+    console.log('User role:', userRole);
 
     // Admin routes
     const isAdminRoute = pathname === '/' || 
@@ -25,7 +29,8 @@ export default withAuth(
                         pathname.startsWith('/items') ||
                         pathname.startsWith('/schedules') ||
                         pathname.startsWith('/tasks') ||
-                        pathname.startsWith('/tunnels');
+                        pathname.startsWith('/tunnels') ||
+                        pathname.startsWith('/configuration');
 
     // User routes
     const isUserRoute = pathname.startsWith('/user');

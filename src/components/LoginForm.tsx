@@ -21,32 +21,17 @@ export default function LoginForm() {
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false,
+        callbackUrl: '/', // Let middleware handle the proper redirect
       });
 
+      // If signIn doesn't redirect (which it should), there was an error
       if (result?.error) {
         setError('Invalid email or password');
-      } else {
-        // Wait a moment for session to be established, then check role
-        setTimeout(async () => {
-          try {
-            const response = await fetch('/api/auth/session');
-            const session = await response.json();
-            
-            if (session?.user?.role === 'admin') {
-              window.location.href = '/';
-            } else {
-              window.location.href = '/user/dashboard';
-            }
-          } catch (error) {
-            // Fallback redirect
-            window.location.href = '/';
-          }
-        }, 200);
+        setIsLoading(false);
       }
+      // If successful, signIn will redirect automatically
     } catch (error) {
       setError('An error occurred. Please try again.');
-    } finally {
       setIsLoading(false);
     }
   };

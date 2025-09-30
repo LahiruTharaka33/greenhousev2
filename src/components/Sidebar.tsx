@@ -44,6 +44,12 @@ const navigation: NavItem[] = [
     description: 'Greenhouse tunnel tracking'
   },
   {
+    name: 'Configuration',
+    href: '/configuration',
+    icon: '⚙️',
+    description: 'Client ID mapping and settings'
+  },
+  {
     name: 'Items',
     href: '/items',
     icon: '🏷️',
