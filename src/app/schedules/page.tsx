@@ -490,56 +490,69 @@ export default function SchedulesPage() {
         onClose={() => setMqttNotification({ show: false, result: null })}
       />
 
-      <main className="p-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-black mb-2">
-            🌱 Fertilizer Scheduler
-          </h1>
-          <p className="text-lg text-black">
-            Schedule fertilizer applications for customer tunnels
-          </p>
+      <main className="min-h-screen bg-gray-50 text-gray-900">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-4 py-6 shadow-sm">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                  🌱 Fertilizer Scheduler
+                </h1>
+                <p className="text-gray-600">
+                  Schedule fertilizer applications for customer tunnels
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="mb-6">
-          <nav className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('create')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'create'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              📝 Create Schedules
-            </button>
-            <button
-              onClick={() => setActiveTab('view')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'view'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              📋 View & Manage Schedules ({savedSchedules.length})
-            </button>
-          </nav>
+        <div className="px-4 py-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <button
+                  onClick={() => setActiveTab('create')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'create'
+                      ? 'border-emerald-500 text-emerald-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Create Schedules
+                </button>
+                <button
+                  onClick={() => setActiveTab('view')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'view'
+                      ? 'border-emerald-500 text-emerald-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  View & Manage Schedules ({savedSchedules.length})
+                </button>
+              </nav>
+            </div>
+          </div>
         </div>
 
         {/* Create Schedules Tab */}
         {activeTab === 'create' && (
           <>
             {/* Customer and Tunnel Selection */}
-            <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+            <div className="px-4 py-6">
+              <div className="max-w-7xl mx-auto">
+                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
-              <label className="block text-sm font-medium text-black mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Customer *
               </label>
               <select
                 value={selectedCustomerId}
                 onChange={(e) => handleCustomerChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
               >
                 <option value="">Select Customer</option>
                 {customers.map((customer) => (
@@ -551,13 +564,13 @@ export default function SchedulesPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-black mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Tunnel *
               </label>
               <select
                 value={selectedTunnelId}
                 onChange={(e) => setSelectedTunnelId(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                 disabled={!selectedCustomerId}
               >
                 <option value="">Select Tunnel</option>
@@ -573,9 +586,9 @@ export default function SchedulesPage() {
               <button
                 onClick={handleCreateClick}
                 disabled={!selectedCustomerId || !selectedTunnelId}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                📅 Create Schedule
+                Create Schedule
               </button>
             </div>
           </div>
@@ -584,43 +597,43 @@ export default function SchedulesPage() {
         {/* Schedule Form */}
         {showForm && (
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <h2 className="text-xl font-semibold text-black mb-4">New Schedule</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">New Schedule</h2>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">
-                    📅 Start Date *
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Start Date *
                   </label>
                   <input
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({...formData, date: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     📅 End Date <span className="text-gray-500">(Optional)</span>
                   </label>
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({...formData, endDate: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                     min={formData.date || undefined}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     🧪 Fertilizer Type *
                   </label>
                   <select
                     value={formData.fertilizerId}
                     onChange={(e) => setFormData({...formData, fertilizerId: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                     required
                   >
                     <option value="">Select Fertilizer</option>
@@ -633,7 +646,7 @@ export default function SchedulesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     📦 Quantity
                   </label>
                   <input
@@ -641,32 +654,32 @@ export default function SchedulesPage() {
                     min="1"
                     value={formData.quantity}
                     onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     ⏰ Time *
                   </label>
                   <input
                     type="time"
                     value={formData.time}
                     onChange={(e) => setFormData({...formData, time: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-black mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   📝 Notes
                 </label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   rows={2}
                 />
               </div>
@@ -691,13 +704,13 @@ export default function SchedulesPage() {
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2 text-sm font-medium text-black bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700"
                 >
                   💾 Save
                 </button>
@@ -709,7 +722,7 @@ export default function SchedulesPage() {
         {/* Schedule List */}
         {scheduleItems.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <h2 className="text-xl font-semibold text-black mb-4">Scheduled Items</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Scheduled Items</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -737,19 +750,19 @@ export default function SchedulesPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {scheduleItems.map((item) => (
                     <tr key={item.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.customerName}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.tunnelName}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.scheduledDate} at {item.scheduledTime}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.itemName}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.quantity}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -783,9 +796,11 @@ export default function SchedulesPage() {
 
         {scheduleItems.length === 0 && !showForm && (
           <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
-            <p className="text-black">Select a customer and tunnel, then click "Create Schedule" to get started.</p>
+            <p className="text-gray-900">Select a customer and tunnel, then click "Create Schedule" to get started.</p>
           </div>
         )}
+              </div>
+            </div>
           </>
         )}
 
@@ -793,16 +808,18 @@ export default function SchedulesPage() {
         {activeTab === 'view' && (
           <>
             {/* Filters */}
-            <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-              <h2 className="text-xl font-semibold text-black mb-4">🔍 Filter Schedules</h2>
+            <div className="px-4 py-6">
+              <div className="max-w-7xl mx-auto">
+                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">🔍 Filter Schedules</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {/* Customer Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">Customer</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
                   <select
                     value={filters.customer}
                     onChange={(e) => setFilters({...filters, customer: e.target.value, tunnel: ''})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                   >
                     <option value="">All Customers</option>
                     {customers.map((customer) => (
@@ -815,11 +832,11 @@ export default function SchedulesPage() {
 
                 {/* Tunnel Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">Tunnel</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tunnel</label>
                   <select
                     value={filters.tunnel}
                     onChange={(e) => setFilters({...filters, tunnel: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                     disabled={!filters.customer}
                   >
                     <option value="">All Tunnels</option>
@@ -833,11 +850,11 @@ export default function SchedulesPage() {
 
                 {/* Fertilizer Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">Fertilizer</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fertilizer</label>
                   <select
                     value={filters.fertilizer}
                     onChange={(e) => setFilters({...filters, fertilizer: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                   >
                     <option value="">All Fertilizers</option>
                     {items.map((item) => (
@@ -850,11 +867,11 @@ export default function SchedulesPage() {
 
                 {/* Status Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">Status</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={filters.status}
                     onChange={(e) => setFilters({...filters, status: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                   >
                     <option value="">All Statuses</option>
                     <option value="pending">Pending</option>
@@ -865,23 +882,23 @@ export default function SchedulesPage() {
 
                 {/* Date From */}
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">Date From</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
                   <input
                     type="date"
                     value={filters.dateFrom}
                     onChange={(e) => setFilters({...filters, dateFrom: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                   />
                 </div>
 
                 {/* Date To */}
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">Date To</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
                   <input
                     type="date"
                     value={filters.dateTo}
                     onChange={(e) => setFilters({...filters, dateTo: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                     min={filters.dateFrom || undefined}
                   />
                 </div>
@@ -909,7 +926,7 @@ export default function SchedulesPage() {
                   </button>
                   <button
                     onClick={() => fetchSavedSchedules(false)}
-                    className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+                    className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700"
                     disabled={loadingSavedSchedules}
                   >
                     {loadingSavedSchedules ? '⏳ Refreshing...' : '🔄 Refresh All'}
@@ -920,7 +937,7 @@ export default function SchedulesPage() {
 
             {/* Saved Schedules List */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-black mb-4">📋 Saved Schedules</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">📋 Saved Schedules</h2>
               
               {loadingSavedSchedules ? (
                 <div className="text-center py-8">
@@ -962,7 +979,7 @@ export default function SchedulesPage() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {savedSchedules.map((schedule) => (
                         <tr key={schedule.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <div>
                               <div className="font-medium">{schedule.customer.customerName}</div>
                               {schedule.customer.company && (
@@ -970,22 +987,22 @@ export default function SchedulesPage() {
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {schedule.tunnel ? schedule.tunnel.tunnelName : 'No Tunnel'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <div>
                               <div className="font-medium">{schedule.item.itemName}</div>
                               <div className="text-gray-500">{schedule.item.itemCategory}</div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             <div>
                               <div>{formatDate(schedule.scheduledDate)}</div>
                               <div className="text-gray-500">at {schedule.scheduledTime}</div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {schedule.quantity}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
@@ -1009,6 +1026,8 @@ export default function SchedulesPage() {
                   </table>
                 </div>
               )}
+            </div>
+              </div>
             </div>
           </>
         )}

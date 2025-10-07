@@ -28,7 +28,6 @@ interface Tunnel {
   customerId: string;
   cultivationType?: string;
   location?: string;
-  clientId?: string;
   createdAt: string;
   updatedAt: string;
   customer: Customer;
@@ -319,18 +318,6 @@ export default function TunnelsPage() {
                             <span className="ml-1 text-gray-600">{tunnel.customer.customerName}</span>
                           </div>
                           
-                          <div>
-                            <span className="font-medium text-gray-700">Client ID:</span>
-                            <span className="ml-1 text-gray-600">
-                              {tunnel.clientId ? (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                  {tunnel.clientId}
-                                </span>
-                              ) : (
-                                <span className="text-gray-400">Not assigned</span>
-                              )}
-                            </span>
-                          </div>
                           
                           <div>
                             <span className="font-medium text-gray-700">Cultivation:</span>

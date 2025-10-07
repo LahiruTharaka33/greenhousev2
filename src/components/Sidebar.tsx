@@ -44,6 +44,12 @@ const navigation: NavItem[] = [
     description: 'Greenhouse tunnel tracking'
   },
   {
+    name: 'Configuration',
+    href: '/configuration',
+    icon: '⚙️',
+    description: 'Client ID mapping and settings'
+  },
+  {
     name: 'Items',
     href: '/items',
     icon: '🏷️',
@@ -66,6 +72,12 @@ const navigation: NavItem[] = [
     href: '/tasks',
     icon: '✅',
     description: 'Task management'
+  },
+  {
+    name: 'Financial Records',
+    href: '/financial-records',
+    icon: '💰',
+    description: 'Track income and expenses'
   },
 ];
 
