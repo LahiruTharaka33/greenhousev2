@@ -73,6 +73,12 @@ const navigation: NavItem[] = [
     icon: '✅',
     description: 'Task management'
   },
+  {
+    name: 'Financial Records',
+    href: '/financial-records',
+    icon: '💰',
+    description: 'Track income and expenses'
+  },
 ];
 
 export default function Sidebar() {

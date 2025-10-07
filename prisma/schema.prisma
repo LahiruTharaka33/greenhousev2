@@ -182,3 +182,18 @@ model TankConfiguration {
 
   @@unique([tunnelId, tankName])
 }
+
+model FinancialRecord {
+  id              String   @id @default(cuid())
+  date            DateTime
+  rate            Float    // Price per kg
+  quantity        Float    // Quantity in kg
+  totalIncome     Float    // Calculated as rate * quantity
+  harvestingCost  Float    @default(0)
+  chemicalCost    Float    @default(0)
+  fertilizerCost  Float    @default(0)
+  rent            Float    @default(0)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

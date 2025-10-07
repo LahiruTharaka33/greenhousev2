@@ -187,26 +187,36 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6">
-      <h2 className="text-2xl font-semibold text-black mb-6">
-        {initialData ? 'Edit Schedule' : 'Create New Schedule'}
-      </h2>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-900">
+          {initialData ? 'Edit Schedule' : 'Create New Schedule'}
+        </h2>
+        <button
+          onClick={onCancel}
+          className="text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Customer Selection */}
         <div>
-          <label className="block text-sm font-medium text-black mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Customer *
           </label>
           <select
             value={selectedCustomerId}
             onChange={(e) => setSelectedCustomerId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
             required
           >
-            <option value="" className="text-black">Select a customer</option>
+            <option value="">Select a customer</option>
             {customers.map((customer) => (
-              <option key={customer.id} value={customer.id} className="text-black">
+              <option key={customer.id} value={customer.id}>
                 {customer.customerName} {customer.company ? `(${customer.company})` : ''}
               </option>
             ))}
@@ -216,13 +226,13 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
         {/* Schedule Items */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <label className="block text-sm font-medium text-black">
+            <label className="block text-sm font-medium text-gray-700">
               Schedule Items *
             </label>
             <button
               type="button"
               onClick={addScheduleItem}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors"
             >
               + Add Item
             </button>
@@ -232,7 +242,7 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
             {scheduleItems.map((item, index) => (
               <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-medium text-black">Item {index + 1}</h4>
+                  <h4 className="text-sm font-medium text-gray-900">Item {index + 1}</h4>
                   {scheduleItems.length > 1 && (
                     <button
                       type="button"
@@ -244,19 +254,19 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Item Selection */}
-                  <div className="lg:col-span-3">
-                    <label className="block text-sm text-black mb-1">Item *</label>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Item *</label>
                     <select
                       value={item.itemId}
                       onChange={(e) => updateScheduleItem(index, 'itemId', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                       required
                     >
-                      <option value="" className="text-black">Select an item</option>
+                      <option value="">Select an item</option>
                       {items.map((itm) => (
-                        <option key={itm.id} value={itm.id} className="text-black">
+                        <option key={itm.id} value={itm.id}>
                           {itm.itemName} ({itm.itemCategory})
                         </option>
                       ))}
@@ -265,62 +275,62 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
 
                   {/* Start Date */}
                   <div>
-                    <label className="block text-sm text-black mb-1">Start Date *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
                     <input
                       type="date"
                       value={item.scheduledDate}
                       onChange={(e) => updateScheduleItem(index, 'scheduledDate', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                       required
                     />
                   </div>
 
                   {/* End Date (Optional) */}
                   <div>
-                    <label className="block text-sm text-black mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       End Date <span className="text-gray-500">(Optional - for date range)</span>
                     </label>
                     <input
                       type="date"
                       value={item.scheduledEndDate || ''}
                       onChange={(e) => updateScheduleItem(index, 'scheduledEndDate', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                       min={item.scheduledDate || undefined}
                     />
                   </div>
 
                   {/* Time */}
                   <div>
-                    <label className="block text-sm text-black mb-1">Time *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Time *</label>
                     <input
                       type="time"
                       value={item.scheduledTime}
                       onChange={(e) => updateScheduleItem(index, 'scheduledTime', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                       required
                     />
                   </div>
                 </div>
                 
                 {/* Second row for Quantity */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                   {/* Quantity */}
                   <div>
-                    <label className="block text-sm text-black mb-1">Quantity</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
                     <input
                       type="number"
                       min="1"
                       value={item.quantity}
                       onChange={(e) => updateScheduleItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                     />
                   </div>
                   
                   {/* Date Range Preview */}
                   {item.scheduledDate && item.scheduledEndDate && (
                     <div className="md:col-span-2">
-                      <label className="block text-sm text-black mb-1">Date Range Preview</label>
-                      <div className="px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Date Range Preview</label>
+                      <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-md text-sm text-emerald-800">
                         {(() => {
                           const startDate = new Date(item.scheduledDate);
                           const endDate = new Date(item.scheduledEndDate);
@@ -335,11 +345,11 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
 
                 {/* Notes */}
                 <div className="mt-3">
-                  <label className="block text-sm text-black mb-1">Notes</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                   <textarea
                     value={item.notes}
                     onChange={(e) => updateScheduleItem(index, 'notes', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                     rows={2}
                   />
                 </div>
@@ -353,14 +363,14 @@ export default function ScheduleForm({ onSubmit, onCancel, loading = false, init
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-black bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Saving...' : (initialData ? 'Update Schedule' : 'Create Schedule')}
           </button>
