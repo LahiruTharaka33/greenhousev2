@@ -1,0 +1,28 @@
+{
+  "metadata": {
+    "timestamp": "2025-09-25T14:22:16.214Z",
+    "version": "1.0.0",
+    "description": "Greenhouse Management System Database Backup",
+    "statistics": {
+      "users": 0,
+      "customers": 0,
+      "tunnels": 0,
+      "schedules": 0,
+      "items": 0,
+      "tasks": 0
+    }
+  },
+  "data": {
+    "users": [],
+    "accounts": [],
+    "sessions": [],
+    "verificationTokens": [],
+    "customers": [],
+    "tunnels": [],
+    "schedules": [],
+    "items": [],
+    "mainInventory": [],
+    "customerInventories": [],
+    "tasks": []
+  }
+}

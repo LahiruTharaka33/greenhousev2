@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import schedulePublisher, { ScheduleData } from '@/lib/schedulePublisher';
 
 // GET /api/schedules - Fetch all schedules with optional filtering
 export async function GET(request: NextRequest) {
@@ -218,7 +219,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Return appropriate response based on results
+    // Return early if no schedules were created
     if (errors.length > 0 && createdSchedules.length === 0) {
       return NextResponse.json(
         { error: 'Failed to create any schedules', details: errors },
@@ -226,21 +227,69 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (errors.length > 0) {
-      return NextResponse.json(
-        { 
-          success: createdSchedules, 
-          errors: errors,
-          message: `Created ${createdSchedules.length} schedules, ${errors.length} failed`
-        },
-        { status: 207 } // Multi-status
-      );
+    // Publish schedules to MQTT (ESP32) if any were created successfully
+    let mqttPublishResult = null;
+    if (createdSchedules.length > 0) {
+      try {
+        console.log(`Publishing ${createdSchedules.length} schedules to ESP32...`);
+        
+        // Convert created schedules to ScheduleData format
+        const scheduleDataForMQTT: ScheduleData[] = createdSchedules.map(schedule => ({
+          id: schedule.id,
+          scheduledDate: schedule.scheduledDate,
+          scheduledTime: schedule.scheduledTime,
+          quantity: schedule.quantity,
+          item: {
+            itemName: schedule.item.itemName,
+            itemCategory: schedule.item.itemCategory,
+          },
+          customer: {
+            customerName: schedule.customer.customerName,
+          },
+          tunnel: schedule.tunnel ? {
+            tunnelName: schedule.tunnel.tunnelName,
+          } : undefined,
+        }));
+
+        // Publish to MQTT
+        mqttPublishResult = await schedulePublisher.publishSchedules(scheduleDataForMQTT);
+        
+        console.log('MQTT publishing completed:', {
+          success: mqttPublishResult.overallSuccess,
+          uniqueDates: mqttPublishResult.uniqueDates,
+          totalSchedules: mqttPublishResult.totalSchedules
+        });
+      } catch (mqttError) {
+        console.error('Error publishing schedules to MQTT:', mqttError);
+        // Don't fail the entire request if MQTT publishing fails
+        mqttPublishResult = {
+          totalSchedules: createdSchedules.length,
+          uniqueDates: 0,
+          publishResults: [],
+          overallSuccess: false,
+          timestamp: new Date().toISOString(),
+          error: mqttError instanceof Error ? mqttError.message : 'Unknown MQTT error'
+        };
+      }
     }
 
-    return NextResponse.json(
-      isBatchRequest ? createdSchedules : createdSchedules[0], 
-      { status: 201 }
-    );
+    // Prepare response with MQTT results
+    const responseData = {
+      schedules: isBatchRequest ? createdSchedules : createdSchedules[0],
+      mqttPublish: mqttPublishResult,
+      ...(errors.length > 0 && {
+        success: createdSchedules,
+        errors: errors,
+        message: `Created ${createdSchedules.length} schedules, ${errors.length} failed`
+      })
+    };
+
+    // Return appropriate response based on results
+    if (errors.length > 0) {
+      return NextResponse.json(responseData, { status: 207 }); // Multi-status
+    }
+
+    return NextResponse.json(responseData, { status: 201 });
   } catch (error) {
     console.error('Error creating schedule:', error);
     return NextResponse.json(

@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
+import MQTTTerminalNotification from '@/components/MQTTTerminalNotification';
+import { PublishSummary } from '@/lib/schedulePublisher';
 
 interface Customer {
   id: string;
@@ -89,6 +91,15 @@ export default function SchedulesPage() {
   const [loadingSavedSchedules, setLoadingSavedSchedules] = useState(false);
   const [activeTab, setActiveTab] = useState<'create' | 'view'>('create');
   const [filterTunnels, setFilterTunnels] = useState<Tunnel[]>([]);
+
+  // MQTT Terminal Notification state
+  const [mqttNotification, setMqttNotification] = useState<{
+    show: boolean;
+    result: PublishSummary | null;
+  }>({
+    show: false,
+    result: null
+  });
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -373,13 +384,33 @@ export default function SchedulesPage() {
       const result = await response.json();
 
       if (response.ok) {
+        // Show MQTT terminal notification if MQTT publishing occurred
+        if (result.mqttPublish) {
+          setMqttNotification({
+            show: true,
+            result: result.mqttPublish
+          });
+        }
+
         if (response.status === 207) {
           // Partial success
-          alert(`${result.message}\n\nSuccessfully created: ${result.success.length}\nFailed: ${result.errors.length}`);
+          const successMessage = `${result.message}`;
+          const mqttMessage = result.mqttPublish?.overallSuccess 
+            ? '\n✅ ESP32 data sent successfully!' 
+            : result.mqttPublish 
+              ? '\n⚠️ ESP32 data partially sent - check terminal for details'
+              : '';
+          alert(successMessage + mqttMessage);
         } else {
           // Full success
-          alert(`All ${batchData.length} schedules saved successfully!`);
+          const mqttMessage = result.mqttPublish?.overallSuccess 
+            ? '\n✅ ESP32 data sent successfully!' 
+            : result.mqttPublish 
+              ? '\n⚠️ ESP32 data partially sent - check terminal for details'
+              : '';
+          alert(`All ${batchData.length} schedules saved successfully!` + mqttMessage);
         }
+        
         setScheduleItems([]);
         setSelectedCustomerId('');
         setSelectedTunnelId('');
@@ -452,6 +483,13 @@ export default function SchedulesPage() {
 
   return (
     <Layout>
+      {/* MQTT Terminal Notification */}
+      <MQTTTerminalNotification
+        publishResult={mqttNotification.result}
+        show={mqttNotification.show}
+        onClose={() => setMqttNotification({ show: false, result: null })}
+      />
+
       <main className="p-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-black mb-2">

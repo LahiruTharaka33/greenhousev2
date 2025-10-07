@@ -43,6 +43,7 @@ yarn restore ./backups/backup-2024-01-01T10-00-00-000Z.json
 
 # Using pnpm
 pnpm restore ./backups/backup-2024-01-01T10-00-00-000Z.json
+pnpm restore ./backups/backup-2025-09-25T14-22-16-198Z.json 
 
 # Direct execution
 node scripts/restore-data.js ./backups/backup-2024-01-01T10-00-00-000Z.json
