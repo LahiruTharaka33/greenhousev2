@@ -43,6 +43,7 @@ const cultivationTypes = [
   'Fruits',
   'Herbs',
   'Flowers',
+  'Chilli',
   'Mixed Crops',
   'Hydroponics',
   'Aquaponics',

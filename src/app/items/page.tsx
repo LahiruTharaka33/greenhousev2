@@ -282,10 +282,15 @@ export default function ItemsPage() {
                           </span>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                           <div>
                             <span className="font-medium text-gray-700">Category:</span>
                             <span className="ml-1 text-gray-600">{item.itemCategory}</span>
+                          </div>
+                          
+                          <div>
+                            <span className="font-medium text-gray-700">Unit:</span>
+                            <span className="ml-1 text-gray-600">{item.unit}</span>
                           </div>
                           
                           <div>
