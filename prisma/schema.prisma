@@ -96,9 +96,9 @@ model Item {
   itemId              String              @unique
   itemName            String
   itemCategory        String
-  unit                String              @default("pieces")
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
+  unit                String              @default("pieces")
   customerInventories CustomerInventory[]
   mainInventory       MainInventory?
   schedules           Schedule[]
@@ -164,6 +164,7 @@ model Schedule {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   tunnelId      String?
+  water         String?
   customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   item          Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
   tunnel        Tunnel?  @relation(fields: [tunnelId], references: [id], onDelete: Cascade)
@@ -172,28 +173,28 @@ model Schedule {
 model TankConfiguration {
   id        String   @id @default(cuid())
   tunnelId  String
-  tankName  String   // "Tank A", "Tank B", "Tank C"
-  itemType  String   // "water" or "fertilizer"
-  itemId    String?  // Item ID if itemType is "fertilizer", null if "water"
+  tankName  String
+  itemType  String
+  itemId    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  item      Item?    @relation(fields: [itemId], references: [id])
   tunnel    Tunnel   @relation(fields: [tunnelId], references: [id], onDelete: Cascade)
-  item      Item?    @relation(fields: [itemId], references: [id], onDelete: SetNull)
 
   @@unique([tunnelId, tankName])
 }
 
 model FinancialRecord {
-  id              String   @id @default(cuid())
-  date            DateTime
-  rate            Float    // Price per kg
-  quantity        Float    // Quantity in kg
-  totalIncome     Float    // Calculated as rate * quantity
-  harvestingCost  Float    @default(0)
-  chemicalCost    Float    @default(0)
-  fertilizerCost  Float    @default(0)
-  rent            Float    @default(0)
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(cuid())
+  date           DateTime
+  rate           Float
+  quantity       Float
+  totalIncome    Float
+  harvestingCost Float    @default(0)
+  chemicalCost   Float    @default(0)
+  fertilizerCost Float    @default(0)
+  rent           Float    @default(0)
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

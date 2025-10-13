@@ -26,6 +26,7 @@ interface Item {
   itemId: string;
   itemName: string;
   itemCategory: string;
+  unit?: string;  // Added this line
 }
 
 interface ScheduleItem {
@@ -40,6 +41,7 @@ interface ScheduleItem {
   scheduledDate: string;
   scheduledTime: string;
   quantity: number;
+  water: string;
   notes?: string;
 }
 
@@ -49,8 +51,10 @@ interface SavedSchedule {
   itemId: string;
   tunnelId?: string;
   scheduledDate: string;
+  scheduledEndDate?: string;
   scheduledTime: string;
   quantity: number;
+  water: string;
   notes?: string;
   status: string;
   createdAt: string;
@@ -88,14 +92,7 @@ export default function SchedulesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Authentication check
-  if (status === 'loading') {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
-
-  if (!session || session.user.role !== 'admin') {
-    redirect('/login');
-  }
+  // Authentication check moved after all hooks to avoid conditional hooks and TS narrowing issues
 
   // Saved schedules state
   const [savedSchedules, setSavedSchedules] = useState<SavedSchedule[]>([]);
@@ -125,9 +122,10 @@ export default function SchedulesPage() {
   // Form state
   const [formData, setFormData] = useState({
     date: '',
-    endDate: '', // Add end date for range selection
+    endDate: '',
     fertilizerId: '',
     quantity: 1,
+    water: '',
     time: '',
     notes: ''
   });
@@ -221,6 +219,7 @@ export default function SchedulesPage() {
       endDate: schedule.scheduledEndDate ? schedule.scheduledEndDate.split('T')[0] : '',
       fertilizerId: schedule.item.id,
       quantity: schedule.quantity,
+      water: schedule.water,
       time: schedule.scheduledTime,
       notes: schedule.notes || ''
     });
@@ -338,8 +337,11 @@ export default function SchedulesPage() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session) {
     redirect('/login');
+  }
+  if (session.user.role !== 'admin') {
+    redirect('/user/dashboard');
   }
 
   if (loading) {
@@ -362,7 +364,7 @@ export default function SchedulesPage() {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.date || !formData.fertilizerId || !formData.time) {
+    if (!formData.date || !formData.fertilizerId || !formData.time || !formData.water) {
       alert('Please fill in all required fields');
       return;
     }
@@ -408,6 +410,7 @@ export default function SchedulesPage() {
           scheduledDate: currentDate.toISOString().split('T')[0],
           scheduledTime: formData.time,
           quantity: formData.quantity,
+          water: formData.water,
           notes: formData.notes
         });
         currentDate.setDate(currentDate.getDate() + 1);
@@ -426,6 +429,7 @@ export default function SchedulesPage() {
         scheduledDate: formData.date,
         scheduledTime: formData.time,
         quantity: formData.quantity,
+        water: formData.water,
         notes: formData.notes
       });
     }
@@ -445,6 +449,7 @@ export default function SchedulesPage() {
             scheduledDate: formData.date,
             scheduledTime: formData.time,
             quantity: formData.quantity,
+            water: formData.water,
             notes: formData.notes
           }),
         });
@@ -460,6 +465,7 @@ export default function SchedulesPage() {
             endDate: '',
             fertilizerId: '',
             quantity: 1,
+            water: '',
             time: '',
             notes: ''
           });
@@ -484,6 +490,7 @@ export default function SchedulesPage() {
         endDate: '',
         fertilizerId: '',
         quantity: 1,
+        water: '',
         time: '',
         notes: ''
       });
@@ -508,6 +515,7 @@ export default function SchedulesPage() {
         scheduledDate: item.scheduledDate,
         scheduledTime: item.scheduledTime,
         quantity: item.quantity,
+        water: item.water,
         notes: item.notes
       }));
 
@@ -800,7 +808,8 @@ export default function SchedulesPage() {
                   <div className="relative">
                     <input
                       type="number"
-                      min="1"
+                      step="0.1"
+                      min="0"
                       value={formData.quantity}
                       onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
@@ -813,6 +822,27 @@ export default function SchedulesPage() {
                         </span>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    💧 Water (L) *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      value={formData.water}
+                      onChange={(e) => setFormData({...formData, water: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                      placeholder="Enter water amount"
+                      required
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 text-sm font-medium">L</span>
+                    </div>
                   </div>
                 </div>
 
