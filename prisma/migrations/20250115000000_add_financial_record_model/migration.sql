@@ -16,3 +16,4 @@ CREATE TABLE "public"."FinancialRecord" (
     CONSTRAINT "FinancialRecord_pkey" PRIMARY KEY ("id")
 );
 
+

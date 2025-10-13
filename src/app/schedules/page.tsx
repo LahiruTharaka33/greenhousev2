@@ -34,6 +34,7 @@ interface ScheduleItem {
   tunnelName: string;
   itemId: string;
   itemName: string;
+  unit?: string;
   scheduledDate: string;
   scheduledTime: string;
   quantity: number;
@@ -63,6 +64,7 @@ interface SavedSchedule {
     itemId: string;
     itemName: string;
     itemCategory: string;
+    unit?: string;
   };
   tunnel?: {
     id: string;
@@ -83,6 +85,15 @@ export default function SchedulesPage() {
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // Authentication check
+  if (status === 'loading') {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!session || session.user.role !== 'admin') {
+    redirect('/login');
+  }
 
   // Saved schedules state
   const [savedSchedules, setSavedSchedules] = useState<SavedSchedule[]>([]);
@@ -109,6 +120,13 @@ export default function SchedulesPage() {
     time: '',
     notes: ''
   });
+
+  // Track selected fertilizer unit
+  const [selectedFertilizerUnit, setSelectedFertilizerUnit] = useState('');
+
+  // Edit and delete states
+  const [editingSchedule, setEditingSchedule] = useState<SavedSchedule | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
 
   // Fetch saved schedules with optional filtering
   const fetchSavedSchedules = useCallback(async (useFilters = false) => {
@@ -148,6 +166,57 @@ export default function SchedulesPage() {
   const applyFilters = useCallback(() => {
     fetchSavedSchedules(true);
   }, [fetchSavedSchedules]);
+
+  // Handle delete schedule
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    if (!confirm('Are you sure you want to delete this schedule?')) {
+      return;
+    }
+
+    setDeleteLoading(scheduleId);
+    try {
+      const response = await fetch(`/api/schedules/${scheduleId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Refresh the schedules list
+        await fetchSavedSchedules();
+        alert('Schedule deleted successfully');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to delete schedule');
+      }
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
+      alert('Failed to delete schedule');
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
+
+  // Handle edit schedule
+  const handleEditSchedule = (schedule: SavedSchedule) => {
+    setEditingSchedule(schedule);
+    // Switch to create tab and populate form
+    setActiveTab('create');
+    setSelectedCustomerId(schedule.customer.id);
+    setSelectedTunnelId(schedule.tunnel?.id || '');
+    setShowForm(true);
+    
+    // Populate form with schedule data
+    setFormData({
+      date: schedule.scheduledDate.split('T')[0], // Convert to YYYY-MM-DD format
+      endDate: schedule.scheduledEndDate ? schedule.scheduledEndDate.split('T')[0] : '',
+      fertilizerId: schedule.item.id,
+      quantity: schedule.quantity,
+      time: schedule.scheduledTime,
+      notes: schedule.notes || ''
+    });
+    
+    // Set the unit for the selected fertilizer
+    setSelectedFertilizerUnit(schedule.item.unit || '');
+  };
 
   // Fetch initial data
   useEffect(() => {
@@ -216,6 +285,27 @@ export default function SchedulesPage() {
     }
   }, [activeTab, fetchSavedSchedules, savedSchedules.length]);
 
+  // Real-time filtering: Apply filters automatically when filter values change
+  useEffect(() => {
+    if (activeTab === 'view') {
+      // Add a small delay to debounce rapid filter changes
+      const timeoutId = setTimeout(() => {
+        // Check if any filters are set
+        const hasFilters = filters.customer || filters.tunnel || filters.fertilizer || filters.status || filters.dateFrom || filters.dateTo;
+        
+        if (hasFilters) {
+          // Apply filters immediately when any filter value changes
+          fetchSavedSchedules(true);
+        } else {
+          // If no filters are set, load all schedules
+          fetchSavedSchedules(false);
+        }
+      }, 300); // 300ms debounce delay
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [filters, activeTab, fetchSavedSchedules]);
+
   // Fetch tunnels for filter when customer filter changes
   const selectedCustomerFilter = filters.customer;
   
@@ -258,7 +348,7 @@ export default function SchedulesPage() {
     setShowForm(true);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.date || !formData.fertilizerId || !formData.time) {
@@ -303,6 +393,7 @@ export default function SchedulesPage() {
           tunnelName: tunnel.tunnelName,
           itemId: formData.fertilizerId,
           itemName: item.itemName,
+          unit: item.unit,
           scheduledDate: currentDate.toISOString().split('T')[0],
           scheduledTime: formData.time,
           quantity: formData.quantity,
@@ -320,6 +411,7 @@ export default function SchedulesPage() {
         tunnelName: tunnel.tunnelName,
         itemId: formData.fertilizerId,
         itemName: item.itemName,
+        unit: item.unit,
         scheduledDate: formData.date,
         scheduledTime: formData.time,
         quantity: formData.quantity,
@@ -327,16 +419,66 @@ export default function SchedulesPage() {
       });
     }
 
-    setScheduleItems([...scheduleItems, ...newScheduleItems]);
-    setFormData({
-      date: '',
-      endDate: '',
-      fertilizerId: '',
-      quantity: 1,
-      time: '',
-      notes: ''
-    });
-    setShowForm(false);
+    if (editingSchedule) {
+      // For edit mode, we'll update the schedule directly via API
+      setSaving(true);
+      try {
+        const response = await fetch(`/api/schedules/${editingSchedule.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            customerId: selectedCustomerId,
+            itemId: formData.fertilizerId,
+            scheduledDate: formData.date,
+            scheduledTime: formData.time,
+            quantity: formData.quantity,
+            notes: formData.notes
+          }),
+        });
+
+        if (response.ok) {
+          // Refresh saved schedules
+          await fetchSavedSchedules();
+          alert('Schedule updated successfully!');
+          
+          // Reset form and close
+          setFormData({
+            date: '',
+            endDate: '',
+            fertilizerId: '',
+            quantity: 1,
+            time: '',
+            notes: ''
+          });
+          setShowForm(false);
+          setSelectedFertilizerUnit('');
+          setEditingSchedule(null);
+        } else {
+          const error = await response.json();
+          alert(error.error || 'Failed to update schedule');
+        }
+      } catch (error) {
+        console.error('Error updating schedule:', error);
+        alert('Failed to update schedule');
+      } finally {
+        setSaving(false);
+      }
+    } else {
+      // For create mode, add to local list
+      setScheduleItems([...scheduleItems, ...newScheduleItems]);
+      setFormData({
+        date: '',
+        endDate: '',
+        fertilizerId: '',
+        quantity: 1,
+        time: '',
+        notes: ''
+      });
+      setShowForm(false);
+      setSelectedFertilizerUnit('');
+    }
   };
 
   const handleSaveAll = async () => {
@@ -559,7 +701,9 @@ export default function SchedulesPage() {
         {/* Schedule Form */}
         {showForm && (
           <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">New Schedule</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              {editingSchedule ? 'Edit Schedule' : 'New Schedule'}
+            </h2>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
@@ -594,7 +738,11 @@ export default function SchedulesPage() {
                   </label>
                   <select
                     value={formData.fertilizerId}
-                    onChange={(e) => setFormData({...formData, fertilizerId: e.target.value})}
+                    onChange={(e) => {
+                      const selectedItem = items.find(item => item.id === e.target.value);
+                      setSelectedFertilizerUnit(selectedItem?.unit || '');
+                      setFormData({...formData, fertilizerId: e.target.value});
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
                     required
                   >
@@ -609,15 +757,25 @@ export default function SchedulesPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    📦 Quantity
+                    📦 Quantity {selectedFertilizerUnit && `(${selectedFertilizerUnit})`}
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={formData.quantity}
-                    onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
-                  />
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value) || 1})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
+                      placeholder={selectedFertilizerUnit ? `Enter quantity in ${selectedFertilizerUnit}` : 'Enter quantity'}
+                    />
+                    {selectedFertilizerUnit && (
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span className="text-gray-500 text-sm font-medium">
+                          {selectedFertilizerUnit}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -665,16 +823,21 @@ export default function SchedulesPage() {
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
-                  onClick={() => setShowForm(false)}
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditingSchedule(null);
+                    setSelectedFertilizerUnit('');
+                  }}
                   className="px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700"
+                  disabled={saving}
+                  className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 border border-transparent rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  💾 Save
+                  {saving ? 'Saving...' : (editingSchedule ? '💾 Update' : '💾 Save')}
                 </button>
               </div>
             </form>
@@ -725,7 +888,7 @@ export default function SchedulesPage() {
                         {item.itemName}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {item.quantity}
+                        {item.quantity} {item.unit && `(${item.unit})`}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
@@ -870,7 +1033,16 @@ export default function SchedulesPage() {
               <div className="flex justify-between items-center mt-4">
                 <div className="text-sm text-gray-600">
                   Showing {savedSchedules.length} schedule{savedSchedules.length !== 1 ? 's' : ''}
-                  {(filters.customer || filters.tunnel || filters.fertilizer || filters.status || filters.dateFrom || filters.dateTo) && ' (filtered)'}
+                  {(filters.customer || filters.tunnel || filters.fertilizer || filters.status || filters.dateFrom || filters.dateTo) && (
+                    <span className="ml-1 text-emerald-600 font-medium">
+                      (filtered in real-time)
+                    </span>
+                  )}
+                  {loadingSavedSchedules && (
+                    <span className="ml-1 text-blue-600">
+                      ⏳ Updating...
+                    </span>
+                  )}
                 </div>
                 <div className="flex space-x-2">
                   <button
@@ -884,7 +1056,7 @@ export default function SchedulesPage() {
                     className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700"
                     disabled={loadingSavedSchedules}
                   >
-                    {loadingSavedSchedules ? '⏳ Applying...' : '🔍 Apply Filters'}
+                    {loadingSavedSchedules ? '⏳ Refreshing...' : '🔄 Refresh Filters'}
                   </button>
                   <button
                     onClick={() => fetchSavedSchedules(false)}
@@ -965,7 +1137,7 @@ export default function SchedulesPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {schedule.quantity}
+                            {schedule.quantity} {schedule.item.unit && `(${schedule.item.unit})`}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(schedule.status)}`}>
@@ -974,11 +1146,18 @@ export default function SchedulesPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex space-x-2">
-                              <button className="text-blue-600 hover:text-blue-900">
+                              <button 
+                                onClick={() => handleEditSchedule(schedule)}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
                                 Edit
                               </button>
-                              <button className="text-red-600 hover:text-red-900">
-                                Delete
+                              <button 
+                                onClick={() => handleDeleteSchedule(schedule.id)}
+                                disabled={deleteLoading === schedule.id}
+                                className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                              >
+                                {deleteLoading === schedule.id ? 'Deleting...' : 'Delete'}
                               </button>
                             </div>
                           </td>
