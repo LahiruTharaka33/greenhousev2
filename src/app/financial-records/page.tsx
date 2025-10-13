@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { redirect } from 'next/navigation';
 import Layout from '@/components/Layout';
 import FinancialRecordForm from '@/components/FinancialRecordForm';
 
@@ -20,6 +22,7 @@ interface FinancialRecord {
 }
 
 export default function FinancialRecordsPage() {
+  const { data: session, status } = useSession();
   const [records, setRecords] = useState<FinancialRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -33,27 +36,37 @@ export default function FinancialRecordsPage() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [activeTab, setActiveTab] = useState<'records' | 'summary'>('records');
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch records
   const fetchRecords = async () => {
     try {
+      setError(null);
       const response = await fetch('/api/financial-records');
       if (response.ok) {
         const data = await response.json();
         setRecords(data);
       } else {
-        console.error('Failed to fetch financial records');
+        const errorData = await response.json();
+        console.error('Failed to fetch financial records:', errorData);
+        setError(errorData.error || 'Failed to fetch financial records');
       }
     } catch (error) {
       console.error('Error fetching financial records:', error);
+      setError('Failed to connect to the server');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRecords();
-  }, []);
+    if (status === 'authenticated' && session?.user?.role === 'admin') {
+      fetchRecords();
+    } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
+      setLoading(false);
+      setError('Unauthorized: Admin access required');
+    }
+  }, [status, session]);
 
   // Handle form submission
   const handleSubmit = async (recordData: Omit<FinancialRecord, 'id' | 'createdAt' | 'updatedAt' | 'totalIncome'>) => {
@@ -193,6 +206,24 @@ export default function FinancialRecordsPage() {
     })}`;
   };
 
+  // Authentication checks
+  if (status === 'loading') {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen bg-gray-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!session || session.user.role !== 'admin') {
+    redirect('/login');
+  }
+
   return (
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
@@ -218,6 +249,24 @@ export default function FinancialRecordsPage() {
             </div>
           </div>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="px-4 py-4">
+            <div className="max-w-7xl mx-auto">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-sm text-red-800">
+                    <span className="font-medium">Error:</span> {error}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tab Navigation */}
         <div className="px-4 py-4">
