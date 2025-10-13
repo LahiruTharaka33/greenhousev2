@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginForm() {
@@ -21,15 +21,24 @@ export default function LoginForm() {
       const result = await signIn('credentials', {
         email,
         password,
-        callbackUrl: '/', // Let middleware handle the proper redirect
+        redirect: false,
       });
 
-      // If signIn doesn't redirect (which it should), there was an error
+      // Handle the result
       if (result?.error) {
         setError('Invalid email or password');
         setIsLoading(false);
+      } else if (result?.ok) {
+        // Login successful, get session and redirect based on role
+        const session = await getSession();
+        if (session?.user?.role === 'admin') {
+          router.push('/');
+        } else if (session?.user?.role === 'user') {
+          router.push('/user/dashboard');
+        } else {
+          router.push('/');
+        }
       }
-      // If successful, signIn will redirect automatically
     } catch (error) {
       setError('An error occurred. Please try again.');
       setIsLoading(false);
