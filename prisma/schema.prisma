@@ -74,6 +74,7 @@ model Customer {
   user                User?               @relation(fields: [userId], references: [id])
   customerInventories CustomerInventory[]
   schedules           Schedule[]
+  schedulesV2         ScheduleV2[] @relation("ScheduleV2Customer")
   tasks               Task[]
   tunnels             Tunnel[]
 }
@@ -102,6 +103,7 @@ model Item {
   customerInventories CustomerInventory[]
   mainInventory       MainInventory?
   schedules           Schedule[]
+  schedulesV2         ScheduleV2[] @relation("ScheduleV2Fertilizer")
   tankConfigs         TankConfiguration[]
 }
 
@@ -132,6 +134,7 @@ model Tunnel {
   customerId      String
   clientId        String?
   schedules       Schedule[]
+  schedulesV2     ScheduleV2[] @relation("ScheduleV2Tunnel")
   tankConfigs     TankConfiguration[]
   customer        Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
@@ -182,6 +185,34 @@ model TankConfiguration {
   tunnel    Tunnel   @relation(fields: [tunnelId], references: [id], onDelete: Cascade)
 
   @@unique([tunnelId, tankName])
+}
+
+model ScheduleV2 {
+  id               String            @id @default(cuid())
+  customerId       String
+  tunnelId         String
+  scheduledDate    DateTime
+  fertilizerTypeId String
+  quantity         Decimal           @db.Decimal(10, 2)
+  water            Decimal           @db.Decimal(10, 2)
+  notes            String?
+  status           String            @default("pending")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  customer         Customer          @relation("ScheduleV2Customer", fields: [customerId], references: [id], onDelete: Cascade)
+  tunnel           Tunnel            @relation("ScheduleV2Tunnel", fields: [tunnelId], references: [id], onDelete: Cascade)
+  fertilizerType   Item              @relation("ScheduleV2Fertilizer", fields: [fertilizerTypeId], references: [id], onDelete: Cascade)
+  releases         ScheduleV2Release[]
+}
+
+model ScheduleV2Release {
+  id               String     @id @default(cuid())
+  scheduleV2Id     String
+  time             String
+  releaseQuantity  Decimal    @db.Decimal(10, 2)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  scheduleV2       ScheduleV2 @relation(fields: [scheduleV2Id], references: [id], onDelete: Cascade)
 }
 
 model FinancialRecord {

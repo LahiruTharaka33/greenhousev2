@@ -68,6 +68,12 @@ const navigation: NavItem[] = [
     description: 'Maintenance schedules'
   },
   {
+    name: 'New Schedules',
+    href: '/schedules-v2',
+    icon: '🌱',
+    description: 'New improved schedule system'
+  },
+  {
     name: 'Tasks',
     href: '/tasks',
     icon: '✅',
