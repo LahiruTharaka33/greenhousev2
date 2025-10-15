@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import schedulePublisher, { ScheduleData } from '@/lib/schedulePublisher';
+import scheduleV2Publisher from '@/lib/scheduleV2Publisher';
 
 // GET /api/schedules-v2 - Fetch all schedules
 export async function GET(request: NextRequest) {
@@ -189,46 +189,69 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Publish to MQTT (ESP32) after successful creation
+    // Fetch tank configuration for the selected tunnel to determine fertilizer mapping
     let mqttPublishResult = null;
+    const warnings: string[] = [];
+    
     try {
-      console.log('Publishing schedule to ESP32...');
+      console.log('Fetching tank configuration for tunnel:', tunnelId);
       
-      // Convert schedule to ScheduleData format for MQTT
-      const scheduleDataForMQTT: ScheduleData[] = [{
-        id: schedule.id,
-        scheduledDate: schedule.scheduledDate,
-        scheduledTime: '08:00', // Default time since we don't have time in new schema
-        quantity: Number(schedule.quantity),
-        item: {
-          itemName: schedule.fertilizerType.itemName,
-          itemCategory: schedule.fertilizerType.itemCategory,
-        },
-        customer: {
-          customerName: schedule.customer.customerName,
-        },
-        tunnel: {
-          tunnelName: schedule.tunnel.tunnelName,
-        },
-      }];
+      // Get tank configurations for this tunnel
+      const tankConfigs = await prisma.tankConfiguration.findMany({
+        where: { tunnelId: tunnelId },
+        include: { item: true }
+      });
 
-      // Publish to MQTT
-      mqttPublishResult = await schedulePublisher.publishSchedules(scheduleDataForMQTT);
+      // Find which tank contains the selected fertilizer
+      let fertilizerTank: string | null = null;
+      for (const config of tankConfigs) {
+        if (config.itemId === fertilizerTypeId) {
+          fertilizerTank = config.tankName; // "Tank A", "Tank B", or "Tank C"
+          console.log(`Found fertilizer in ${fertilizerTank}`);
+          break;
+        }
+      }
+
+      // Warn if fertilizer is not configured in any tank
+      if (!fertilizerTank) {
+        const warningMsg = `Warning: Selected fertilizer "${schedule.fertilizerType.itemName}" is not configured in any tank for tunnel "${schedule.tunnel.tunnelName}". Please configure it in the Configuration page.`;
+        warnings.push(warningMsg);
+        console.warn(warningMsg);
+      }
+
+      // Build MQTT topic data based on tank mapping
+      const topicData = {
+        fertilizer_1: fertilizerTank === "Tank A" ? parseFloat(quantity) : 0,
+        fertilizer_2: fertilizerTank === "Tank B" ? parseFloat(quantity) : 0,
+        fertilizer_3: fertilizerTank === "Tank C" ? parseFloat(quantity) : 0,
+        water_volume: parseFloat(water),
+        schedule_time1: releases && releases[0] ? releases[0].time : "",
+        schedule_volume1: releases && releases[0] ? parseFloat(releases[0].releaseQuantity) : 0,
+        schedule_time2: releases && releases[1] ? releases[1].time : "",
+        schedule_volume2: releases && releases[1] ? parseFloat(releases[1].releaseQuantity) : 0,
+        schedule_time3: releases && releases[2] ? releases[2].time : "",
+        schedule_volume3: releases && releases[2] ? parseFloat(releases[2].releaseQuantity) : 0,
+      };
+
+      console.log('Publishing ScheduleV2 to ESP32 with topic data:', topicData);
+
+      // Publish to MQTT using the new ScheduleV2 publisher
+      mqttPublishResult = await scheduleV2Publisher.publishScheduleV2(topicData, warnings);
       
       console.log('MQTT publishing completed:', {
         success: mqttPublishResult.overallSuccess,
-        uniqueDates: mqttPublishResult.uniqueDates,
-        totalSchedules: mqttPublishResult.totalSchedules
+        totalTopics: mqttPublishResult.totalTopics,
+        warnings: mqttPublishResult.warnings?.length || 0
       });
     } catch (mqttError) {
       console.error('Error publishing schedule to MQTT:', mqttError);
       // Don't fail the entire request if MQTT publishing fails
       mqttPublishResult = {
-        totalSchedules: 1,
-        uniqueDates: 0,
+        totalTopics: 0,
         publishResults: [],
         overallSuccess: false,
         timestamp: new Date().toISOString(),
+        warnings,
         error: mqttError instanceof Error ? mqttError.message : 'Unknown MQTT error'
       };
     }

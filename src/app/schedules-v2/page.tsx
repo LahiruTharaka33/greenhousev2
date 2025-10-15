@@ -249,17 +249,43 @@ export default function SchedulesV2Page() {
         const result = await response.json();
         const scheduleData = result.schedule || result; // Handle both response formats
         
+        // Show MQTT notification if MQTT publishing occurred
+        if (result.mqttPublish) {
+          setMqttNotification({
+            show: true,
+            result: result.mqttPublish
+          });
+        }
+        
+        // Build success message
+        let successMessage = '';
         if (editingSchedule) {
+          successMessage = 'Schedule updated successfully!';
           // Update existing schedule in the list
           setSchedules(schedules.map(s => s.id === editingSchedule.id ? scheduleData : s));
-          alert('Schedule updated successfully!');
           // Switch back to view tab to see the updated schedule
           setActiveTab('view');
         } else {
+          successMessage = 'Schedule created successfully!';
           // Add new schedule to the list
           setSchedules([scheduleData, ...schedules]);
-          alert('Schedule created successfully!');
         }
+
+        // Add MQTT status to message
+        if (result.mqttPublish) {
+          if (result.mqttPublish.overallSuccess) {
+            successMessage += '\n✅ Data sent to ESP32 successfully!';
+          } else {
+            successMessage += '\n⚠️ Schedule saved but ESP32 communication had issues. Check terminal for details.';
+          }
+          
+          // Add warnings if any
+          if (result.mqttPublish.warnings && result.mqttPublish.warnings.length > 0) {
+            successMessage += '\n\n⚠️ Warnings:\n' + result.mqttPublish.warnings.join('\n');
+          }
+        }
+        
+        alert(successMessage);
         
         // Reset form
         resetForm();
