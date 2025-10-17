@@ -46,6 +46,20 @@ class ScheduleV2Publisher {
     }
   }
 
+  /**
+   * Convert time from "HH:mm" format to "HHmm" format for ESP32
+   * @param timeString - Time in "HH:mm" format (e.g., "13:45", "08:00")
+   * @returns Time in "HHmm" format (e.g., "1345", "0800")
+   */
+  private convertTimeToESP32Format(timeString: string): string {
+    if (!timeString || timeString === "") {
+      return "0000";  // Default empty time (4-digit format)
+    }
+    
+    // Remove colon to create numeric string: "13:45" -> "1345"
+    return timeString.replace(':', '');
+  }
+
   private publishToTopic(topic: string, message: string): Promise<MQTTPublishResult> {
     return new Promise((resolve) => {
       try {
@@ -92,16 +106,26 @@ class ScheduleV2Publisher {
     // Publish water volume
     results.push(await this.publishToTopic('water_volume', topicData.water_volume.toString()));
     
+    // Convert times to ESP32 format (HH:mm -> HHmm)
+    const time1 = this.convertTimeToESP32Format(topicData.schedule_time1);
+    const time2 = this.convertTimeToESP32Format(topicData.schedule_time2);
+    const time3 = this.convertTimeToESP32Format(topicData.schedule_time3);
+    
+    console.log('Converted times for ESP32:', {
+      original: [topicData.schedule_time1, topicData.schedule_time2, topicData.schedule_time3],
+      converted: [time1, time2, time3]
+    });
+    
     // Publish schedule time 1 and volume 1
-    results.push(await this.publishToTopic('schedule_time1', topicData.schedule_time1));
+    results.push(await this.publishToTopic('schedule_time1', time1));
     results.push(await this.publishToTopic('schedule_volume1', topicData.schedule_volume1.toString()));
     
     // Publish schedule time 2 and volume 2
-    results.push(await this.publishToTopic('schedule_time2', topicData.schedule_time2));
+    results.push(await this.publishToTopic('schedule_time2', time2));
     results.push(await this.publishToTopic('schedule_volume2', topicData.schedule_volume2.toString()));
     
     // Publish schedule time 3 and volume 3
-    results.push(await this.publishToTopic('schedule_time3', topicData.schedule_time3));
+    results.push(await this.publishToTopic('schedule_time3', time3));
     results.push(await this.publishToTopic('schedule_volume3', topicData.schedule_volume3.toString()));
     
     // Add small delay to avoid overwhelming the ESP32
