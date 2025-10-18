@@ -101,30 +101,30 @@ export default function UserLayout({ children }: UserLayoutProps) {
         />
       )}
 
-      {/* Sidebar - Enhanced animations */}
+      {/* Sidebar - Enhanced animations with proper scroll */}
       <div className={`bg-white shadow-2xl transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-16' : 'w-64'
       } h-screen fixed left-0 top-0 z-50 lg:translate-x-0 ${
         isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-      } flex flex-col`}>
+      } flex flex-col overflow-hidden`}>
         <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            {!isCollapsed && (
-              <h1 className="text-xl font-bold text-gray-900">GreenHouseV2</h1>
-            )}
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-2 rounded-md hover:bg-gray-50 transition-colors hidden lg:block"
-              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {isCollapsed ? '→' : '←'}
-            </button>
-          </div>
+        {/* Header - Fixed at top */}
+        <div className="flex-none flex items-center justify-between p-4 border-b border-gray-200">
+          {!isCollapsed && (
+            <h1 className="text-xl font-bold text-gray-900">GreenHouseV2</h1>
+          )}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 rounded-md hover:bg-gray-50 transition-colors hidden lg:block"
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? '→' : '←'}
+          </button>
+        </div>
 
-          {/* User info */}
-          {!isCollapsed && session && (
-            <div className="p-4 bg-emerald-50 border-b border-gray-200">
+        {/* User info - Fixed */}
+        {!isCollapsed && session && (
+          <div className="flex-none p-4 bg-emerald-50 border-b border-gray-200">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
                   <span className="text-emerald-600 font-medium">
@@ -139,9 +139,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
             </div>
           )}
 
-          {/* Navigation - Enhanced with smooth scrolling */}
-          <nav className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-            <ul className="space-y-2">
+        {/* Navigation - Enhanced with smooth scrolling */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar">
+          <ul className="space-y-2">
               {userNavigation.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -172,27 +172,27 @@ export default function UserLayout({ children }: UserLayoutProps) {
             </ul>
           </nav>
 
-          {/* Sign out button */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
-            {!isCollapsed ? (
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center p-3 min-h-[44px] text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
-              >
-                <span className="text-lg mr-3">🚪</span>
-                Sign Out
-              </button>
-            ) : (
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center justify-center p-3 min-h-[44px] text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
-                title="Sign Out"
-                aria-label="Sign Out"
-              >
-                <span className="text-lg">🚪</span>
-              </button>
-            )}
-          </div>
+        {/* Sign out button - Fixed at bottom */}
+        <div className="flex-none p-4 border-t border-gray-200 bg-white">
+          {!isCollapsed ? (
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center p-3 min-h-[44px] text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
+            >
+              <span className="text-lg mr-3">🚪</span>
+              Sign Out
+            </button>
+          ) : (
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center p-3 min-h-[44px] text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
+              title="Sign Out"
+              aria-label="Sign Out"
+            >
+              <span className="text-lg">🚪</span>
+            </button>
+          )}
+        </div>
         </div>
       </div>
 
