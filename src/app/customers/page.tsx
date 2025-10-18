@@ -141,7 +141,7 @@ export default function CustomersPage() {
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Mobile-Optimized Header with Safe Zone */}
-        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
+        <div className="bg-white border-b border-gray-200 pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col space-y-3">
               <div className="flex items-start justify-between gap-2 md:gap-3">
@@ -177,7 +177,7 @@ export default function CustomersPage() {
         </div>
 
         {/* Customers Content with Safe Zone */}
-        <div className="pl-16 pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 animate-fade-in-up">
+        <div className="pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 animate-fade-in-up">
           <div className="max-w-7xl mx-auto">
             {loading ? (
               <div className="bg-white rounded-lg shadow-sm border p-5 md:p-8 text-center">

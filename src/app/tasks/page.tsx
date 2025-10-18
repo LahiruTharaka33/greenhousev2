@@ -136,7 +136,7 @@ export default function TasksPage() {
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Header with Safe Zone */}
-        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
+        <div className="bg-white border-b border-gray-200 pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
               <div className="flex-1 min-w-0">
@@ -159,7 +159,7 @@ export default function TasksPage() {
         </div>
 
         {/* Stats Cards with Safe Zone */}
-        <div className="pl-16 pr-4 lg:px-4 py-6">
+        <div className="pl-[72px] pr-4 lg:px-4 py-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">

@@ -67,6 +67,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
+      {/* Hamburger Safe Zone - Mobile Only */}
+      <div className="hamburger-safe-zone lg:hidden" aria-hidden="true"></div>
+      
       {/* Mobile menu button - Enhanced with animation */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button

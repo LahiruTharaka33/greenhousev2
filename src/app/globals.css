@@ -286,3 +286,28 @@ body.menu-open {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Hamburger Safe Zone - Mobile Only */
+@media screen and (max-width: 1023px) {
+  .hamburger-safe-zone {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 56px;
+    height: 100vh;
+    background: white;
+    border-right: 1px solid #e5e7eb;
+    z-index: 35;
+    pointer-events: none;
+  }
+
+  .hamburger-safe-zone::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+  }
+}

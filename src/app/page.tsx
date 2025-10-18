@@ -20,7 +20,7 @@ export default function DashboardPage() {
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Mobile-Optimized Header with Safe Zone */}
-        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
+        <div className="bg-white border-b border-gray-200 pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
           <div className="max-w-7xl mx-auto">
             {/* Mobile: Stack vertically, Desktop: Side by side */}
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4">
@@ -53,7 +53,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Main Dashboard Content with Safe Zone */}
-        <div className="pl-16 pr-4 lg:pl-6 lg:pr-6 py-4 md:py-8 lg:py-12">
+        <div className="pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-8 lg:py-12">
           <div className="max-w-6xl mx-auto">
             
             {/* MOBILE LAYOUT: Vertical Stack (visible only on mobile) */}
