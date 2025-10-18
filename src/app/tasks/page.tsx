@@ -136,23 +136,23 @@ export default function TasksPage() {
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Header with Safe Zone */}
-        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-6 shadow-sm">
+        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-0.5 truncate">
                   Task Management
-          </h1>
-                <p className="text-gray-600">
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
                   Assign and track tasks for your customers
                 </p>
               </div>
               <button
                 onClick={() => setShowTaskForm(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 shadow-sm"
+                className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3 sm:px-4 md:px-6 py-2.5 min-h-[44px] min-w-[44px] rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2 shadow-sm whitespace-nowrap flex-shrink-0"
               >
-                <span>+</span>
-                <span>Add Task</span>
+                <span className="text-base sm:text-lg">+</span>
+                <span className="hidden sm:inline text-sm md:text-base">Add Task</span>
               </button>
             </div>
           </div>

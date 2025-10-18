@@ -44,12 +44,6 @@ const navigation: NavItem[] = [
     description: 'Greenhouse tunnel tracking'
   },
   {
-    name: 'Configuration',
-    href: '/configuration',
-    icon: '⚙️',
-    description: 'Client ID mapping and settings'
-  },
-  {
     name: 'Items',
     href: '/items',
     icon: '🏷️',
@@ -63,15 +57,9 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Schedules',
-    href: '/schedules',
-    icon: '📅',
-    description: 'Maintenance schedules'
-  },
-  {
-    name: 'New Schedules',
     href: '/schedules-v2',
-    icon: '🌱',
-    description: 'New improved schedule system'
+    icon: '📅',
+    description: 'Schedule management system'
   },
   {
     name: 'Tasks',
@@ -165,16 +153,25 @@ export default function Sidebar() {
       {/* Admin user info */}
       {!isCollapsed && session && (
         <div className="p-4 bg-emerald-50 border-b border-gray-200">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-              <span className="text-emerald-600 font-medium">
-                {session.user?.name?.charAt(0).toUpperCase() || 'A'}
-              </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center min-w-0 flex-1">
+              <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-emerald-600 font-medium">
+                  {session.user?.name?.charAt(0).toUpperCase() || 'A'}
+                </span>
+              </div>
+              <div className="ml-3 min-w-0">
+                <p className="text-sm font-medium text-gray-900 truncate">{session.user?.name}</p>
+                <p className="text-xs text-emerald-600">Administrator</p>
+              </div>
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">{session.user?.name}</p>
-              <p className="text-xs text-emerald-600">Administrator</p>
-            </div>
+            <Link
+              href="/configuration"
+              className="p-2 rounded-lg hover:bg-emerald-100 active:bg-emerald-200 transition-colors flex-shrink-0 ml-2"
+              title="Configuration Settings"
+            >
+              <span className="text-lg">⚙️</span>
+            </Link>
           </div>
         </div>
       )}

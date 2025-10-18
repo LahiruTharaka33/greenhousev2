@@ -196,89 +196,89 @@ export default function InventoryPage() {
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Header with Safe Zone */}
-        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-6 shadow-sm">
+        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-0.5 truncate">
                   Main Inventory
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
                   Manage your greenhouse inventory and supplies
                 </p>
               </div>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 shadow-sm"
+                className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3 sm:px-4 md:px-6 py-2.5 min-h-[44px] min-w-[44px] rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2 shadow-sm whitespace-nowrap flex-shrink-0"
               >
-                <span>+</span>
-                <span>Add Item</span>
+                <span className="text-base sm:text-lg">+</span>
+                <span className="hidden sm:inline text-sm md:text-base">Add Item</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Stats Cards with Safe Zone */}
-        <div className="pl-16 pr-4 lg:px-4 py-6">
+        <div className="pl-16 pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 animate-fade-in-up">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white rounded-lg shadow-sm border p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+              <div className="bg-white rounded-lg shadow-sm border p-3 md:p-4 hover:shadow-md transition-all duration-200">
                 <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                    <svg className="w-5 h-5 md:w-6 md:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Items</p>
-                    <p className="text-2xl font-bold text-gray-900">{inventory.length}</p>
+                  <div className="ml-3 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Items</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{inventory.length}</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="bg-white rounded-lg shadow-sm border p-3 md:p-4 hover:shadow-md transition-all duration-200">
                 <div className="flex items-center">
-                  <div className="p-2 bg-emerald-100 rounded-lg">
-                    <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 bg-emerald-100 rounded-lg flex-shrink-0">
+                    <svg className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Quantity</p>
-                    <p className="text-2xl font-bold text-gray-900">{totalQuantity}</p>
+                  <div className="ml-3 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Quantity</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{totalQuantity}</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="bg-white rounded-lg shadow-sm border p-3 md:p-4 hover:shadow-md transition-all duration-200">
                 <div className="flex items-center">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                    <svg className="w-5 h-5 md:w-6 md:h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Categories</p>
-                    <p className="text-2xl font-bold text-gray-900">{itemTypes.length}</p>
+                  <div className="ml-3 min-w-0">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Categories</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{itemTypes.length}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
               <div className="flex-1">
                 <input
                   type="text"
                   placeholder="Search items..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 placeholder-gray-500"
+                  className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 placeholder-gray-500 transition-all"
                 />
               </div>
               <div className="sm:w-48">
                 <select
                   value={filterType}
                   onChange={(e) => setFilterType(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
+                  className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 transition-all"
                 >
                   <option value="">All Types</option>
                   {itemTypes.map(type => (
@@ -291,20 +291,20 @@ export default function InventoryPage() {
         </div>
 
         {/* Inventory Content */}
-        <div className="px-4 pb-6">
+        <div className="pl-16 pr-4 lg:pl-6 lg:pr-6 pb-4 md:pb-6">
           <div className="max-w-7xl mx-auto">
             {loading ? (
-              <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-                <p className="mt-4 text-gray-600">Loading inventory...</p>
+              <div className="bg-white rounded-lg shadow-sm border p-5 md:p-8 text-center">
+                <div className="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-b-2 border-emerald-600 mx-auto"></div>
+                <p className="mt-3 md:mt-4 text-xs sm:text-sm md:text-base text-gray-600">Loading inventory...</p>
               </div>
             ) : filteredInventory.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-                <div className="text-6xl mb-4">📦</div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <div className="bg-white rounded-lg shadow-sm border p-5 md:p-8 text-center">
+                <div className="text-4xl sm:text-5xl md:text-6xl mb-3 md:mb-4">📦</div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-2 md:mb-4">
                   {searchTerm || filterType ? 'No items found' : 'No inventory items yet'}
                 </h2>
-                <p className="text-gray-600 mb-6">
+                <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-4 md:mb-6">
                   {searchTerm || filterType 
                     ? 'Try adjusting your search or filter terms'
                     : 'Get started by adding your first inventory item'
@@ -313,42 +313,42 @@ export default function InventoryPage() {
                 {!searchTerm && !filterType && (
                   <button
                     onClick={() => setShowForm(true)}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg transition-colors shadow-sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-5 sm:px-6 py-2.5 sm:py-3 min-h-[44px] rounded-lg transition-all duration-200 shadow-sm text-sm sm:text-base"
                   >
                     Add Your First Item
                   </button>
                 )}
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 {filteredInventory.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow"
+                    className="bg-white rounded-lg shadow-sm border p-4 md:p-5 hover:shadow-md transition-all duration-200"
                   >
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                    <div className="flex flex-col space-y-3">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 truncate">
                             {item.itemName}
                           </h3>
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                          <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                             {item.itemId}
                           </span>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                          <div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3 text-xs sm:text-sm">
+                          <div className="flex flex-wrap">
                             <span className="font-medium text-gray-700">Type:</span>
                             <span className="ml-1 text-gray-600">{item.itemType}</span>
                           </div>
                           
-                          <div>
-                            <span className="font-medium text-gray-700">Quantity:</span>
-                            <span className="ml-1 px-2 py-1 bg-emerald-100 text-emerald-800 rounded-md font-semibold text-lg">{formatQuantityWithUnit(item.quantity, item.item.unit)}</span>
+                          <div className="flex flex-wrap items-center">
+                            <span className="font-medium text-gray-700 mr-1">Quantity:</span>
+                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-md font-semibold text-sm sm:text-base">{formatQuantityWithUnit(item.quantity, item.item.unit)}</span>
                           </div>
                           
-                          <div>
+                          <div className="flex flex-wrap">
                             <span className="font-medium text-gray-700">Stored:</span>
                             <span className="ml-1 text-gray-600">{formatDate(item.storedDate)}</span>
                           </div>
@@ -362,25 +362,25 @@ export default function InventoryPage() {
                         </div>
                       </div>
                       
-                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                      <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-gray-100">
                         <button
                           onClick={() => handleMove(item)}
                           disabled={item.quantity <= 0}
-                          className="px-4 py-2 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex-1 sm:flex-initial px-3 sm:px-4 py-2.5 min-h-[44px] text-sm text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                           title={item.quantity <= 0 ? 'No quantity available to move' : 'Move to Customer Inventory'}
                         >
                           Move
                         </button>
                         <button
                           onClick={() => handleEdit(item)}
-                          className="px-4 py-2 text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors font-medium"
+                          className="flex-1 sm:flex-initial px-3 sm:px-4 py-2.5 min-h-[44px] text-sm text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 rounded-lg transition-all duration-200 font-medium"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
                           disabled={deleteLoading === item.id}
-                          className="px-4 py-2 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors font-medium disabled:opacity-50"
+                          className="flex-1 sm:flex-initial px-3 sm:px-4 py-2.5 min-h-[44px] text-sm text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {deleteLoading === item.id ? 'Deleting...' : 'Delete'}
                         </button>
