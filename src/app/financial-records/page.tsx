@@ -525,29 +525,30 @@ export default function FinancialRecordsPage() {
         )}
 
         {/* Tab Navigation with Safe Zone */}
-        <div className="pl-16 pr-4 lg:px-4 py-4">
+        <div className="pl-[72px] pr-4 lg:px-4 py-4 bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto">
             <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
+              <nav className="-mb-px flex space-x-4 sm:space-x-8">
                 <button
                   onClick={() => setActiveTab('records')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
                     activeTab === 'records'
                       ? 'border-emerald-500 text-emerald-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
                   }`}
                 >
                   Records
                 </button>
                 <button
                   onClick={() => setActiveTab('summary')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
                     activeTab === 'summary'
                       ? 'border-emerald-500 text-emerald-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
                   }`}
                 >
-                  Monthly Summary
+                  <span className="hidden sm:inline">Monthly Summary</span>
+                  <span className="sm:hidden">Summary</span>
                 </button>
               </nav>
             </div>
@@ -556,72 +557,72 @@ export default function FinancialRecordsPage() {
 
 
         {/* Stats Cards with Safe Zone */}
-        <div className="pl-[72px] pr-4 lg:px-4 py-6">
+        <div className="pl-[72px] pr-4 lg:px-4 py-4 lg:py-6 animate-fade-in-up">
           <div className="max-w-7xl mx-auto">
             {activeTab === 'records' && (
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mb-4 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start sm:items-center">
+                  <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5 sm:mt-0 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-sm text-blue-800">
+                  <p className="text-xs sm:text-sm text-blue-800">
                     <span className="font-medium">Records Tab:</span> Showing data for {dateFilter ? new Date(dateFilter + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'current month'} only
                   </p>
                 </div>
               </div>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white rounded-lg shadow-sm border p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+              <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-4">
                 <div className="flex items-center">
-                  <div className="p-2 bg-emerald-100 rounded-lg">
-                    <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 bg-emerald-100 rounded-lg flex-shrink-0">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Income</p>
-                    <p className="text-2xl font-bold text-emerald-600">{formatCurrency(totalIncome)}</p>
+                  <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Income</p>
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-emerald-600 truncate">{formatCurrency(totalIncome)}</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-4">
                 <div className="flex items-center">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 bg-red-100 rounded-lg flex-shrink-0">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Costs</p>
-                    <p className="text-2xl font-bold text-red-600">{formatCurrency(totalCosts)}</p>
+                  <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Costs</p>
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600 truncate">{formatCurrency(totalCosts)}</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-4">
                 <div className="flex items-center">
-                  <div className={`p-2 rounded-lg ${netProfit >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-                    <svg className={`w-6 h-6 ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className={`p-2 rounded-lg flex-shrink-0 ${netProfit >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                    <svg className={`w-5 h-5 sm:w-6 sm:h-6 ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Net Profit</p>
-                    <p className={`text-2xl font-bold ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Net Profit</p>
+                    <p className={`text-lg sm:text-xl lg:text-2xl font-bold truncate ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {formatCurrency(netProfit)}
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border p-4">
+              <div className="bg-white rounded-lg shadow-sm border p-3 sm:p-4">
                 <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Total Records</p>
-                    <p className="text-2xl font-bold text-gray-900">{displayTotalRecords}</p>
+                  <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Records</p>
+                    <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{displayTotalRecords}</p>
                   </div>
                 </div>
               </div>
@@ -629,27 +630,27 @@ export default function FinancialRecordsPage() {
 
             {/* Monthly Costs Section - Only show on Records tab */}
             {activeTab === 'records' && (
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <div className="bg-white rounded-lg shadow-sm border">
                   <button
                     onClick={() => setIsMonthlyCostsExpanded(!isMonthlyCostsExpanded)}
-                    className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                    className="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-start sm:items-center justify-between text-left hover:bg-gray-50 active:bg-gray-100 transition-colors min-h-[44px]"
                   >
-                    <div className="flex items-center">
-                      <div className="p-2 bg-orange-100 rounded-lg mr-4">
-                        <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-start sm:items-center flex-1 min-w-0">
+                      <div className="p-2 bg-orange-100 rounded-lg mr-3 sm:mr-4 flex-shrink-0">
+                        <svg className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
                       </div>
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900">Monthly Costs</h3>
-                        <p className="text-sm text-gray-600">
-                          Manage monthly expenses for {dateFilter ? new Date(dateFilter + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'current month'} (Salary, Man Power, Other)
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900">Monthly Costs</h3>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-0.5">
+                          Manage monthly expenses for {dateFilter ? new Date(dateFilter + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'current month'}
                         </p>
                       </div>
                     </div>
                     <svg 
-                      className={`w-5 h-5 text-gray-400 transition-transform ${isMonthlyCostsExpanded ? 'rotate-180' : ''}`} 
+                      className={`w-5 h-5 text-gray-400 transition-transform flex-shrink-0 ml-2 mt-1 sm:mt-0 ${isMonthlyCostsExpanded ? 'rotate-180' : ''}`} 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
@@ -659,9 +660,9 @@ export default function FinancialRecordsPage() {
                   </button>
                   
                   {isMonthlyCostsExpanded && (
-                    <div className="px-6 pb-6 border-t border-gray-200">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                        <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t border-gray-200">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-3 sm:mt-4">
+                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                           <label htmlFor="salary" className="block text-sm font-medium text-gray-700 mb-2">
                             Salary
                           </label>
@@ -672,12 +673,12 @@ export default function FinancialRecordsPage() {
                             onChange={(e) => setMonthlyCosts(prev => ({ ...prev, salary: parseFloat(e.target.value) || 0 }))}
                             step="0.01"
                             min="0"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base"
                             placeholder="0.00"
                           />
                         </div>
                         
-                        <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                           <label htmlFor="manPower" className="block text-sm font-medium text-gray-700 mb-2">
                             Man Power
                           </label>
@@ -688,12 +689,12 @@ export default function FinancialRecordsPage() {
                             onChange={(e) => setMonthlyCosts(prev => ({ ...prev, manPower: parseFloat(e.target.value) || 0 }))}
                             step="0.01"
                             min="0"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base"
                             placeholder="0.00"
                           />
                         </div>
                         
-                        <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                           <label htmlFor="other" className="block text-sm font-medium text-gray-700 mb-2">
                             Other
                           </label>
@@ -704,16 +705,16 @@ export default function FinancialRecordsPage() {
                             onChange={(e) => setMonthlyCosts(prev => ({ ...prev, other: parseFloat(e.target.value) || 0 }))}
                             step="0.01"
                             min="0"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base"
                             placeholder="0.00"
                           />
                         </div>
                       </div>
                       
-                      <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                        <div className="flex justify-between items-center">
+                      <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2">
                           <span className="text-sm font-medium text-orange-800">Total Monthly Costs:</span>
-                          <span className="text-lg font-semibold text-orange-900">{formatCurrency(totalMonthlyCosts)}</span>
+                          <span className="text-base sm:text-lg font-semibold text-orange-900">{formatCurrency(totalMonthlyCosts)}</span>
                         </div>
                       </div>
                     </div>
@@ -724,14 +725,14 @@ export default function FinancialRecordsPage() {
 
             {/* Search and Filter - Show for both tabs */}
             {activeTab === 'records' && (
-              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
                 <div className="flex-1">
                   <input
                     type="text"
                     placeholder="Search by notes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 placeholder-gray-500"
+                    className="w-full px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base text-gray-900 placeholder-gray-500"
                   />
                 </div>
                 <div className="sm:w-48">
@@ -739,7 +740,7 @@ export default function FinancialRecordsPage() {
                     type="month"
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
+                    className="w-full px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base text-gray-900"
                   />
                 </div>
               </div>
@@ -747,38 +748,38 @@ export default function FinancialRecordsPage() {
 
             {/* Monthly Summary Filter - Only show for Monthly Summary tab */}
             {activeTab === 'summary' && (
-              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="flex flex-col gap-3 mb-4 sm:mb-6">
                 <div className="flex-1">
                   <input
                     type="text"
                     placeholder="Search by month name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 placeholder-gray-500"
+                    className="w-full px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base text-gray-900 placeholder-gray-500"
                   />
                 </div>
-                <div className="sm:w-48 flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="month"
                     value={monthlySummaryFilter.fromMonth}
                     onChange={(e) => setMonthlySummaryFilter(prev => ({ ...prev, fromMonth: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
+                    className="flex-1 px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base text-gray-900"
                     placeholder="From Month"
                   />
                   <input
                     type="month"
                     value={monthlySummaryFilter.toMonth}
                     onChange={(e) => setMonthlySummaryFilter(prev => ({ ...prev, toMonth: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
+                    className="flex-1 px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-base text-gray-900"
                     placeholder="To Month"
                   />
                   {(monthlySummaryFilter.fromMonth || monthlySummaryFilter.toMonth) && (
                     <button
                       onClick={() => setMonthlySummaryFilter({ fromMonth: '', toMonth: '' })}
-                      className="px-3 py-2 text-gray-500 hover:text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      className="px-4 py-3 min-h-[44px] min-w-[44px] text-gray-500 hover:text-gray-700 active:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors font-medium"
                       title="Clear month filter"
                     >
-                      ✕
+                      Clear
                     </button>
                   )}
                 </div>
@@ -788,7 +789,7 @@ export default function FinancialRecordsPage() {
         </div>
 
         {/* Content based on active tab */}
-        <div className="px-4 pb-6">
+        <div className="pl-[72px] pr-4 lg:px-4 pb-6">
           <div className="max-w-7xl mx-auto">
             {activeTab === 'records' ? (
               // Records Tab Content
@@ -820,8 +821,11 @@ export default function FinancialRecordsPage() {
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                  {/* Table View */}
+                  {/* Table View - Horizontal scroll on mobile */}
                 <div className="overflow-x-auto">
+                  <div className="text-xs text-gray-500 px-4 py-2 bg-gray-50 border-b border-gray-200 sm:hidden">
+                    ← Swipe to see more columns →
+                  </div>
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -897,20 +901,22 @@ export default function FinancialRecordsPage() {
                             <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                               {record.notes || '-'}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                              <button
-                                onClick={() => handleEdit(record)}
-                                className="text-emerald-600 hover:text-emerald-900"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDelete(record.id)}
-                                disabled={deleteLoading === record.id}
-                                className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                              >
-                                {deleteLoading === record.id ? 'Deleting...' : 'Delete'}
-                              </button>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleEdit(record)}
+                                  className="px-3 py-2 min-h-[44px] min-w-[60px] text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 active:bg-emerald-100 rounded transition-colors font-medium"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(record.id)}
+                                  disabled={deleteLoading === record.id}
+                                  className="px-3 py-2 min-h-[44px] min-w-[60px] text-red-600 hover:text-red-900 hover:bg-red-50 active:bg-red-100 rounded transition-colors disabled:opacity-50 font-medium"
+                                >
+                                  {deleteLoading === record.id ? 'Deleting...' : 'Delete'}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -922,25 +928,25 @@ export default function FinancialRecordsPage() {
                   
                   {/* Pagination Controls */}
                   {activeTab === 'records' && totalRecords > pageSize && (
-                    <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm text-gray-700">
+                    <div className="px-4 sm:px-6 py-4 border-t border-gray-200 bg-gray-50">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                        <div className="flex items-center">
+                          <span className="text-xs sm:text-sm text-gray-700 text-center">
                             Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalRecords)} of {totalRecords} records
                           </span>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => {
                               setCurrentPage(prev => Math.max(1, prev - 1));
                               fetchRecords(currentPage - 1, pageSize);
                             }}
                             disabled={currentPage === 1}
-                            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 min-h-[44px] text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             Previous
                           </button>
-                          <span className="px-3 py-2 text-sm text-gray-700">
+                          <span className="px-3 py-2 text-xs sm:text-sm text-gray-700 whitespace-nowrap">
                             Page {currentPage} of {Math.ceil(totalRecords / pageSize)}
                           </span>
                           <button
@@ -949,7 +955,7 @@ export default function FinancialRecordsPage() {
                               fetchRecords(currentPage + 1, pageSize);
                             }}
                             disabled={currentPage >= Math.ceil(totalRecords / pageSize)}
-                            className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 min-h-[44px] text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 active:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             Next
                           </button>
@@ -978,11 +984,14 @@ export default function FinancialRecordsPage() {
                 </div>
               ) : (
                 <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                  <div className="px-6 py-4 border-b border-gray-200">
-                    <h3 className="text-lg font-medium text-gray-900">Monthly Summary</h3>
-                    <p className="text-sm text-gray-600">Financial performance by month</p>
+                  <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900">Monthly Summary</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-0.5">Financial performance by month</p>
                   </div>
                   <div className="overflow-x-auto">
+                    <div className="text-xs text-gray-500 px-4 py-2 bg-gray-50 border-b border-gray-200 sm:hidden">
+                      ← Swipe to see more columns →
+                    </div>
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
