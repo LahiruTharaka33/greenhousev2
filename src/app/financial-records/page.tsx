@@ -483,8 +483,8 @@ export default function FinancialRecordsPage() {
   return (
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-6 shadow-sm">
+        {/* Header with Safe Zone */}
+        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-6 shadow-sm">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
               <div>
@@ -506,9 +506,9 @@ export default function FinancialRecordsPage() {
           </div>
         </div>
 
-        {/* Error Alert */}
+        {/* Error Alert with Safe Zone */}
         {error && (
-          <div className="px-4 py-4">
+          <div className="pl-16 pr-4 lg:px-4 py-4">
             <div className="max-w-7xl mx-auto">
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
                 <div className="flex items-center">
@@ -524,8 +524,8 @@ export default function FinancialRecordsPage() {
           </div>
         )}
 
-        {/* Tab Navigation */}
-        <div className="px-4 py-4">
+        {/* Tab Navigation with Safe Zone */}
+        <div className="pl-16 pr-4 lg:px-4 py-4">
           <div className="max-w-7xl mx-auto">
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8">
@@ -555,8 +555,8 @@ export default function FinancialRecordsPage() {
         </div>
 
 
-        {/* Stats Cards */}
-        <div className="px-4 py-6">
+        {/* Stats Cards with Safe Zone */}
+        <div className="pl-16 pr-4 lg:px-4 py-6">
           <div className="max-w-7xl mx-auto">
             {activeTab === 'records' && (
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">

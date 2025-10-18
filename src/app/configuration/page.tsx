@@ -401,8 +401,8 @@ export default function ConfigurationPage() {
   return (
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-6 shadow-sm">
+        {/* Header with Safe Zone */}
+        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-6 shadow-sm">
           <div className="max-w-7xl mx-auto">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
@@ -415,7 +415,8 @@ export default function ConfigurationPage() {
           </div>
         </div>
 
-        <div className="px-4 py-6">
+        {/* Content with Safe Zone */}
+        <div className="pl-16 pr-4 lg:px-4 py-6">
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Message */}
             {message && (

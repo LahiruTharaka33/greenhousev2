@@ -107,15 +107,29 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            {customer ? 'Edit Customer' : 'Add New Customer'}
-          </h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-0 md:p-4 overflow-y-auto">
+      <div className="bg-white md:rounded-lg shadow-xl max-w-2xl w-full min-h-screen md:min-h-0 md:max-h-[90vh] md:my-8 overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 md:p-6 z-10">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+              {customer ? 'Edit Customer' : 'Add New Customer'}
+            </h2>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="md:hidden p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="p-4 md:p-6">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               {/* Customer ID */}
               <div>
                 <label htmlFor="customerId" className="block text-sm font-medium text-gray-700 mb-2">
@@ -127,7 +141,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                   name="customerId"
                   value={formData.customerId}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  className={`w-full px-4 py-3 min-h-[44px] border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                     errors.customerId ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter customer ID"
@@ -148,7 +162,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                   name="customerName"
                   value={formData.customerName}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  className={`w-full px-4 py-3 min-h-[44px] border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                     errors.customerName ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter customer name"
@@ -169,7 +183,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                   name="company"
                   value={formData.company}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="Enter company name"
                 />
               </div>
@@ -185,7 +199,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                   name="cultivationType"
                   value={formData.cultivationType}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="Enter cultivation type"
                 />
               </div>
@@ -201,7 +215,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                   name="cultivationName"
                   value={formData.cultivationName}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="Enter cultivation name"
                 />
               </div>
@@ -218,7 +232,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                   value={formData.noOfTunnel}
                   onChange={handleChange}
                   min="0"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                  className={`w-full px-4 py-3 min-h-[44px] border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                     errors.noOfTunnel ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="0"
@@ -239,7 +253,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                   name="location"
                   value={formData.location}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="Enter location"
                 />
               </div>
@@ -255,7 +269,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="Enter email address"
                 />
               </div>
@@ -271,7 +285,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="Enter phone number"
                 />
               </div>
@@ -289,7 +303,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                       name="password"
                       value={formData.password}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                      className={`w-full px-4 py-3 min-h-[44px] border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                         errors.password ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Enter password (min 6 characters)"
@@ -310,7 +324,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                      className={`w-full px-4 py-3 min-h-[44px] border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
                         errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="Confirm password"
@@ -335,17 +349,17 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
                 value={formData.address}
                 onChange={handleChange}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 placeholder="Enter address"
               />
             </div>
 
-            {/* Form Actions */}
-            <div className="flex justify-end space-x-4 pt-6 border-t">
+            {/* Form Actions - Sticky on mobile */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 -mx-4 md:-mx-6 px-4 md:px-6 py-4 md:py-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-4">
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 min-h-[44px] text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 active:bg-gray-300 transition-colors font-medium"
                 disabled={isLoading}
               >
                 Cancel
@@ -353,7 +367,7 @@ export default function CustomerForm({ customer, onSubmit, onCancel, isLoading =
               <button
                 type="submit"
                 disabled={isLoading}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-6 py-3 min-h-[44px] bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 active:bg-emerald-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 {isLoading ? 'Saving...' : (customer ? 'Update Customer' : 'Add Customer')}
               </button>

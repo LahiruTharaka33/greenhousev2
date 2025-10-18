@@ -401,8 +401,8 @@ export default function SchedulesV2Page() {
   return (
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-6 shadow-sm">
+        {/* Header with Safe Zone */}
+        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-6 shadow-sm">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
               <div>
@@ -417,8 +417,8 @@ export default function SchedulesV2Page() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="px-4 py-4">
+        {/* Tab Navigation with Safe Zone */}
+        <div className="pl-16 pr-4 lg:px-4 py-4">
           <div className="max-w-7xl mx-auto">
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8">
@@ -447,7 +447,8 @@ export default function SchedulesV2Page() {
           </div>
         </div>
 
-        <div className="px-4 py-6">
+        {/* Content with Safe Zone */}
+        <div className="pl-16 pr-4 lg:px-4 py-6">
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Create Schedule Tab */}
             {activeTab === 'create' && (

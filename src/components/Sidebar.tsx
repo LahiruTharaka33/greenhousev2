@@ -99,14 +99,15 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile menu button */}
+      {/* Mobile menu button - Improved touch target */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="p-2 rounded-md bg-white shadow-lg hover:bg-gray-50 border border-gray-200"
+          className="p-3 min-w-[44px] min-h-[44px] rounded-lg bg-white shadow-lg hover:bg-gray-50 active:bg-gray-100 border border-gray-200 transition-colors"
+          aria-label={isMobileOpen ? "Close menu" : "Open menu"}
         >
-          <span className="block w-6 h-0.5 bg-gray-600 mb-1"></span>
-          <span className="block w-6 h-0.5 bg-gray-600 mb-1"></span>
+          <span className="block w-6 h-0.5 bg-gray-600 mb-1.5"></span>
+          <span className="block w-6 h-0.5 bg-gray-600 mb-1.5"></span>
           <span className="block w-6 h-0.5 bg-gray-600"></span>
         </button>
       </div>
@@ -116,6 +117,7 @@ export default function Sidebar() {
         <div 
           className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={() => setIsMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
 
@@ -165,10 +167,11 @@ export default function Sidebar() {
               <li key={item.name}>
                 <Link
                   href={item.href}
-                  className={`flex items-center p-3 rounded-lg transition-all duration-200 group ${
+                  onClick={() => setIsMobileOpen(false)}
+                  className={`flex items-center p-3 min-h-[44px] rounded-lg transition-all duration-200 group ${
                     isActive
                       ? 'bg-emerald-50 text-emerald-700 border-l-4 border-emerald-500 shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
                   }`}
                   title={isCollapsed ? item.name : undefined}
                 >
@@ -176,7 +179,7 @@ export default function Sidebar() {
                   {!isCollapsed && (
                     <div className="flex-1">
                       <div className="font-medium">{item.name}</div>
-                      <div className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity lg:block hidden">
                         {item.description}
                       </div>
                     </div>
@@ -189,11 +192,11 @@ export default function Sidebar() {
       </nav>
 
       {/* Sign out button */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
         {!isCollapsed ? (
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center p-3 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
+            className="w-full flex items-center p-3 min-h-[44px] text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
           >
             <span className="text-lg mr-3">🚪</span>
             Sign Out
@@ -201,8 +204,9 @@ export default function Sidebar() {
         ) : (
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center justify-center p-3 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
+            className="w-full flex items-center justify-center p-3 min-h-[44px] text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
             title="Sign Out"
+            aria-label="Sign Out"
           >
             <span className="text-lg">🚪</span>
           </button>

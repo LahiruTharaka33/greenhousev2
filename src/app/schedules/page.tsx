@@ -641,8 +641,8 @@ export default function SchedulesPage() {
       />
 
       <main className="min-h-screen bg-gray-50 text-gray-900">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-6 shadow-sm">
+        {/* Header with Safe Zone */}
+        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-6 shadow-sm">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
               <div>
@@ -657,8 +657,8 @@ export default function SchedulesPage() {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="px-4 py-4">
+        {/* Tab Navigation with Safe Zone */}
+        <div className="pl-16 pr-4 lg:px-4 py-4">
           <div className="max-w-7xl mx-auto">
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-8">
@@ -690,8 +690,8 @@ export default function SchedulesPage() {
         {/* Create Schedules Tab */}
         {activeTab === 'create' && (
           <>
-            {/* Customer and Tunnel Selection */}
-            <div className="px-4 py-6">
+            {/* Customer and Tunnel Selection with Safe Zone */}
+            <div className="pl-16 pr-4 lg:px-4 py-6">
               <div className="max-w-7xl mx-auto">
                 <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -1000,8 +1000,8 @@ export default function SchedulesPage() {
         {/* View & Manage Schedules Tab */}
         {activeTab === 'view' && (
           <>
-            {/* Filters */}
-            <div className="px-4 py-6">
+            {/* Filters with Safe Zone */}
+            <div className="pl-16 pr-4 lg:px-4 py-6">
               <div className="max-w-7xl mx-auto">
                 <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">🔍 Filter Schedules</h2>

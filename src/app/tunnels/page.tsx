@@ -156,8 +156,8 @@ export default function TunnelsPage() {
   return (
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 py-6 shadow-sm">
+        {/* Header with Safe Zone */}
+        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-6 shadow-sm">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
               <div>
@@ -179,8 +179,8 @@ export default function TunnelsPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="px-4 py-6">
+        {/* Stats Cards with Safe Zone */}
+        <div className="pl-16 pr-4 lg:px-4 py-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               <div className="bg-white rounded-lg shadow-sm border p-4">
