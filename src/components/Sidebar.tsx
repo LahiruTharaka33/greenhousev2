@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
@@ -97,32 +97,53 @@ export default function Sidebar() {
     await signOut({ callbackUrl: '/login' });
   };
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileOpen]);
+
   return (
     <>
-      {/* Mobile menu button - Improved touch target */}
+      {/* Mobile menu button - Enhanced with animation */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="p-3 min-w-[44px] min-h-[44px] rounded-lg bg-white shadow-lg hover:bg-gray-50 active:bg-gray-100 border border-gray-200 transition-colors"
+          className="p-3 min-w-[44px] min-h-[44px] rounded-lg bg-white shadow-lg hover:bg-gray-50 active:bg-gray-100 border border-gray-200 transition-all duration-300 hamburger-button"
           aria-label={isMobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isMobileOpen}
         >
-          <span className="block w-6 h-0.5 bg-gray-600 mb-1.5"></span>
-          <span className="block w-6 h-0.5 bg-gray-600 mb-1.5"></span>
-          <span className="block w-6 h-0.5 bg-gray-600"></span>
+          <div className="relative w-6 h-5 flex flex-col justify-center items-center">
+            <span className={`absolute w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${
+              isMobileOpen ? 'rotate-45 translate-y-0' : '-translate-y-2'
+            }`}></span>
+            <span className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${
+              isMobileOpen ? 'opacity-0 scale-0' : 'opacity-100 scale-100'
+            }`}></span>
+            <span className={`absolute w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${
+              isMobileOpen ? '-rotate-45 translate-y-0' : 'translate-y-2'
+            }`}></span>
+          </div>
         </button>
       </div>
 
-      {/* Mobile overlay */}
+      {/* Mobile overlay - Enhanced animation */}
       {isMobileOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 animate-fade-in"
           onClick={() => setIsMobileOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
-      <div className={`bg-white shadow-lg transition-all duration-300 ${
+      {/* Sidebar - Enhanced animations */}
+      <div className={`bg-white shadow-2xl transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-16' : 'w-64'
       } h-screen fixed left-0 top-0 z-50 lg:translate-x-0 ${
         isMobileOpen ? 'translate-x-0' : '-translate-x-full'
@@ -158,8 +179,8 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
+      {/* Navigation - Enhanced with smooth scrolling */}
+      <nav className="flex-1 overflow-y-auto p-4 custom-scrollbar">
         <ul className="space-y-2">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
@@ -175,11 +196,11 @@ export default function Sidebar() {
                   }`}
                   title={isCollapsed ? item.name : undefined}
                 >
-                  <span className="text-xl mr-3">{item.icon}</span>
+                  <span className="text-xl mr-3 flex-shrink-0">{item.icon}</span>
                   {!isCollapsed && (
-                    <div className="flex-1">
-                      <div className="font-medium">{item.name}</div>
-                      <div className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity lg:block hidden">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{item.name}</div>
+                      <div className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity lg:block hidden truncate">
                         {item.description}
                       </div>
                     </div>

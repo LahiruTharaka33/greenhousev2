@@ -8,7 +8,8 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
       <Sidebar />
-      <div className="flex-1 lg:ml-64 w-full">
+      {/* Main content area with responsive margin */}
+      <div className="flex-1 lg:ml-64 w-full transition-all duration-300 ease-in-out">
         <div className="min-h-screen w-full">
           {children}
         </div>
