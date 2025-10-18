@@ -122,9 +122,9 @@ export default function Sidebar() {
       {/* Sidebar */}
       <div className={`bg-white shadow-lg transition-all duration-300 ${
         isCollapsed ? 'w-16' : 'w-64'
-      } min-h-screen fixed left-0 top-0 z-50 lg:translate-x-0 ${
+      } h-screen fixed left-0 top-0 z-50 lg:translate-x-0 ${
         isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      } flex flex-col`}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {!isCollapsed && (
@@ -157,7 +157,7 @@ export default function Sidebar() {
       )}
 
       {/* Navigation */}
-      <nav className="p-4">
+      <nav className="flex-1 overflow-y-auto p-4">
         <ul className="space-y-2">
           {navigation.map((item) => {
             const isActive = pathname === item.href;

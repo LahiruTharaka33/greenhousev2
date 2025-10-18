@@ -12,6 +12,9 @@ interface FinancialRecord {
   chemicalCost: number;
   fertilizerCost: number;
   rent: number;
+  deliveryCost?: number;
+  commission?: number;
+  other?: number;
   notes?: string;
   createdAt: string | Date;
   updatedAt: string | Date;
@@ -19,7 +22,7 @@ interface FinancialRecord {
 
 interface FinancialRecordFormProps {
   record?: FinancialRecord;
-  onSubmit: (data: Omit<FinancialRecord, 'id' | 'createdAt' | 'updatedAt' | 'totalIncome'>) => void;
+  onSubmit: (data: Omit<FinancialRecord, 'id' | 'createdAt' | 'updatedAt' | 'rate'>) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -27,12 +30,12 @@ interface FinancialRecordFormProps {
 export default function FinancialRecordForm({ record, onSubmit, onCancel, isLoading = false }: FinancialRecordFormProps) {
   const [formData, setFormData] = useState({
     date: '',
-    rate: '',
+    totalIncome: '',
     quantity: '',
     harvestingCost: '',
-    chemicalCost: '',
-    fertilizerCost: '',
-    rent: '',
+    deliveryCost: '',
+    commission: '',
+    other: '',
     notes: '',
   });
 
@@ -46,12 +49,12 @@ export default function FinancialRecordForm({ record, onSubmit, onCancel, isLoad
       
       setFormData({
         date: dateValue, // Format date for input
-        rate: record.rate.toString(),
+        totalIncome: record.totalIncome.toString(),
         quantity: record.quantity.toString(),
         harvestingCost: record.harvestingCost.toString(),
-        chemicalCost: record.chemicalCost.toString(),
-        fertilizerCost: record.fertilizerCost.toString(),
-        rent: record.rent.toString(),
+        deliveryCost: (record as any).deliveryCost?.toString() || '0',
+        commission: (record as any).commission?.toString() || '0',
+        other: (record as any).other?.toString() || '0',
         notes: record.notes || '',
       });
     }
@@ -64,8 +67,8 @@ export default function FinancialRecordForm({ record, onSubmit, onCancel, isLoad
       newErrors.date = 'Date is required';
     }
 
-    if (!formData.rate || parseFloat(formData.rate) <= 0) {
-      newErrors.rate = 'Rate must be a positive number';
+    if (!formData.totalIncome || parseFloat(formData.totalIncome) <= 0) {
+      newErrors.totalIncome = 'Total Income must be a positive number';
     }
 
     if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
@@ -76,16 +79,16 @@ export default function FinancialRecordForm({ record, onSubmit, onCancel, isLoad
       newErrors.harvestingCost = 'Harvesting cost must be a positive number';
     }
 
-    if (formData.chemicalCost && (isNaN(parseFloat(formData.chemicalCost)) || parseFloat(formData.chemicalCost) < 0)) {
-      newErrors.chemicalCost = 'Chemical cost must be a positive number';
+    if (formData.deliveryCost && (isNaN(parseFloat(formData.deliveryCost)) || parseFloat(formData.deliveryCost) < 0)) {
+      newErrors.deliveryCost = 'Delivery cost must be a positive number';
     }
 
-    if (formData.fertilizerCost && (isNaN(parseFloat(formData.fertilizerCost)) || parseFloat(formData.fertilizerCost) < 0)) {
-      newErrors.fertilizerCost = 'Fertilizer cost must be a positive number';
+    if (formData.commission && (isNaN(parseFloat(formData.commission)) || parseFloat(formData.commission) < 0)) {
+      newErrors.commission = 'Commission must be a positive number';
     }
 
-    if (formData.rent && (isNaN(parseFloat(formData.rent)) || parseFloat(formData.rent) < 0)) {
-      newErrors.rent = 'Rent must be a positive number';
+    if (formData.other && (isNaN(parseFloat(formData.other)) || parseFloat(formData.other) < 0)) {
+      newErrors.other = 'Other cost must be a positive number';
     }
 
     setErrors(newErrors);
@@ -94,17 +97,50 @@ export default function FinancialRecordForm({ record, onSubmit, onCancel, isLoad
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Additional validation before submission
+    if (!formData.date || !formData.totalIncome || !formData.quantity) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    if (isNaN(parseFloat(formData.totalIncome)) || isNaN(parseFloat(formData.quantity))) {
+      alert('Total Income and Quantity must be valid numbers');
+      return;
+    }
+
+    if (parseFloat(formData.totalIncome) < 0 || parseFloat(formData.quantity) <= 0) {
+      alert('Total Income must be positive and Quantity must be greater than 0');
+      return;
+    }
+    
     if (validateForm()) {
-      onSubmit({
+      const totalCosts = 
+        (formData.harvestingCost ? parseFloat(formData.harvestingCost) : 0) +
+        (formData.deliveryCost ? parseFloat(formData.deliveryCost) : 0) +
+        (formData.commission ? parseFloat(formData.commission) : 0) +
+        (formData.other ? parseFloat(formData.other) : 0);
+      
+      const netIncome = parseFloat(formData.totalIncome) - totalCosts;
+      const calculatedRate = formData.quantity ? netIncome / parseFloat(formData.quantity) : 0;
+
+      // Create a copy of the data to prevent mutations
+      const submitData = {
         date: formData.date,
-        rate: parseFloat(formData.rate),
+        totalIncome: parseFloat(formData.totalIncome),
         quantity: parseFloat(formData.quantity),
         harvestingCost: formData.harvestingCost ? parseFloat(formData.harvestingCost) : 0,
-        chemicalCost: formData.chemicalCost ? parseFloat(formData.chemicalCost) : 0,
-        fertilizerCost: formData.fertilizerCost ? parseFloat(formData.fertilizerCost) : 0,
-        rent: formData.rent ? parseFloat(formData.rent) : 0,
-        notes: formData.notes || null,
-      });
+        chemicalCost: 0, // Keep for backward compatibility
+        fertilizerCost: 0, // Keep for backward compatibility
+        rent: 0, // Keep for backward compatibility
+        deliveryCost: formData.deliveryCost ? parseFloat(formData.deliveryCost) : 0,
+        commission: formData.commission ? parseFloat(formData.commission) : 0,
+        other: formData.other ? parseFloat(formData.other) : 0,
+        notes: formData.notes || undefined,
+      };
+
+      console.log('Submitting data:', submitData); // Debug log
+      onSubmit(submitData);
     }
   };
 
@@ -124,8 +160,15 @@ export default function FinancialRecordForm({ record, onSubmit, onCancel, isLoad
     }
   };
 
-  const totalIncome = formData.rate && formData.quantity 
-    ? (parseFloat(formData.rate) * parseFloat(formData.quantity)).toFixed(2)
+  const totalCosts = 
+    (formData.harvestingCost ? parseFloat(formData.harvestingCost) : 0) +
+    (formData.deliveryCost ? parseFloat(formData.deliveryCost) : 0) +
+    (formData.commission ? parseFloat(formData.commission) : 0) +
+    (formData.other ? parseFloat(formData.other) : 0);
+  
+  const netIncome = formData.totalIncome ? parseFloat(formData.totalIncome) - totalCosts : 0;
+  const rate = formData.quantity && formData.totalIncome 
+    ? (netIncome / parseFloat(formData.quantity)).toFixed(2)
     : '0.00';
 
   return (
@@ -166,24 +209,24 @@ export default function FinancialRecordForm({ record, onSubmit, onCancel, isLoad
           </div>
 
           <div>
-            <label htmlFor="rate" className="block text-sm font-medium text-gray-700 mb-1">
-              Rate (per kg) *
+            <label htmlFor="totalIncome" className="block text-sm font-medium text-gray-700 mb-1">
+              Total Income (Rs) *
             </label>
             <input
               type="number"
-              id="rate"
-              name="rate"
-              value={formData.rate}
+              id="totalIncome"
+              name="totalIncome"
+              value={formData.totalIncome}
               onChange={handleChange}
               step="0.01"
               min="0"
               required
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
-                errors.rate ? 'border-red-500' : 'border-gray-300'
+                errors.totalIncome ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="0.00"
             />
-            {errors.rate && <p className="text-red-500 text-xs mt-1">{errors.rate}</p>}
+            {errors.totalIncome && <p className="text-red-500 text-xs mt-1">{errors.totalIncome}</p>}
           </div>
 
           <div>
@@ -208,11 +251,11 @@ export default function FinancialRecordForm({ record, onSubmit, onCancel, isLoad
           </div>
         </div>
 
-        {/* Total Income Display */}
+        {/* Rate Display */}
         <div className="bg-emerald-50 border border-emerald-200 rounded-md p-3">
           <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-emerald-800">Total Income:</span>
-            <span className="text-lg font-semibold text-emerald-900">Rs {totalIncome}</span>
+            <span className="text-sm font-medium text-emerald-800">Rate (per kg):</span>
+            <span className="text-lg font-semibold text-emerald-900">Rs {rate}</span>
           </div>
         </div>
 
@@ -239,63 +282,63 @@ export default function FinancialRecordForm({ record, onSubmit, onCancel, isLoad
           </div>
 
           <div>
-            <label htmlFor="chemicalCost" className="block text-sm font-medium text-gray-700 mb-1">
-              Chemical Cost
+            <label htmlFor="deliveryCost" className="block text-sm font-medium text-gray-700 mb-1">
+              Delivery Cost
             </label>
             <input
               type="number"
-              id="chemicalCost"
-              name="chemicalCost"
-              value={formData.chemicalCost}
+              id="deliveryCost"
+              name="deliveryCost"
+              value={formData.deliveryCost}
               onChange={handleChange}
               step="0.01"
               min="0"
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
-                errors.chemicalCost ? 'border-red-500' : 'border-gray-300'
+                errors.deliveryCost ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="0.00"
             />
-            {errors.chemicalCost && <p className="text-red-500 text-xs mt-1">{errors.chemicalCost}</p>}
+            {errors.deliveryCost && <p className="text-red-500 text-xs mt-1">{errors.deliveryCost}</p>}
           </div>
 
           <div>
-            <label htmlFor="fertilizerCost" className="block text-sm font-medium text-gray-700 mb-1">
-              Fertilizer Cost
+            <label htmlFor="commission" className="block text-sm font-medium text-gray-700 mb-1">
+              Commission
             </label>
             <input
               type="number"
-              id="fertilizerCost"
-              name="fertilizerCost"
-              value={formData.fertilizerCost}
+              id="commission"
+              name="commission"
+              value={formData.commission}
               onChange={handleChange}
               step="0.01"
               min="0"
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
-                errors.fertilizerCost ? 'border-red-500' : 'border-gray-300'
+                errors.commission ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="0.00"
             />
-            {errors.fertilizerCost && <p className="text-red-500 text-xs mt-1">{errors.fertilizerCost}</p>}
+            {errors.commission && <p className="text-red-500 text-xs mt-1">{errors.commission}</p>}
           </div>
 
           <div>
-            <label htmlFor="rent" className="block text-sm font-medium text-gray-700 mb-1">
-              Rent
+            <label htmlFor="other" className="block text-sm font-medium text-gray-700 mb-1">
+              Other
             </label>
             <input
               type="number"
-              id="rent"
-              name="rent"
-              value={formData.rent}
+              id="other"
+              name="other"
+              value={formData.other}
               onChange={handleChange}
               step="0.01"
               min="0"
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
-                errors.rent ? 'border-red-500' : 'border-gray-300'
+                errors.other ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="0.00"
             />
-            {errors.rent && <p className="text-red-500 text-xs mt-1">{errors.rent}</p>}
+            {errors.other && <p className="text-red-500 text-xs mt-1">{errors.other}</p>}
           </div>
         </div>
 

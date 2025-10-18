@@ -43,41 +43,52 @@ export async function PUT(
     const body = await request.json();
     const { 
       date, 
-      rate, 
+      totalIncome,
       quantity, 
       harvestingCost, 
       chemicalCost, 
       fertilizerCost, 
       rent, 
+      deliveryCost,
+      commission,
+      other,
       notes 
     } = body;
 
     // Validation
-    if (!date || !rate || !quantity) {
-      return NextResponse.json({ error: 'Date, rate, and quantity are required' }, { status: 400 });
+    if (!date || !totalIncome || !quantity) {
+      return NextResponse.json({ error: 'Date, total income, and quantity are required' }, { status: 400 });
     }
 
-    if (rate < 0 || quantity < 0) {
-      return NextResponse.json({ error: 'Rate and quantity must be positive numbers' }, { status: 400 });
+    if (totalIncome < 0 || quantity < 0) {
+      return NextResponse.json({ error: 'Total income and quantity must be positive numbers' }, { status: 400 });
     }
 
-    if ((harvestingCost && harvestingCost < 0) || (chemicalCost && chemicalCost < 0) || (fertilizerCost && fertilizerCost < 0) || (rent && rent < 0)) {
+    if ((harvestingCost && harvestingCost < 0) || (chemicalCost && chemicalCost < 0) || (fertilizerCost && fertilizerCost < 0) || (rent && rent < 0) || (deliveryCost && deliveryCost < 0) || (commission && commission < 0) || (other && other < 0)) {
       return NextResponse.json({ error: 'All cost values must be positive numbers' }, { status: 400 });
     }
 
-    const totalIncome = rate * quantity;
+    // Calculate total costs
+    const totalCosts = (harvestingCost || 0) + (deliveryCost || 0) + (commission || 0) + (other || 0);
+    
+    // Calculate rate as (totalIncome - totalCosts) / quantity
+    const netIncome = parseFloat(totalIncome) - totalCosts;
+    const rate = parseFloat(quantity) > 0 ? netIncome / parseFloat(quantity) : 0;
 
     const record = await prisma.financialRecord.update({
       where: { id: params.id },
       data: {
         date: new Date(date),
-        rate: parseFloat(rate),
+        rate: rate,
         quantity: parseFloat(quantity),
-        totalIncome,
+        totalIncome: parseFloat(totalIncome),
         harvestingCost: harvestingCost ? parseFloat(harvestingCost) : 0,
         chemicalCost: chemicalCost ? parseFloat(chemicalCost) : 0,
         fertilizerCost: fertilizerCost ? parseFloat(fertilizerCost) : 0,
         rent: rent ? parseFloat(rent) : 0,
+        deliveryCost: deliveryCost ? parseFloat(deliveryCost) : 0,
+        commission: commission ? parseFloat(commission) : 0,
+        other: other ? parseFloat(other) : 0,
         notes: notes || null
       }
     });

@@ -225,7 +225,20 @@ model FinancialRecord {
   chemicalCost   Float    @default(0)
   fertilizerCost Float    @default(0)
   rent           Float    @default(0)
+  deliveryCost   Float    @default(0)
+  commission     Float    @default(0)
+  other          Float    @default(0)
   notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model MonthlyCosts {
+  id        String   @id @default(cuid())
+  month     String   @unique // Format: "YYYY-MM" (e.g., "2024-01")
+  salary    Float    @default(0)
+  manPower  Float    @default(0)
+  other     Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
