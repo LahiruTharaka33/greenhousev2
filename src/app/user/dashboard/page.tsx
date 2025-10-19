@@ -17,7 +17,7 @@ export default function UserDashboard() {
 
   return (
     <UserLayout>
-      <div className="space-y-4 sm:space-y-6 animate-fade-in-up">
+      <div className="pl-[72px] pr-4 lg:px-0 space-y-4 sm:space-y-6 animate-fade-in-up">
         {/* Welcome Section */}
         <div className="bg-white rounded-lg shadow p-4 sm:p-6">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">

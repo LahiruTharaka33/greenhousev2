@@ -106,7 +106,7 @@ export default function UserSchedules() {
 
   return (
     <UserLayout>
-      <div className="space-y-4 sm:space-y-6 animate-fade-in-up">
+      <div className="pl-[72px] pr-4 lg:px-0 space-y-4 sm:space-y-6 animate-fade-in-up">
         <div className="flex justify-between items-center">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">My Schedules</h1>
         </div>

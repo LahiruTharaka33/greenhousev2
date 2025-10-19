@@ -132,7 +132,7 @@ export default function UserNewSchedulesPage() {
   if (error) {
     return (
       <UserLayout>
-        <div className="min-h-screen px-4 sm:px-6 py-4 sm:py-6">
+        <div className="min-h-screen pl-[72px] pr-4 lg:px-6 py-4 sm:py-6">
           <div className="max-w-4xl mx-auto">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <h2 className="text-lg font-semibold text-red-800 mb-2">Error</h2>
@@ -154,7 +154,7 @@ export default function UserNewSchedulesPage() {
     <UserLayout>
       <div className="min-h-screen animate-fade-in-up">
       {/* Header */}
-      <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200 bg-white">
+      <div className="pl-[72px] pr-4 lg:px-6 py-4 sm:py-6 border-b border-gray-200 bg-white">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             📅 My Schedules
@@ -168,7 +168,7 @@ export default function UserNewSchedulesPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="px-4 sm:px-6 py-4 sm:py-6 bg-gray-50">
+      <div className="pl-[72px] pr-4 lg:px-6 py-4 sm:py-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 hover:shadow-md transition-shadow">
@@ -212,7 +212,7 @@ export default function UserNewSchedulesPage() {
       </div>
 
       {/* Filter */}
-      <div className="px-4 sm:px-6 py-4 bg-white border-b border-gray-200">
+      <div className="pl-[72px] pr-4 lg:px-6 py-4 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto">
           <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-2">
             Filter by Status
@@ -233,7 +233,7 @@ export default function UserNewSchedulesPage() {
       </div>
 
       {/* Schedules List */}
-      <div className="px-4 sm:px-6 py-4 sm:py-6">
+      <div className="pl-[72px] pr-4 lg:px-6 py-4 sm:py-6">
         <div className="max-w-7xl mx-auto">
           {filteredSchedules.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow-sm">
