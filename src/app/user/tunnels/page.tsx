@@ -69,62 +69,62 @@ export default function UserTunnels() {
 
   return (
     <UserLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in-up">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">My Tunnels</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">My Tunnels</h1>
         </div>
 
         <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Tunnel Information</h2>
-            <p className="text-sm text-gray-500 mt-1">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-medium text-gray-900">Tunnel Information</h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Monitor your greenhouse tunnels and their current status
             </p>
           </div>
           
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
                 <p className="mt-2 text-gray-600">Loading your tunnels...</p>
               </div>
             ) : tunnels.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-gray-400 text-xl">🌱</span>
+              <div className="text-center py-8 sm:py-12">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <span className="text-gray-400 text-2xl sm:text-3xl">🌱</span>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No tunnels assigned</h3>
-                <p className="text-gray-500 mb-4">
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No tunnels assigned</h3>
+                <p className="text-sm sm:text-base text-gray-500 mb-4 px-4">
                   Contact your administrator to get tunnels assigned to your account.
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {tunnels.map((tunnel) => (
                   <div
                     key={tunnel.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-3">
-                          <h3 className="text-lg font-semibold text-gray-900">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                             {tunnel.tunnelName}
                           </h3>
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             {tunnel.tunnelId}
                           </span>
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-600">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600">
                           <div>
                             <span className="font-medium text-gray-700">Cultivation Type:</span>
-                            <span className="ml-1">{tunnel.cultivationType || 'Not specified'}</span>
+                            <span className="ml-1 break-words">{tunnel.cultivationType || 'Not specified'}</span>
                           </div>
                           
                           <div>
                             <span className="font-medium text-gray-700">Location:</span>
-                            <span className="ml-1">{tunnel.location || 'Not specified'}</span>
+                            <span className="ml-1 break-words">{tunnel.location || 'Not specified'}</span>
                           </div>
                           
                           <div>
@@ -135,7 +135,7 @@ export default function UserTunnels() {
                           {tunnel.description && (
                             <div className="sm:col-span-2">
                               <span className="font-medium text-gray-700">Description:</span>
-                              <span className="ml-1">{tunnel.description}</span>
+                              <span className="ml-1 break-words">{tunnel.description}</span>
                             </div>
                           )}
                         </div>
