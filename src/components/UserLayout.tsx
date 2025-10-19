@@ -26,6 +26,12 @@ const userNavigation: NavItem[] = [
     description: 'My greenhouse schedules'
   },
   {
+    name: 'New Schedules',
+    href: '/user/new-schedules',
+    icon: '📋',
+    description: 'View schedules assigned by admin'
+  },
+  {
     name: 'Tasks',
     href: '/user/tasks',
     icon: '✅',
@@ -36,6 +42,12 @@ const userNavigation: NavItem[] = [
     href: '/user/tunnels',
     icon: '🌱',
     description: 'My tunnel information'
+  },
+  {
+    name: 'Controller',
+    href: '/user/controller',
+    icon: '🎮',
+    description: 'IoT device control and monitoring'
   },
 ];
 
