@@ -4,9 +4,9 @@ import scheduleV2Publisher from '@/lib/scheduleV2Publisher';
 
 /**
  * Cron Job Handler for Publishing Schedules
- * Called daily at 10:55 AM UTC to publish schedules for the current date
+ * Called daily at 11:25 AM UTC to publish schedules for the current date
  * 
- * This endpoint is triggered by Vercel Cron and sends schedule data to ESP32 devices via MQTT
+ * This endpoint is triggered by GitHub Actions and sends schedule data to ESP32 devices via MQTT
  */
 export async function GET(request: NextRequest) {
   try {
