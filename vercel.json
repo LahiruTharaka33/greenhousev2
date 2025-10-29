@@ -1,4 +1,5 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pnpm build",
   "outputDirectory": ".next",
   "framework": "nextjs",
@@ -9,5 +10,11 @@
     "app/api/**/*.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/publish-schedules",
+      "schedule": "55 10 * * *"
+    }
+  ]
 }

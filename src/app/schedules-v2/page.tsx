@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
-import MQTTTerminalNotification from '@/components/MQTTTerminalNotification';
-import { PublishSummary } from '@/lib/schedulePublisher';
 
 interface Customer {
   id: string;
@@ -97,14 +95,6 @@ export default function SchedulesV2Page() {
   const [editingSchedule, setEditingSchedule] = useState<ScheduleV2 | null>(null);
   const [activeTab, setActiveTab] = useState<'create' | 'view'>('create');
 
-  // MQTT Terminal Notification state
-  const [mqttNotification, setMqttNotification] = useState<{
-    show: boolean;
-    result: PublishSummary | null;
-  }>({
-    show: false,
-    result: null
-  });
 
   // Fetch initial data
   useEffect(() => {
@@ -247,15 +237,7 @@ export default function SchedulesV2Page() {
 
       if (response.ok) {
         const result = await response.json();
-        const scheduleData = result.schedule || result; // Handle both response formats
-        
-        // Show MQTT notification if MQTT publishing occurred
-        if (result.mqttPublish) {
-          setMqttNotification({
-            show: true,
-            result: result.mqttPublish
-          });
-        }
+        const scheduleData = result.schedule || result;
         
         // Build success message
         let successMessage = '';
@@ -267,22 +249,9 @@ export default function SchedulesV2Page() {
           setActiveTab('view');
         } else {
           successMessage = 'Schedule created successfully!';
+          successMessage += '\n📅 Schedule will be sent to ESP32 at 10:55 AM UTC on the scheduled date.';
           // Add new schedule to the list
           setSchedules([scheduleData, ...schedules]);
-        }
-
-        // Add MQTT status to message
-        if (result.mqttPublish) {
-          if (result.mqttPublish.overallSuccess) {
-            successMessage += '\n✅ Data sent to ESP32 successfully!';
-          } else {
-            successMessage += '\n⚠️ Schedule saved but ESP32 communication had issues. Check terminal for details.';
-          }
-          
-          // Add warnings if any
-          if (result.mqttPublish.warnings && result.mqttPublish.warnings.length > 0) {
-            successMessage += '\n\n⚠️ Warnings:\n' + result.mqttPublish.warnings.join('\n');
-          }
         }
         
         alert(successMessage);
@@ -373,8 +342,12 @@ export default function SchedulesV2Page() {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'sent':
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'completed':
         return 'bg-green-100 text-green-800 border-green-200';
+      case 'failed':
+        return 'bg-red-100 text-red-800 border-red-200';
       case 'cancelled':
         return 'bg-red-100 text-red-800 border-red-200';
       default:
