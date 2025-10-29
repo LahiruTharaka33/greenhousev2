@@ -249,7 +249,7 @@ export default function SchedulesV2Page() {
           setActiveTab('view');
         } else {
           successMessage = 'Schedule created successfully!';
-          successMessage += '\n📅 Schedule will be sent to ESP32 at 11:32 AM UTC on the scheduled date.';
+          successMessage += '\n📅 Schedule will be sent to ESP32 at 11:45 AM UTC on the scheduled date.';
           // Add new schedule to the list
           setSchedules([scheduleData, ...schedules]);
         }
