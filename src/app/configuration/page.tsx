@@ -402,21 +402,19 @@ export default function ConfigurationPage() {
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Header with Safe Zone */}
-        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-6 shadow-sm">
+        <div className="bg-white border-b border-gray-200 pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
           <div className="max-w-7xl mx-auto">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                Configuration
-              </h1>
-              <p className="text-gray-600">
-                Manage client ID mappings for tunnel devices
-              </p>
-            </div>
+            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-0.5 truncate">
+              Configuration
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-600 truncate">
+              Manage client ID mappings for tunnel devices
+            </p>
           </div>
         </div>
 
         {/* Content with Safe Zone */}
-        <div className="pl-16 pr-4 lg:px-4 py-6">
+        <div className="pl-[72px] pr-4 lg:px-4 py-6">
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Message */}
             {message && (

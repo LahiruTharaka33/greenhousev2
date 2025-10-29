@@ -141,25 +141,24 @@ export default function CustomersPage() {
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Mobile-Optimized Header with Safe Zone */}
-        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-4 md:py-6 shadow-sm">
+        <div className="bg-white border-b border-gray-200 pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col space-y-3 md:space-y-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1">
+            <div className="flex flex-col space-y-3">
+              <div className="flex items-start justify-between gap-2 md:gap-3">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-0.5 truncate">
                     Customers
                   </h1>
-                  <p className="text-sm md:text-base text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
                     Manage customer information and relationships
                   </p>
                 </div>
                 <button
                   onClick={() => setShowForm(true)}
-                  className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-4 md:px-6 py-2.5 md:py-3 min-h-[44px] rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 shadow-sm whitespace-nowrap"
+                  className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3 sm:px-4 md:px-6 py-2.5 min-h-[44px] min-w-[44px] rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2 shadow-sm whitespace-nowrap flex-shrink-0"
                 >
-                  <span className="text-lg">+</span>
-                  <span className="hidden sm:inline">Add Customer</span>
-                  <span className="sm:hidden">Add</span>
+                  <span className="text-base sm:text-lg">+</span>
+                  <span className="hidden sm:inline text-sm md:text-base">Add Customer</span>
                 </button>
               </div>
               
@@ -170,7 +169,7 @@ export default function CustomersPage() {
                   placeholder="Search customers..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-3 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 placeholder-gray-500"
+                  className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 placeholder-gray-500 transition-all"
                 />
               </div>
             </div>
@@ -178,20 +177,20 @@ export default function CustomersPage() {
         </div>
 
         {/* Customers Content with Safe Zone */}
-        <div className="pl-16 pr-4 lg:px-4 py-4 md:py-6">
+        <div className="pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 animate-fade-in-up">
           <div className="max-w-7xl mx-auto">
             {loading ? (
-              <div className="bg-white rounded-lg shadow-sm border p-6 md:p-8 text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-                <p className="mt-4 text-sm md:text-base text-gray-600">Loading customers...</p>
+              <div className="bg-white rounded-lg shadow-sm border p-5 md:p-8 text-center">
+                <div className="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-b-2 border-emerald-600 mx-auto"></div>
+                <p className="mt-3 md:mt-4 text-xs sm:text-sm md:text-base text-gray-600">Loading customers...</p>
               </div>
             ) : filteredCustomers.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm border p-6 md:p-8 text-center">
-                <div className="text-5xl md:text-6xl mb-4">👥</div>
-                <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-3 md:mb-4">
+              <div className="bg-white rounded-lg shadow-sm border p-5 md:p-8 text-center">
+                <div className="text-4xl sm:text-5xl md:text-6xl mb-3 md:mb-4">👥</div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-900 mb-2 md:mb-4">
                   {searchTerm ? 'No customers found' : 'No customers yet'}
                 </h2>
-                <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
+                <p className="text-xs sm:text-sm md:text-base text-gray-600 mb-4 md:mb-6">
                   {searchTerm 
                     ? 'Try adjusting your search terms'
                     : 'Get started by adding your first customer'
@@ -200,7 +199,7 @@ export default function CustomersPage() {
                 {!searchTerm && (
                   <button
                     onClick={() => setShowForm(true)}
-                    className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-6 py-3 min-h-[44px] rounded-lg transition-colors shadow-sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-5 sm:px-6 py-2.5 sm:py-3 min-h-[44px] rounded-lg transition-all duration-200 shadow-sm text-sm sm:text-base"
                   >
                     Add Your First Customer
                   </button>
@@ -211,25 +210,25 @@ export default function CustomersPage() {
                 {filteredCustomers.map((customer) => (
                   <div
                     key={customer.id}
-                    className="bg-white rounded-lg shadow-sm border p-4 md:p-5 hover:shadow-md transition-shadow"
+                    className="bg-white rounded-lg shadow-sm border p-4 md:p-5 hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex flex-col space-y-3">
                       {/* Customer Header */}
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base md:text-lg font-semibold text-gray-900">
+                        <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-900 truncate">
                           {customer.customerName}
                         </h3>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                        <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                           {customer.customerId}
                         </span>
                       </div>
                       
                       {/* Customer Details */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs sm:text-sm">
                         {customer.company && (
-                          <div className="flex flex-wrap">
-                            <span className="font-medium text-gray-700">Company:</span>
-                            <span className="ml-1 text-gray-600 break-all">{customer.company}</span>
+                          <div className="flex flex-wrap min-w-0">
+                            <span className="font-medium text-gray-700 flex-shrink-0">Company:</span>
+                            <span className="ml-1 text-gray-600 break-words">{customer.company}</span>
                           </div>
                         )}
                         
@@ -239,22 +238,22 @@ export default function CustomersPage() {
                         </div>
                         
                         {customer.location && (
-                          <div className="flex flex-wrap">
-                            <span className="font-medium text-gray-700">Location:</span>
-                            <span className="ml-1 text-gray-600 break-all">{customer.location}</span>
+                          <div className="flex flex-wrap min-w-0">
+                            <span className="font-medium text-gray-700 flex-shrink-0">Location:</span>
+                            <span className="ml-1 text-gray-600 break-words">{customer.location}</span>
                           </div>
                         )}
                         
                         {customer.cultivationType && (
-                          <div className="flex flex-wrap">
-                            <span className="font-medium text-gray-700">Cultivation:</span>
-                            <span className="ml-1 text-gray-600 break-all">{customer.cultivationType}</span>
+                          <div className="flex flex-wrap min-w-0">
+                            <span className="font-medium text-gray-700 flex-shrink-0">Cultivation:</span>
+                            <span className="ml-1 text-gray-600 break-words">{customer.cultivationType}</span>
                           </div>
                         )}
                         
                         {customer.email && (
-                          <div className="flex flex-wrap sm:col-span-2">
-                            <span className="font-medium text-gray-700">Email:</span>
+                          <div className="flex flex-wrap sm:col-span-2 min-w-0">
+                            <span className="font-medium text-gray-700 flex-shrink-0">Email:</span>
                             <span className="ml-1 text-gray-600 break-all">{customer.email}</span>
                           </div>
                         )}
@@ -271,14 +270,14 @@ export default function CustomersPage() {
                       <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t border-gray-100">
                         <button
                           onClick={() => handleEdit(customer)}
-                          className="flex-1 sm:flex-initial px-4 py-2.5 min-h-[44px] text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 rounded-lg transition-colors font-medium"
+                          className="flex-1 sm:flex-initial px-3 sm:px-4 py-2.5 min-h-[44px] text-sm text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 rounded-lg transition-all duration-200 font-medium"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(customer.id)}
                           disabled={deleteLoading === customer.id}
-                          className="flex-1 sm:flex-initial px-4 py-2.5 min-h-[44px] text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex-1 sm:flex-initial px-3 sm:px-4 py-2.5 min-h-[44px] text-sm text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-lg transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {deleteLoading === customer.id ? 'Deleting...' : 'Delete'}
                         </button>

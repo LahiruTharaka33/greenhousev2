@@ -157,36 +157,36 @@ export default function TunnelsPage() {
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Header with Safe Zone */}
-        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-6 shadow-sm">
+        <div className="bg-white border-b border-gray-200 pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-0.5 truncate">
                   Tunnels Management
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
                   Manage your greenhouse tunnels and cultivation areas
                 </p>
               </div>
               <button
                 onClick={() => setShowForm(true)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 shadow-sm"
+                className="bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white px-3 sm:px-4 md:px-6 py-2.5 min-h-[44px] min-w-[44px] rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2 shadow-sm whitespace-nowrap flex-shrink-0"
               >
-                <span>+</span>
-                <span>Add Tunnel</span>
+                <span className="text-base sm:text-lg">+</span>
+                <span className="hidden sm:inline text-sm md:text-base">Add Tunnel</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Stats Cards with Safe Zone */}
-        <div className="pl-16 pr-4 lg:px-4 py-6">
+        <div className="pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 animate-fade-in-up">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white rounded-lg shadow-sm border p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+              <div className="bg-white rounded-lg shadow-sm border p-3 md:p-4 hover:shadow-md transition-all duration-200">
                 <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                    <svg className="w-5 h-5 md:w-6 md:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
@@ -225,21 +225,21 @@ export default function TunnelsPage() {
             </div>
 
             {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
               <div className="flex-1">
                 <input
                   type="text"
                   placeholder="Search tunnels..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 placeholder-gray-500"
+                  className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 placeholder-gray-500 transition-all"
                 />
               </div>
               <div className="sm:w-48">
                 <select
                   value={filterCustomer}
                   onChange={(e) => setFilterCustomer(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
+                  className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 transition-all"
                 >
                   <option value="">All Customers</option>
                   {customers.map(customer => (
@@ -266,7 +266,7 @@ export default function TunnelsPage() {
         </div>
 
         {/* Tunnels Content */}
-        <div className="px-4 pb-6">
+        <div className="pl-[72px] pr-4 lg:pl-6 lg:pr-6 pb-4 md:pb-6">
           <div className="max-w-7xl mx-auto">
             {loading ? (
               <div className="bg-white rounded-lg shadow-sm border p-8 text-center">

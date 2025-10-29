@@ -374,15 +374,15 @@ export default function SchedulesV2Page() {
   return (
     <Layout>
       <main className="min-h-screen bg-gray-50 text-gray-900">
-        {/* Header with Safe Zone */}
-        <div className="bg-white border-b border-gray-200 pl-16 pr-4 lg:px-4 py-6 shadow-sm">
+        {/* Header with Safe Zone - Sticky with backdrop blur */}
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 pl-[72px] pr-4 lg:px-4 py-4 lg:py-6 shadow-sm animate-fade-in">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+            <div className="flex flex-col space-y-2">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                   🌱 New Schedule System
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600 mt-1">
                   Create and manage fertilizer schedules with improved interface
                 </p>
               </div>
@@ -391,29 +391,31 @@ export default function SchedulesV2Page() {
         </div>
 
         {/* Tab Navigation with Safe Zone */}
-        <div className="pl-16 pr-4 lg:px-4 py-4">
+        <div className="pl-[72px] pr-4 lg:px-4 py-4 bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto">
             <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
+              <nav className="-mb-px flex space-x-4 sm:space-x-8">
                 <button
                   onClick={() => setActiveTab('create')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
                     activeTab === 'create'
                       ? 'border-emerald-500 text-emerald-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
                   }`}
                 >
-                  Create Schedule
+                  Create
                 </button>
                 <button
                   onClick={() => setActiveTab('view')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
                     activeTab === 'view'
                       ? 'border-emerald-500 text-emerald-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
                   }`}
                 >
-                  View Schedules ({schedules.length})
+                  <span className="hidden sm:inline">View Schedules</span>
+                  <span className="sm:hidden">View</span>
+                  <span className="ml-1">({schedules.length})</span>
                 </button>
               </nav>
             </div>
@@ -421,23 +423,23 @@ export default function SchedulesV2Page() {
         </div>
 
         {/* Content with Safe Zone */}
-        <div className="pl-16 pr-4 lg:px-4 py-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <div className="pl-[72px] pr-4 lg:px-4 py-4 lg:py-6 animate-fade-in-up">
+          <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6">
             {/* Create Schedule Tab */}
             {activeTab === 'create' && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">
                 {editingSchedule ? 'Edit Schedule' : 'Create New Schedule'}
               </h2>
               
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 {/* Header Section - Customer, Tunnel, Date */}
-                <div className="border-b border-gray-200 pb-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Schedule Head</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="border-b border-gray-200 pb-4 sm:pb-6">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Schedule Head</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                     {/* Customer */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Customer *
                       </label>
                       <select
@@ -446,7 +448,7 @@ export default function SchedulesV2Page() {
                           setSelectedCustomerId(e.target.value);
                           setSelectedTunnelId(''); // Reset tunnel when customer changes
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
+                        className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base"
                         required
                       >
                         <option value="">Select Customer</option>
@@ -460,13 +462,13 @@ export default function SchedulesV2Page() {
 
                     {/* Tunnel */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Tunnel *
                       </label>
                       <select
                         value={selectedTunnelId}
                         onChange={(e) => setSelectedTunnelId(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
+                        className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base"
                         disabled={!selectedCustomerId}
                         required
                       >
@@ -481,14 +483,14 @@ export default function SchedulesV2Page() {
 
                     {/* Date */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Date *
                       </label>
                       <input
                         type="date"
                         value={scheduledDate}
                         onChange={(e) => setScheduledDate(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
+                        className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base"
                         required
                       />
                     </div>
@@ -497,17 +499,17 @@ export default function SchedulesV2Page() {
 
                 {/* Details Section - Fertilizer, Quantity, Water */}
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Schedule Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Schedule Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                     {/* Fertilizer Type */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Fertilizer Type *
                       </label>
                       <select
                         value={selectedFertilizerTypeId}
                         onChange={(e) => setSelectedFertilizerTypeId(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
+                        className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base"
                         required
                       >
                         <option value="">Select Fertilizer</option>
@@ -521,7 +523,7 @@ export default function SchedulesV2Page() {
 
                     {/* Quantity */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Quantity {selectedFertilizerUnit && `(${selectedFertilizerUnit})`} *
                       </label>
                       <div className="relative">
@@ -531,8 +533,8 @@ export default function SchedulesV2Page() {
                           min="0"
                           value={quantity}
                           onChange={(e) => setQuantity(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900"
-                          placeholder={selectedFertilizerUnit ? `Enter quantity in ${selectedFertilizerUnit}` : 'Enter quantity'}
+                          className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base pr-12"
+                          placeholder={selectedFertilizerUnit ? `Enter in ${selectedFertilizerUnit}` : 'Enter quantity'}
                           required
                         />
                         {selectedFertilizerUnit && (
@@ -547,7 +549,7 @@ export default function SchedulesV2Page() {
 
                     {/* Water */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Water (L) *
                       </label>
                       <div className="relative">
@@ -557,7 +559,7 @@ export default function SchedulesV2Page() {
                           min="0"
                           value={water}
                           onChange={(e) => setWater(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                          className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base pr-8"
                           placeholder="Enter water amount"
                           required
                         />
@@ -571,33 +573,33 @@ export default function SchedulesV2Page() {
 
                 {/* Release Sub-List */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">Release Schedule</h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 sm:mb-4">
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900">Release Schedule</h3>
                     <button
                       type="button"
                       onClick={addReleaseRow}
-                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      className="px-4 py-2 min-h-[44px] text-sm sm:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors w-full sm:w-auto"
                     >
                       + Add Release
                     </button>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-3 sm:space-y-4">
                     {releases.map((release, index) => (
-                      <div key={index} className="flex items-center space-x-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                      <div key={index} className="flex flex-col sm:flex-row sm:items-end gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50">
                         <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
                             Time
                           </label>
                           <input
                             type="time"
                             value={release.time}
                             onChange={(e) => updateReleaseRow(index, 'time', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                            className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
                           />
                         </div>
                         <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
                             Release Quantity (L)
                           </label>
                           <div className="relative">
@@ -607,7 +609,7 @@ export default function SchedulesV2Page() {
                               min="0"
                               value={release.releaseQuantity}
                               onChange={(e) => updateReleaseRow(index, 'releaseQuantity', parseFloat(e.target.value) || 0)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                              className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base pr-8"
                               placeholder="Enter quantity"
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -615,12 +617,12 @@ export default function SchedulesV2Page() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-end">
+                        <div className="flex sm:items-end">
                           {releases.length > 1 && (
                             <button
                               type="button"
                               onClick={() => removeReleaseRow(index)}
-                              className="px-3 py-2 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                              className="w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base text-red-600 hover:text-red-800 hover:bg-red-50 active:bg-red-100 rounded-md transition-colors font-medium"
                             >
                               Remove
                             </button>
@@ -631,17 +633,17 @@ export default function SchedulesV2Page() {
                   </div>
 
                   {/* Validation Summary */}
-                  <div className="mt-4 p-3 rounded-md border">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-700">
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-md border bg-white">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                      <span className="text-sm sm:text-base font-medium text-gray-700">
                         Total Release Quantity:
                       </span>
-                      <span className={`text-sm font-bold ${isReleaseQuantityValid ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className={`text-base sm:text-lg font-bold ${isReleaseQuantityValid ? 'text-green-600' : 'text-red-600'}`}>
                         {totalReleaseQuantity.toFixed(1)}L / {water || '0'}L
                       </span>
                     </div>
                     {!isReleaseQuantityValid && (
-                      <div className="mt-2 text-sm text-red-600">
+                      <div className="mt-2 text-sm sm:text-base text-red-600 font-medium">
                         ⚠️ Total release quantity cannot exceed water amount
                       </div>
                     )}
@@ -650,31 +652,31 @@ export default function SchedulesV2Page() {
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Notes
                   </label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
+                    className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-base"
                     rows={3}
                     placeholder="Add any additional notes..."
                   />
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                    className="w-full sm:w-auto px-6 py-3 min-h-[44px] text-gray-700 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-md transition-colors font-medium"
                   >
                     {editingSchedule ? 'Cancel' : 'Reset'}
                   </button>
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:w-auto px-6 py-3 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                   >
                     {saving ? 'Saving...' : (editingSchedule ? 'Update Schedule' : 'Create Schedule')}
                   </button>
@@ -685,38 +687,38 @@ export default function SchedulesV2Page() {
 
             {/* View Schedules Tab */}
             {activeTab === 'view' && (
-              <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Saved Schedules</h2>
+              <div className="space-y-4 sm:space-y-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Saved Schedules</h2>
               
               {schedules.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-gray-400 text-6xl mb-4">📅</div>
-                  <p className="text-gray-600 text-lg">No schedules created yet.</p>
-                  <p className="text-gray-500 text-sm mt-2">Create your first schedule using the "Create Schedule" tab.</p>
+                <div className="text-center py-12 bg-white rounded-lg border">
+                  <div className="text-gray-400 text-5xl sm:text-6xl mb-4">📅</div>
+                  <p className="text-gray-600 text-base sm:text-lg font-medium">No schedules created yet.</p>
+                  <p className="text-gray-500 text-sm sm:text-base mt-2 px-4">Create your first schedule using the "Create" tab.</p>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                   {schedules.map((schedule) => (
                     <div key={schedule.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
                       {/* Card Header */}
-                      <div className="bg-gradient-to-r from-emerald-50 to-blue-50 px-6 py-4 border-b border-gray-200">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">
+                      <div className="bg-gradient-to-r from-emerald-50 to-blue-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                               {schedule.customer.customerName}
                             </h3>
-                            <p className="text-sm text-gray-600">{schedule.tunnel.tunnelName}</p>
+                            <p className="text-sm text-gray-600 truncate">{schedule.tunnel.tunnelName}</p>
                           </div>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(schedule.status)}`}>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(schedule.status)} self-start sm:self-auto`}>
                             {schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}
                           </span>
                         </div>
                       </div>
 
                       {/* Card Body */}
-                      <div className="p-6 space-y-4">
+                      <div className="p-4 sm:p-6 space-y-4">
                         {/* Schedule Details */}
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                           <div>
                             <span className="text-gray-500">Date:</span>
                             <p className="font-medium text-gray-900">{formatDate(schedule.scheduledDate)}</p>
@@ -742,11 +744,11 @@ export default function SchedulesV2Page() {
                             <div className="space-y-2">
                               {schedule.releases.map((release, index) => (
                                 <div key={index} className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
-                                  <div className="flex items-center space-x-3">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                  <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
                                     <span className="text-sm font-medium text-gray-900">{release.time}</span>
                                   </div>
-                                  <span className="text-sm font-semibold text-blue-600">{release.releaseQuantity}L</span>
+                                  <span className="text-sm font-semibold text-blue-600 flex-shrink-0 ml-2">{release.releaseQuantity}L</span>
                                 </div>
                               ))}
                               <div className="mt-2 pt-2 border-t border-gray-200">
@@ -770,7 +772,7 @@ export default function SchedulesV2Page() {
                         {schedule.notes && (
                           <div>
                             <h4 className="text-sm font-medium text-gray-700 mb-2">Notes</h4>
-                            <p className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-md">
+                            <p className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-md break-words">
                               {schedule.notes}
                             </p>
                           </div>
@@ -778,20 +780,20 @@ export default function SchedulesV2Page() {
                       </div>
 
                       {/* Card Footer */}
-                      <div className="bg-gray-50 px-6 py-3 border-t border-gray-200">
-                        <div className="flex justify-end space-x-2">
+                      <div className="bg-gray-50 px-4 sm:px-6 py-3 border-t border-gray-200">
+                        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
                           <button 
                             onClick={() => {
                               setActiveTab('create');
                               handleEdit(schedule);
                             }}
-                            className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                            className="w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base text-blue-600 hover:text-blue-800 hover:bg-blue-50 active:bg-blue-100 rounded-md transition-colors font-medium"
                           >
                             Edit
                           </button>
                           <button 
                             onClick={() => handleDelete(schedule.id)}
-                            className="px-3 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                            className="w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base text-red-600 hover:text-red-800 hover:bg-red-50 active:bg-red-100 rounded-md transition-colors font-medium"
                           >
                             Delete
                           </button>
@@ -805,6 +807,14 @@ export default function SchedulesV2Page() {
             )}
           </div>
         </div>
+
+        {/* MQTT Terminal Notification */}
+        {mqttNotification.show && mqttNotification.result && (
+          <MQTTTerminalNotification
+            result={mqttNotification.result}
+            onClose={() => setMqttNotification({ show: false, result: null })}
+          />
+        )}
       </main>
     </Layout>
   );

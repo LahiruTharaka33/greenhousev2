@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
@@ -26,6 +26,12 @@ const userNavigation: NavItem[] = [
     description: 'My greenhouse schedules'
   },
   {
+    name: 'New Schedules',
+    href: '/user/new-schedules',
+    icon: '📋',
+    description: 'View schedules assigned by admin'
+  },
+  {
     name: 'Tasks',
     href: '/user/tasks',
     icon: '✅',
@@ -36,6 +42,12 @@ const userNavigation: NavItem[] = [
     href: '/user/tunnels',
     icon: '🌱',
     description: 'My tunnel information'
+  },
+  {
+    name: 'Controller',
+    href: '/user/controller',
+    icon: '🎮',
+    description: 'IoT device control and monitoring'
   },
 ];
 
@@ -53,54 +65,78 @@ export default function UserLayout({ children }: UserLayoutProps) {
     await signOut({ callbackUrl: '/login' });
   };
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileOpen]);
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Mobile menu button - Improved touch target */}
+    <div className="flex min-h-screen bg-gray-50 overflow-x-hidden">
+      {/* Hamburger Safe Zone - Mobile Only */}
+      <div className="hamburger-safe-zone lg:hidden" aria-hidden="true"></div>
+      
+      {/* Mobile menu button - Enhanced with animation */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <button
           onClick={() => setIsMobileOpen(!isMobileOpen)}
-          className="p-3 min-w-[44px] min-h-[44px] rounded-lg bg-white shadow-lg hover:bg-gray-50 active:bg-gray-100 border border-gray-200 transition-colors"
+          className="p-3 min-w-[44px] min-h-[44px] rounded-lg bg-white shadow-lg hover:bg-gray-50 active:bg-gray-100 border border-gray-200 transition-all duration-300 hamburger-button"
           aria-label={isMobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isMobileOpen}
         >
-          <span className="block w-6 h-0.5 bg-gray-600 mb-1.5"></span>
-          <span className="block w-6 h-0.5 bg-gray-600 mb-1.5"></span>
-          <span className="block w-6 h-0.5 bg-gray-600"></span>
+          <div className="relative w-6 h-5 flex flex-col justify-center items-center">
+            <span className={`absolute w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${
+              isMobileOpen ? 'rotate-45 translate-y-0' : '-translate-y-2'
+            }`}></span>
+            <span className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${
+              isMobileOpen ? 'opacity-0 scale-0' : 'opacity-100 scale-100'
+            }`}></span>
+            <span className={`absolute w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${
+              isMobileOpen ? '-rotate-45 translate-y-0' : 'translate-y-2'
+            }`}></span>
+          </div>
         </button>
       </div>
 
-      {/* Mobile overlay */}
+      {/* Mobile overlay - Enhanced animation */}
       {isMobileOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 animate-fade-in"
           onClick={() => setIsMobileOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
-      <div className={`bg-white shadow-lg transition-all duration-300 ${
+      {/* Sidebar - Enhanced animations with proper scroll */}
+      <div className={`bg-white shadow-2xl transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-16' : 'w-64'
-      } min-h-screen fixed left-0 top-0 z-50 lg:translate-x-0 ${
+      } h-screen fixed left-0 top-0 z-50 lg:translate-x-0 ${
         isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      } flex flex-col overflow-hidden`}>
         <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            {!isCollapsed && (
-              <h1 className="text-xl font-bold text-gray-900">GreenHouseV2</h1>
-            )}
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="p-2 rounded-md hover:bg-gray-50 transition-colors hidden lg:block"
-              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {isCollapsed ? '→' : '←'}
-            </button>
-          </div>
+        {/* Header - Fixed at top */}
+        <div className="flex-none flex items-center justify-between p-4 border-b border-gray-200">
+          {!isCollapsed && (
+            <h1 className="text-xl font-bold text-gray-900">GreenHouseV2</h1>
+          )}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 rounded-md hover:bg-gray-50 transition-colors hidden lg:block"
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? '→' : '←'}
+          </button>
+        </div>
 
-          {/* User info */}
-          {!isCollapsed && session && (
-            <div className="p-4 bg-emerald-50 border-b border-gray-200">
+        {/* User info - Fixed */}
+        {!isCollapsed && session && (
+          <div className="flex-none p-4 bg-emerald-50 border-b border-gray-200">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
                   <span className="text-emerald-600 font-medium">
@@ -115,9 +151,9 @@ export default function UserLayout({ children }: UserLayoutProps) {
             </div>
           )}
 
-          {/* Navigation */}
-          <nav className="p-4">
-            <ul className="space-y-2">
+        {/* Navigation - Enhanced with smooth scrolling */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar">
+          <ul className="space-y-2">
               {userNavigation.map((item) => {
                 const isActive = pathname === item.href;
                 return (
@@ -132,11 +168,11 @@ export default function UserLayout({ children }: UserLayoutProps) {
                       }`}
                       title={isCollapsed ? item.name : undefined}
                     >
-                      <span className="text-xl mr-3">{item.icon}</span>
+                      <span className="text-xl mr-3 flex-shrink-0">{item.icon}</span>
                       {!isCollapsed && (
-                        <div className="flex-1">
-                          <div className="font-medium">{item.name}</div>
-                          <div className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{item.name}</div>
+                          <div className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity truncate">
                             {item.description}
                           </div>
                         </div>
@@ -148,33 +184,33 @@ export default function UserLayout({ children }: UserLayoutProps) {
             </ul>
           </nav>
 
-          {/* Sign out button */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-white">
-            {!isCollapsed ? (
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center p-3 min-h-[44px] text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
-              >
-                <span className="text-lg mr-3">🚪</span>
-                Sign Out
-              </button>
-            ) : (
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center justify-center p-3 min-h-[44px] text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
-                title="Sign Out"
-                aria-label="Sign Out"
-              >
-                <span className="text-lg">🚪</span>
-              </button>
-            )}
-          </div>
+        {/* Sign out button - Fixed at bottom */}
+        <div className="flex-none p-4 border-t border-gray-200 bg-white">
+          {!isCollapsed ? (
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center p-3 min-h-[44px] text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
+            >
+              <span className="text-lg mr-3">🚪</span>
+              Sign Out
+            </button>
+          ) : (
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center p-3 min-h-[44px] text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
+              title="Sign Out"
+              aria-label="Sign Out"
+            >
+              <span className="text-lg">🚪</span>
+            </button>
+          )}
+        </div>
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 lg:ml-64">
-        <div className="min-h-screen">
+      {/* Main content - Responsive margin with transition */}
+      <div className="flex-1 lg:ml-64 w-full transition-all duration-300 ease-in-out">
+        <div className="min-h-screen w-full">
           {children}
         </div>
       </div>
