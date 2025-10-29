@@ -2,8 +2,8 @@ name: Publish Daily Schedules
 
 on:
   schedule:
-    # Run at 11:25 AM UTC every day (testing)
-    - cron: '25 11 * * *'
+    # Run at 11:32 AM UTC every day (testing)
+    - cron: '32 11 * * *'
   workflow_dispatch: # Allow manual trigger
 
 jobs:

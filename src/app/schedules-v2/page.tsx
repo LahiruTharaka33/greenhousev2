@@ -172,7 +172,7 @@ export default function SchedulesV2Page() {
 
   // Calculate total release quantity
   const totalReleaseQuantity = releases.reduce((sum, release) => {
-    return sum + (parseFloat(release.releaseQuantity) || 0);
+    return sum + (Number(release.releaseQuantity) || 0);
   }, 0);
 
   // Check if total exceeds water limit
@@ -249,7 +249,7 @@ export default function SchedulesV2Page() {
           setActiveTab('view');
         } else {
           successMessage = 'Schedule created successfully!';
-          successMessage += '\n📅 Schedule will be sent to ESP32 at 11:25 AM UTC on the scheduled date.';
+          successMessage += '\n📅 Schedule will be sent to ESP32 at 11:32 AM UTC on the scheduled date.';
           // Add new schedule to the list
           setSchedules([scheduleData, ...schedules]);
         }
@@ -808,13 +808,6 @@ export default function SchedulesV2Page() {
           </div>
         </div>
 
-        {/* MQTT Terminal Notification */}
-        {mqttNotification.show && mqttNotification.result && (
-          <MQTTTerminalNotification
-            result={mqttNotification.result}
-            onClose={() => setMqttNotification({ show: false, result: null })}
-          />
-        )}
       </main>
     </Layout>
   );
