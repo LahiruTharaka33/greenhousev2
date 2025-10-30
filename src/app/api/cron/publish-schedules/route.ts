@@ -4,7 +4,7 @@ import scheduleV2Publisher from '@/lib/scheduleV2Publisher';
 
 /**
  * Cron Job Handler for Publishing Schedules
- * Called daily at 1:15 PM UTC to publish schedules for the current date
+ * Called daily at 12:00 PM UTC to publish schedules for the current date
  * 
  * This endpoint is triggered by GitHub Actions and sends schedule data to ESP32 devices via MQTT
  */
