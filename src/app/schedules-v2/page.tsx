@@ -91,6 +91,7 @@ export default function SchedulesV2Page() {
   // UI state
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingAndPublishing, setSavingAndPublishing] = useState(false);
   const [selectedFertilizerUnit, setSelectedFertilizerUnit] = useState('');
   const [editingSchedule, setEditingSchedule] = useState<ScheduleV2 | null>(null);
   const [activeTab, setActiveTab] = useState<'create' | 'view'>('create');
@@ -268,6 +269,78 @@ export default function SchedulesV2Page() {
       alert('Failed to save schedule');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSubmitAndPublish = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedCustomerId || !selectedTunnelId || !scheduledDate || !selectedFertilizerTypeId || !quantity || !water) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    // Validate release quantities
+    if (!isReleaseQuantityValid) {
+      alert(`Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${water}L)`);
+      return;
+    }
+
+    setSavingAndPublishing(true);
+    try {
+      const scheduleData = {
+        customerId: selectedCustomerId,
+        tunnelId: selectedTunnelId,
+        scheduledDate,
+        fertilizerTypeId: selectedFertilizerTypeId,
+        quantity: parseFloat(quantity),
+        water: parseFloat(water),
+        notes: notes || '',
+        releases: releases.filter(release => release.time && release.releaseQuantity > 0)
+      };
+
+      const response = await fetch('/api/schedules-v2/publish-now', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(scheduleData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const scheduleData = result.schedule || result;
+        
+        // Build success message
+        let successMessage = 'Schedule created and sent to ESP32 successfully!';
+        
+        if (result.publishResult?.warnings && result.publishResult.warnings.length > 0) {
+          successMessage += '\n\n⚠️ Warnings:\n' + result.publishResult.warnings.join('\n');
+        }
+        
+        alert(successMessage);
+        
+        // Add new schedule to the list
+        setSchedules([scheduleData, ...schedules]);
+        
+        // Reset form
+        resetForm();
+      } else {
+        const error = await response.json();
+        console.error('API Error:', error);
+        
+        // If schedule was created but publishing failed, still show it in the list
+        if (error.schedule) {
+          setSchedules([error.schedule, ...schedules]);
+        }
+        
+        alert(error.details || error.error || 'Failed to create and publish schedule');
+      }
+    } catch (error) {
+      console.error('Error creating and publishing schedule:', error);
+      alert('Failed to create and publish schedule');
+    } finally {
+      setSavingAndPublishing(false);
     }
   };
 
@@ -673,9 +746,19 @@ export default function SchedulesV2Page() {
                   >
                     {editingSchedule ? 'Cancel' : 'Reset'}
                   </button>
+                  {!editingSchedule && (
+                    <button
+                      type="button"
+                      onClick={handleSubmitAndPublish}
+                      disabled={savingAndPublishing || saving}
+                      className="w-full sm:w-auto px-6 py-3 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      {savingAndPublishing ? 'Creating & Sending...' : 'Create Now'}
+                    </button>
+                  )}
                   <button
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || savingAndPublishing}
                     className="w-full sm:w-auto px-6 py-3 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                   >
                     {saving ? 'Saving...' : (editingSchedule ? 'Update Schedule' : 'Create Schedule')}
