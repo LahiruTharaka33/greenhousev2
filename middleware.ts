@@ -29,6 +29,7 @@ export default withAuth(
                         pathname.startsWith('/schedules') ||
                         pathname.startsWith('/tasks') ||
                         pathname.startsWith('/tunnels') ||
+                        pathname.startsWith('/controller') ||
                         pathname.startsWith('/configuration');
 
     // User routes

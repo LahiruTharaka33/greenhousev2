@@ -27,6 +27,7 @@ interface Tunnel {
   tunnelId: string;
   tunnelName: string;
   clientId: string | null;
+  sensorClientId: string | null;
   tankConfigs: TankConfig[];
 }
 
@@ -59,6 +60,7 @@ export default function ConfigurationPage() {
   const [filteredTunnels, setFilteredTunnels] = useState<CustomerTunnel[]>([]);
   const [selectedTunnelId, setSelectedTunnelId] = useState('');
   const [clientId, setClientId] = useState('');
+  const [sensorClientId, setSensorClientId] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loadingTunnels, setLoadingTunnels] = useState(false);
@@ -160,6 +162,7 @@ export default function ConfigurationPage() {
         body: JSON.stringify({
           tunnelId: selectedTunnelId,
           clientId: clientId.trim() || null,
+          sensorClientId: sensorClientId.trim() || null,
         }),
       });
 
@@ -169,6 +172,7 @@ export default function ConfigurationPage() {
         setMessage({ type: 'success', text: data.message });
         await fetchMappings(); // Refresh mappings
         setClientId('');
+        setSensorClientId('');
         setSelectedTunnelId('');
         setSelectedCustomerId('');
         setShowAddMappingForm(false); // Hide form after successful submission
@@ -184,7 +188,7 @@ export default function ConfigurationPage() {
   };
 
   const handleClearAssignment = async (tunnelId: string) => {
-    if (!confirm('Are you sure you want to clear this client ID assignment?')) {
+    if (!confirm('Are you sure you want to clear both client ID assignments?')) {
       return;
     }
 
@@ -197,6 +201,7 @@ export default function ConfigurationPage() {
         body: JSON.stringify({
           tunnelId: tunnelId,
           clientId: null,
+          sensorClientId: null,
         }),
       });
 
@@ -214,10 +219,11 @@ export default function ConfigurationPage() {
     }
   };
 
-  const handleEditMapping = (customerId: string, tunnelId: string, currentClientId: string | null) => {
+  const handleEditMapping = (customerId: string, tunnelId: string, currentClientId: string | null, currentSensorClientId: string | null) => {
     setSelectedCustomerId(customerId);
     setSelectedTunnelId(tunnelId);
     setClientId(currentClientId || '');
+    setSensorClientId(currentSensorClientId || '');
     setShowAddMappingForm(true); // Show the form when editing
   };
 
@@ -491,22 +497,44 @@ export default function ConfigurationPage() {
                       </select>
                     </div>
 
-                    <div>
-                      <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">
-                        Client ID
-                      </label>
-                      <input
-                        type="text"
-                        id="clientId"
-                        value={clientId}
-                        onChange={(e) => setClientId(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder="Enter client ID for device communication"
-                      />
-                      <p className="text-sm text-gray-500 mt-1">
-                        Leave empty to remove client ID assignment
-                      </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">
+                          Control Client ID <span className="text-xs text-gray-500">(for sending commands)</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="clientId"
+                          value={clientId}
+                          onChange={(e) => setClientId(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          placeholder="e.g., greenhouse_control_01"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Device ID for sending schedules and commands
+                        </p>
+                      </div>
+
+                      <div>
+                        <label htmlFor="sensorClientId" className="block text-sm font-medium text-gray-700 mb-1">
+                          Sensor Client ID <span className="text-xs text-gray-500">(for receiving data)</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="sensorClientId"
+                          value={sensorClientId}
+                          onChange={(e) => setSensorClientId(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="e.g., greenhouse_sensor_01"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Device ID for receiving sensor readings
+                        </p>
+                      </div>
                     </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Leave either field empty to remove that client ID assignment
+                    </p>
 
                     <div className="flex justify-end space-x-3 pt-4">
                       <button
@@ -515,6 +543,7 @@ export default function ConfigurationPage() {
                           setSelectedCustomerId('');
                           setSelectedTunnelId('');
                           setClientId('');
+                          setSensorClientId('');
                           setMessage(null);
                         }}
                         className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
@@ -526,7 +555,7 @@ export default function ConfigurationPage() {
                         disabled={saving || !selectedTunnelId}
                         className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {saving ? 'Saving...' : (selectedTunnelId && clientId ? 'Update Mapping' : 'Clear Assignment')}
+                        {saving ? 'Saving...' : (selectedTunnelId && (clientId || sensorClientId) ? 'Update Mapping' : 'Clear Assignments')}
                       </button>
                     </div>
                   </form>
@@ -589,58 +618,83 @@ export default function ConfigurationPage() {
                         <div className="space-y-4 ml-6">
                           {mapping.tunnels.map((tunnel) => (
                             <div key={tunnel.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center space-x-3">
-                                  <span className="text-sm text-gray-500">🌱</span>
-                                  <div>
-                                    <span className="font-medium text-gray-900">{tunnel.tunnelName}</span>
-                                    <span className="ml-2 text-sm text-gray-500">({tunnel.tunnelId})</span>
-                                  </div>
-                                </div>
-                                
-                                <div className="flex items-center space-x-2">
-                                  {tunnel.clientId ? (
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                      {tunnel.clientId}
-                                    </span>
-                                  ) : (
-                                    <span className="text-sm text-gray-400">Not assigned</span>
-                                  )}
-                                  
-                                  <button
-                                    onClick={() => handleEditMapping(mapping.customer.id, tunnel.id, tunnel.clientId)}
-                                    className="text-xs px-2 py-1 text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded transition-colors"
-                                  >
-                                    Edit
-                                  </button>
-                                  
-                                  {tunnel.clientId && (
-                                    <button
-                                      onClick={() => handleClearAssignment(tunnel.id)}
-                                      className="text-xs px-2 py-1 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded transition-colors"
-                                    >
-                                      Clear
-                                    </button>
-                                  )}
-                                  
-                                  {/* Tank Configuration Toggle Button */}
-                                  {tunnel.clientId && (
-                                    <button
-                                      onClick={() => toggleTankConfigVisibility(tunnel.id)}
-                                      className="text-xs px-2 py-1 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded transition-colors flex items-center space-x-1"
-                                      title={visibleTankConfigs.has(tunnel.id) ? 'Hide tank configurations' : 'Show tank configurations'}
-                                    >
-                                      <span>{visibleTankConfigs.has(tunnel.id) ? '🔼' : '🔽'}</span>
-                                      <span>Tanks</span>
-                                      {tunnel.tankConfigs && tunnel.tankConfigs.length > 0 && (
-                                        <span className="inline-flex items-center justify-center w-4 h-4 text-xs bg-blue-200 text-blue-800 rounded-full">
-                                          {tunnel.tankConfigs.length}
-                                        </span>
-                                      )}
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
+                               <div className="space-y-3">
+                                 <div className="flex items-center justify-between">
+                                   <div className="flex items-center space-x-3">
+                                     <span className="text-sm text-gray-500">🌱</span>
+                                     <div>
+                                       <span className="font-medium text-gray-900">{tunnel.tunnelName}</span>
+                                       <span className="ml-2 text-sm text-gray-500">({tunnel.tunnelId})</span>
+                                     </div>
+                                   </div>
+                                   
+                                   <div className="flex items-center space-x-2">
+                                     <button
+                                       onClick={() => handleEditMapping(mapping.customer.id, tunnel.id, tunnel.clientId, tunnel.sensorClientId)}
+                                       className="text-xs px-2 py-1 text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded transition-colors"
+                                     >
+                                       Edit
+                                     </button>
+                                     
+                                     {(tunnel.clientId || tunnel.sensorClientId) && (
+                                       <button
+                                         onClick={() => handleClearAssignment(tunnel.id)}
+                                         className="text-xs px-2 py-1 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded transition-colors"
+                                       >
+                                         Clear All
+                                       </button>
+                                     )}
+                                     
+                                     {/* Tank Configuration Toggle Button */}
+                                     {tunnel.clientId && (
+                                       <button
+                                         onClick={() => toggleTankConfigVisibility(tunnel.id)}
+                                         className="text-xs px-2 py-1 text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 rounded transition-colors flex items-center space-x-1"
+                                         title={visibleTankConfigs.has(tunnel.id) ? 'Hide tank configurations' : 'Show tank configurations'}
+                                       >
+                                         <span>{visibleTankConfigs.has(tunnel.id) ? '🔼' : '🔽'}</span>
+                                         <span>Tanks</span>
+                                         {tunnel.tankConfigs && tunnel.tankConfigs.length > 0 && (
+                                           <span className="inline-flex items-center justify-center w-4 h-4 text-xs bg-blue-200 text-blue-800 rounded-full">
+                                             {tunnel.tankConfigs.length}
+                                           </span>
+                                         )}
+                                       </button>
+                                     )}
+                                   </div>
+                                 </div>
+
+                                 {/* Client IDs Display */}
+                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-8">
+                                   <div className="flex items-start space-x-2">
+                                     <span className="text-xs text-gray-500 mt-0.5">🎮</span>
+                                     <div className="flex-1 min-w-0">
+                                       <p className="text-xs font-medium text-gray-600">Control Client ID</p>
+                                       {tunnel.clientId ? (
+                                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 mt-1">
+                                           {tunnel.clientId}
+                                         </span>
+                                       ) : (
+                                         <span className="text-xs text-gray-400 italic">Not assigned</span>
+                                       )}
+                                     </div>
+                                   </div>
+                                   
+                                   <div className="flex items-start space-x-2">
+                                     <span className="text-xs text-gray-500 mt-0.5">📡</span>
+                                     <div className="flex-1 min-w-0">
+                                       <p className="text-xs font-medium text-gray-600">Sensor Client ID</p>
+                                       {tunnel.sensorClientId ? (
+                                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                                           {tunnel.sensorClientId}
+                                         </span>
+                                       ) : (
+                                         <span className="text-xs text-gray-400 italic">Not assigned</span>
+                                       )}
+                                     </div>
+                                   </div>
+                                 </div>
+                               </div>
 
                               {/* Tank Configurations - Only show if tunnel has a client ID and is visible */}
                               {tunnel.clientId && visibleTankConfigs.has(tunnel.id) && (

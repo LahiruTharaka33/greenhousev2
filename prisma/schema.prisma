@@ -34,18 +34,19 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  password      String?
-  role          String    @default("user")
-  accounts      Account[]
-  customer      Customer?
-  sessions      Session[]
+  id              String            @id @default(cuid())
+  name            String?
+  email           String?           @unique
+  emailVerified   DateTime?
+  image           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  password        String?
+  role            String            @default("user")
+  accounts        Account[]
+  customer        Customer?
+  FinancialRecord FinancialRecord[]
+  sessions        Session[]
 }
 
 model VerificationToken {
@@ -74,7 +75,7 @@ model Customer {
   user                User?               @relation(fields: [userId], references: [id])
   customerInventories CustomerInventory[]
   schedules           Schedule[]
-  schedulesV2         ScheduleV2[] @relation("ScheduleV2Customer")
+  schedulesV2         ScheduleV2[]        @relation("ScheduleV2Customer")
   tasks               Task[]
   tunnels             Tunnel[]
 }
@@ -103,7 +104,7 @@ model Item {
   customerInventories CustomerInventory[]
   mainInventory       MainInventory?
   schedules           Schedule[]
-  schedulesV2         ScheduleV2[] @relation("ScheduleV2Fertilizer")
+  schedulesV2         ScheduleV2[]        @relation("ScheduleV2Fertilizer")
   tankConfigs         TankConfiguration[]
 }
 
@@ -133,8 +134,9 @@ model Tunnel {
   updatedAt       DateTime            @updatedAt
   customerId      String
   clientId        String?
+  sensorClientId  String?
   schedules       Schedule[]
-  schedulesV2     ScheduleV2[] @relation("ScheduleV2Tunnel")
+  schedulesV2     ScheduleV2[]        @relation("ScheduleV2Tunnel")
   tankConfigs     TankConfiguration[]
   customer        Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
@@ -188,31 +190,31 @@ model TankConfiguration {
 }
 
 model ScheduleV2 {
-  id               String            @id @default(cuid())
+  id               String              @id @default(cuid())
   customerId       String
   tunnelId         String
   scheduledDate    DateTime
   fertilizerTypeId String
-  quantity         Decimal           @db.Decimal(10, 2)
-  water            Decimal           @db.Decimal(10, 2)
+  quantity         Decimal             @db.Decimal(10, 2)
+  water            Decimal             @db.Decimal(10, 2)
   notes            String?
-  status           String            @default("pending")
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  customer         Customer          @relation("ScheduleV2Customer", fields: [customerId], references: [id], onDelete: Cascade)
-  tunnel           Tunnel            @relation("ScheduleV2Tunnel", fields: [tunnelId], references: [id], onDelete: Cascade)
-  fertilizerType   Item              @relation("ScheduleV2Fertilizer", fields: [fertilizerTypeId], references: [id], onDelete: Cascade)
+  status           String              @default("pending")
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  customer         Customer            @relation("ScheduleV2Customer", fields: [customerId], references: [id], onDelete: Cascade)
+  fertilizerType   Item                @relation("ScheduleV2Fertilizer", fields: [fertilizerTypeId], references: [id], onDelete: Cascade)
+  tunnel           Tunnel              @relation("ScheduleV2Tunnel", fields: [tunnelId], references: [id], onDelete: Cascade)
   releases         ScheduleV2Release[]
 }
 
 model ScheduleV2Release {
-  id               String     @id @default(cuid())
-  scheduleV2Id     String
-  time             String
-  releaseQuantity  Decimal    @db.Decimal(10, 2)
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  scheduleV2       ScheduleV2 @relation(fields: [scheduleV2Id], references: [id], onDelete: Cascade)
+  id              String     @id @default(cuid())
+  scheduleV2Id    String
+  time            String
+  releaseQuantity Decimal    @db.Decimal(10, 2)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  scheduleV2      ScheduleV2 @relation(fields: [scheduleV2Id], references: [id], onDelete: Cascade)
 }
 
 model FinancialRecord {
@@ -225,17 +227,19 @@ model FinancialRecord {
   chemicalCost   Float    @default(0)
   fertilizerCost Float    @default(0)
   rent           Float    @default(0)
-  deliveryCost   Float    @default(0)
-  commission     Float    @default(0)
-  other          Float    @default(0)
   notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  commission     Float    @default(0)
+  deliveryCost   Float    @default(0)
+  other          Float    @default(0)
+  userId         String
+  User           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model MonthlyCosts {
   id        String   @id @default(cuid())
-  month     String   @unique // Format: "YYYY-MM" (e.g., "2024-01")
+  month     String   @unique
   salary    Float    @default(0)
   manPower  Float    @default(0)
   other     Float    @default(0)

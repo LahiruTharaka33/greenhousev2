@@ -21,7 +21,7 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Controller',
-    href: '/user/controller',
+    href: '/controller',
     icon: '🎮',
     description: 'IoT device control and monitoring'
   },

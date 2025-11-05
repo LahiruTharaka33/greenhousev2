@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
         tunnelId: true,
         tunnelName: true,
         clientId: true,
+        sensorClientId: true,
         customerId: true,
         customer: {
           select: {
@@ -81,6 +82,7 @@ export async function GET(request: NextRequest) {
         tunnelId: tunnel.tunnelId,
         tunnelName: tunnel.tunnelName,
         clientId: tunnel.clientId,
+        sensorClientId: tunnel.sensorClientId,
         tankConfigs: tunnel.tankConfigs
       });
       return acc;
@@ -121,7 +123,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tunnelId, clientId } = body;
+    const { tunnelId, clientId, sensorClientId } = body;
 
     // Validate input
     if (!tunnelId) {
@@ -132,9 +134,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate clientId (can be null or a non-empty string)
-    if (clientId !== null && (typeof clientId !== 'string' || clientId.trim() === '')) {
+    if (clientId !== null && clientId !== undefined && (typeof clientId !== 'string' || clientId.trim() === '')) {
       return NextResponse.json(
-        { error: 'Client ID must be a non-empty string or null' },
+        { error: 'Control Client ID must be a non-empty string or null' },
+        { status: 400 }
+      );
+    }
+
+    // Validate sensorClientId (can be null or a non-empty string)
+    if (sensorClientId !== null && sensorClientId !== undefined && (typeof sensorClientId !== 'string' || sensorClientId.trim() === '')) {
+      return NextResponse.json(
+        { error: 'Sensor Client ID must be a non-empty string or null' },
         { status: 400 }
       );
     }
@@ -146,6 +156,7 @@ export async function POST(request: NextRequest) {
         id: true, 
         tunnelName: true, 
         clientId: true,
+        sensorClientId: true,
         customer: {
           select: {
             customerName: true
@@ -161,8 +172,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if clientId is already in use by another tunnel (if not null)
-    if (clientId !== null) {
+    // Check if control clientId is already in use by another tunnel (if not null and being updated)
+    if (clientId !== null && clientId !== undefined) {
       const existingClientId = await prisma.tunnel.findFirst({
         where: {
           clientId: clientId.trim(),
@@ -182,20 +193,58 @@ export async function POST(request: NextRequest) {
       if (existingClientId) {
         return NextResponse.json(
           { 
-            error: `Client ID "${clientId.trim()}" is already assigned to tunnel "${existingClientId.tunnelName}" (${existingClientId.customer.customerName})` 
+            error: `Control Client ID "${clientId.trim()}" is already assigned to tunnel "${existingClientId.tunnelName}" (${existingClientId.customer.customerName})` 
           },
           { status: 409 }
         );
       }
     }
 
-    // Update tunnel clientId
+    // Check if sensor clientId is already in use by another tunnel (if not null and being updated)
+    if (sensorClientId !== null && sensorClientId !== undefined) {
+      const existingSensorClientId = await prisma.tunnel.findFirst({
+        where: {
+          sensorClientId: sensorClientId.trim(),
+          id: { not: tunnelId }
+        },
+        select: { 
+          id: true, 
+          tunnelName: true,
+          customer: {
+            select: {
+              customerName: true
+            }
+          }
+        }
+      });
+
+      if (existingSensorClientId) {
+        return NextResponse.json(
+          { 
+            error: `Sensor Client ID "${sensorClientId.trim()}" is already assigned to tunnel "${existingSensorClientId.tunnelName}" (${existingSensorClientId.customer.customerName})` 
+          },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Prepare update data - only include fields that are being updated
+    const updateData: any = {
+      updatedAt: new Date()
+    };
+
+    if (clientId !== undefined) {
+      updateData.clientId = clientId ? clientId.trim() : null;
+    }
+
+    if (sensorClientId !== undefined) {
+      updateData.sensorClientId = sensorClientId ? sensorClientId.trim() : null;
+    }
+
+    // Update tunnel client IDs
     const updatedTunnel = await prisma.tunnel.update({
       where: { id: tunnelId },
-      data: { 
-        clientId: clientId ? clientId.trim() : null,
-        updatedAt: new Date()
-      },
+      data: updateData,
       include: {
         customer: {
           select: {
@@ -206,11 +255,23 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Generate appropriate success message
+    let message = '';
+    if (clientId !== undefined && sensorClientId !== undefined) {
+      message = `Client IDs updated for tunnel "${updatedTunnel.tunnelName}"`;
+    } else if (clientId !== undefined) {
+      message = clientId 
+        ? `Control Client ID "${clientId.trim()}" assigned to tunnel "${updatedTunnel.tunnelName}"`
+        : `Control Client ID removed from tunnel "${updatedTunnel.tunnelName}"`;
+    } else if (sensorClientId !== undefined) {
+      message = sensorClientId 
+        ? `Sensor Client ID "${sensorClientId.trim()}" assigned to tunnel "${updatedTunnel.tunnelName}"`
+        : `Sensor Client ID removed from tunnel "${updatedTunnel.tunnelName}"`;
+    }
+
     return NextResponse.json({
       success: true,
-      message: clientId 
-        ? `Client ID "${clientId.trim()}" assigned to tunnel "${updatedTunnel.tunnelName}"`
-        : `Client ID removed from tunnel "${updatedTunnel.tunnelName}"`,
+      message: message,
       tunnel: updatedTunnel
     });
 
