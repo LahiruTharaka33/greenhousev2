@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || session.user.role !== 'admin') {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -20,8 +20,10 @@ export async function GET(request: NextRequest) {
     // Calculate pagination
     const skip = (page - 1) * limit;
 
-    // Build where clause for filtering
-    const where: any = {};
+    // Build where clause for filtering - always filter by logged-in user
+    const where: any = {
+      userId: session.user.id
+    };
     
     if (search) {
       where.notes = {
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || session.user.role !== 'admin') {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -128,7 +130,8 @@ export async function POST(request: NextRequest) {
         deliveryCost: deliveryCost ? parseFloat(deliveryCost) : 0,
         commission: commission ? parseFloat(commission) : 0,
         other: other ? parseFloat(other) : 0,
-        notes: notes || null
+        notes: notes || null,
+        userId: session.user.id
       }
     });
 

@@ -162,7 +162,7 @@ export default function Sidebar() {
               </div>
               <div className="ml-3 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">{session.user?.name}</p>
-                <p className="text-xs text-emerald-600">Administrator</p>
+                <p className="text-xs text-emerald-600 capitalize">{session.user?.role || 'User'}</p>
               </div>
             </div>
             <Link

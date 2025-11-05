@@ -49,6 +49,12 @@ const userNavigation: NavItem[] = [
     icon: '🎮',
     description: 'IoT device control and monitoring'
   },
+  {
+    name: 'Financial Records',
+    href: '/financial-records',
+    icon: '💰',
+    description: 'Track my income and expenses'
+  },
 ];
 
 interface UserLayoutProps {

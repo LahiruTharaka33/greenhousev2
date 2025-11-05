@@ -10,7 +10,7 @@ export async function GET(
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || session.user.role !== 'admin') {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -18,7 +18,7 @@ export async function GET(
       where: { id: params.id }
     });
 
-    if (!record) {
+    if (!record || record.userId !== session.user.id) {
       return NextResponse.json({ error: 'Financial record not found' }, { status: 404 });
     }
 
@@ -36,8 +36,17 @@ export async function PUT(
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || session.user.role !== 'admin') {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Verify ownership before updating
+    const existingRecord = await prisma.financialRecord.findUnique({
+      where: { id: params.id }
+    });
+
+    if (!existingRecord || existingRecord.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Financial record not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -107,8 +116,17 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user || session.user.role !== 'admin') {
+    if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Verify ownership before deleting
+    const existingRecord = await prisma.financialRecord.findUnique({
+      where: { id: params.id }
+    });
+
+    if (!existingRecord || existingRecord.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Financial record not found' }, { status: 404 });
     }
 
     await prisma.financialRecord.delete({

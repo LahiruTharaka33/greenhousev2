@@ -89,11 +89,8 @@ export default function FinancialRecordsPage() {
   };
 
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'admin') {
+    if (status === 'authenticated') {
       fetchRecords();
-    } else if (status === 'authenticated' && session?.user?.role !== 'admin') {
-      setLoading(false);
-      setError('Unauthorized: Admin access required');
     }
   }, [status, session]);
 
@@ -108,14 +105,14 @@ export default function FinancialRecordsPage() {
 
   // Refetch records when search term changes
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'admin') {
+    if (status === 'authenticated') {
       fetchRecords(1, pageSize); // Reset to page 1 when searching
     }
   }, [debouncedSearchTerm]);
 
   // Refresh records when month filter changes
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'admin') {
+    if (status === 'authenticated') {
       console.log('Month filter changed, refreshing records:', dateFilter); // Debug log
       fetchRecords(1, pageSize); // Reset to first page when filter changes
     }
@@ -304,7 +301,7 @@ export default function FinancialRecordsPage() {
 
   // Fetch all records when component mounts or when switching to summary tab
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.role === 'admin' && activeTab === 'summary') {
+    if (status === 'authenticated' && activeTab === 'summary') {
       fetchAllRecords();
     }
   }, [activeTab, status, session]);
@@ -476,7 +473,7 @@ export default function FinancialRecordsPage() {
     );
   }
 
-  if (!session || session.user.role !== 'admin') {
+  if (!session) {
     redirect('/login');
   }
 
