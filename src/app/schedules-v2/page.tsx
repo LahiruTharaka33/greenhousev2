@@ -95,6 +95,7 @@ export default function SchedulesV2Page() {
   const [selectedFertilizerUnit, setSelectedFertilizerUnit] = useState('');
   const [editingSchedule, setEditingSchedule] = useState<ScheduleV2 | null>(null);
   const [activeTab, setActiveTab] = useState<'create' | 'view'>('create');
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
 
   // Fetch initial data
@@ -400,6 +401,35 @@ export default function SchedulesV2Page() {
     } catch (error) {
       console.error('Error deleting schedule:', error);
       alert('Failed to delete schedule');
+    }
+  };
+
+  const handleCancel = async (scheduleId: string) => {
+    if (!confirm('Are you sure you want to cancel this schedule? It will not be sent to the ESP32.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/schedules-v2/${scheduleId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'cancelled' }),
+      });
+
+      if (response.ok) {
+        const updatedSchedule = await response.json();
+        setSchedules(schedules.map(s => s.id === scheduleId ? updatedSchedule : s));
+        setOpenDropdownId(null);
+        alert('Schedule cancelled successfully');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to cancel schedule');
+      }
+    } catch (error) {
+      console.error('Error cancelling schedule:', error);
+      alert('Failed to cancel schedule');
     }
   };
 
@@ -792,9 +822,44 @@ export default function SchedulesV2Page() {
                             </h3>
                             <p className="text-sm text-gray-600 truncate">{schedule.tunnel.tunnelName}</p>
                           </div>
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(schedule.status)} self-start sm:self-auto`}>
-                            {schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(schedule.status)} self-start sm:self-auto`}>
+                              {schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}
+                            </span>
+                            {/* Dropdown Menu */}
+                            {(schedule.status === 'pending' || schedule.status === 'sent') && (
+                              <div className="relative">
+                                <button
+                                  onClick={() => setOpenDropdownId(openDropdownId === schedule.id ? null : schedule.id)}
+                                  className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+                                  aria-label="More options"
+                                >
+                                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                  </svg>
+                                </button>
+                                {openDropdownId === schedule.id && (
+                                  <>
+                                    <div 
+                                      className="fixed inset-0 z-10" 
+                                      onClick={() => setOpenDropdownId(null)}
+                                    />
+                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                                      <button
+                                        onClick={() => handleCancel(schedule.id)}
+                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                        Cancel Schedule
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -870,13 +935,23 @@ export default function SchedulesV2Page() {
                               setActiveTab('create');
                               handleEdit(schedule);
                             }}
-                            className="w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base text-blue-600 hover:text-blue-800 hover:bg-blue-50 active:bg-blue-100 rounded-md transition-colors font-medium"
+                            disabled={schedule.status === 'cancelled'}
+                            className={`w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors font-medium ${
+                              schedule.status === 'cancelled'
+                                ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                                : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 active:bg-blue-100'
+                            }`}
                           >
                             Edit
                           </button>
                           <button 
                             onClick={() => handleDelete(schedule.id)}
-                            className="w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base text-red-600 hover:text-red-800 hover:bg-red-50 active:bg-red-100 rounded-md transition-colors font-medium"
+                            disabled={schedule.status === 'cancelled'}
+                            className={`w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors font-medium ${
+                              schedule.status === 'cancelled'
+                                ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                                : 'text-red-600 hover:text-red-800 hover:bg-red-50 active:bg-red-100'
+                            }`}
                           >
                             Delete
                           </button>
