@@ -77,6 +77,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // CRITICAL VALIDATION: Check if this fertilizer is configured in a tank for this tunnel
+    const tankWithFertilizer = await prisma.tankConfiguration.findFirst({
+      where: {
+        tunnelId,
+        itemType: 'fertilizer',
+        itemId: fertilizerTypeId
+      },
+      select: {
+        tankName: true
+      }
+    });
+
+    if (!tankWithFertilizer) {
+      return NextResponse.json(
+        { 
+          error: `Fertilizer "${fertilizerExists.itemName}" is not configured in any tank for this tunnel. Please configure it in the Configuration page first.`,
+          fertilizerName: fertilizerExists.itemName
+        },
+        { status: 400 }
+      );
+    }
+
     // Create the schedule with status 'pending' initially
     const schedule = await prisma.scheduleV2.create({
       data: {
@@ -133,48 +155,15 @@ export async function POST(request: NextRequest) {
 
     console.log('Schedule created successfully. Publishing immediately to ESP32...');
 
-    // Fetch tank configuration for the tunnel
-    const tankConfigs = await prisma.tankConfiguration.findMany({
-      where: { tunnelId: schedule.tunnelId },
-      include: { item: true }
-    });
-
-    // Find which tank contains the selected fertilizer
-    let fertilizerTank: string | null = null;
-    for (const config of tankConfigs) {
-      if (config.itemId === schedule.fertilizerTypeId) {
-        fertilizerTank = config.tankName; // "Tank A", "Tank B", or "Tank C"
-        console.log(`Found fertilizer "${schedule.fertilizerType.itemName}" in ${fertilizerTank}`);
-        break;
-      }
-    }
-
-    // Build warnings
-    const warnings: string[] = [];
-    if (!fertilizerTank) {
-      const warningMsg = `Warning: Fertilizer "${schedule.fertilizerType.itemName}" is not configured in any tank for tunnel "${schedule.tunnel.tunnelName}"`;
-      warnings.push(warningMsg);
-      console.warn(warningMsg);
-    }
-
-    // Build MQTT topic data based on tank mapping
-    const topicData = {
-      fertilizer_1: fertilizerTank === "Tank A" ? parseFloat(schedule.quantity.toString()) : 0,
-      fertilizer_2: fertilizerTank === "Tank B" ? parseFloat(schedule.quantity.toString()) : 0,
-      fertilizer_3: fertilizerTank === "Tank C" ? parseFloat(schedule.quantity.toString()) : 0,
-      water_volume: parseFloat(schedule.water.toString()),
-      schedule_time1: schedule.releases && schedule.releases[0] ? schedule.releases[0].time : "",
-      schedule_volume1: schedule.releases && schedule.releases[0] ? parseFloat(schedule.releases[0].releaseQuantity.toString()) : 0,
-      schedule_time2: schedule.releases && schedule.releases[1] ? schedule.releases[1].time : "",
-      schedule_volume2: schedule.releases && schedule.releases[1] ? parseFloat(schedule.releases[1].releaseQuantity.toString()) : 0,
-      schedule_time3: schedule.releases && schedule.releases[2] ? schedule.releases[2].time : "",
-      schedule_volume3: schedule.releases && schedule.releases[2] ? parseFloat(schedule.releases[2].releaseQuantity.toString()) : 0,
-    };
-
-    console.log(`Publishing schedule ${schedule.id} to MQTT:`, topicData);
-
-    // Publish to MQTT
-    const mqttResult = await scheduleV2Publisher.publishScheduleV2(topicData, warnings);
+    // Use the new tank-mapping publisher
+    const mqttResult = await scheduleV2Publisher.publishScheduleV2WithTankMapping(
+      schedule.tunnelId,
+      schedule.fertilizerTypeId,
+      schedule.fertilizerType.itemName,
+      parseFloat(schedule.quantity.toString()),
+      parseFloat(schedule.water.toString()),
+      schedule.releases || []
+    );
 
     if (mqttResult.overallSuccess) {
       // Update schedule status to sent
@@ -223,7 +212,7 @@ export async function POST(request: NextRequest) {
         schedule: updatedSchedule,
         publishResult: {
           success: true,
-          warnings,
+          warnings: mqttResult.warnings || [],
           mqttSummary: mqttResult
         }
       }, { status: 201 });
@@ -276,7 +265,7 @@ export async function POST(request: NextRequest) {
           schedule: updatedSchedule,
           publishResult: {
             success: false,
-            warnings,
+            warnings: mqttResult.warnings || [],
             mqttSummary: mqttResult
           }
         },

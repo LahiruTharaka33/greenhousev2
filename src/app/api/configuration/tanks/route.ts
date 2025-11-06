@@ -126,6 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     // If itemType is fertilizer, verify the item exists and is a fertilizer
+    let itemName = '';
     if (itemType === 'fertilizer' && itemId) {
       const item = await prisma.item.findUnique({
         where: { id: itemId },
@@ -143,6 +144,28 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: 'Selected item is not a fertilizer' },
           { status: 400 }
+        );
+      }
+
+      itemName = item.itemName;
+
+      // Check if this fertilizer is already assigned to another tank in the same tunnel
+      const existingAssignment = await prisma.tankConfiguration.findFirst({
+        where: {
+          tunnelId,
+          tankName: { not: tankName }, // Different tank
+          itemType: 'fertilizer',
+          itemId: itemId
+        },
+        select: {
+          tankName: true
+        }
+      });
+
+      if (existingAssignment) {
+        return NextResponse.json(
+          { error: `This fertilizer "${itemName}" is already assigned to ${existingAssignment.tankName}. Each fertilizer can only be assigned to one tank.` },
+          { status: 409 }
         );
       }
     }

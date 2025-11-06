@@ -105,48 +105,20 @@ export async function GET(request: NextRequest) {
       try {
         console.log(`Processing schedule ${schedule.id} for ${schedule.customer.customerName} - ${schedule.tunnel.tunnelName}`);
 
-        // Fetch tank configuration for the tunnel
-        const tankConfigs = await prisma.tankConfiguration.findMany({
-          where: { tunnelId: schedule.tunnelId },
-          include: { item: true }
-        });
+        // Use the new tank-mapping publisher
+        const mqttResult = await scheduleV2Publisher.publishScheduleV2WithTankMapping(
+          schedule.tunnelId,
+          schedule.fertilizerTypeId,
+          schedule.fertilizerType.itemName,
+          parseFloat(schedule.quantity.toString()),
+          parseFloat(schedule.water.toString()),
+          schedule.releases || []
+        );
 
-        // Find which tank contains the selected fertilizer
-        let fertilizerTank: string | null = null;
-        for (const config of tankConfigs) {
-          if (config.itemId === schedule.fertilizerTypeId) {
-            fertilizerTank = config.tankName; // "Tank A", "Tank B", or "Tank C"
-            console.log(`Found fertilizer "${schedule.fertilizerType.itemName}" in ${fertilizerTank}`);
-            break;
-          }
+        // Log warnings if any
+        if (mqttResult.warnings && mqttResult.warnings.length > 0) {
+          console.warn(`⚠️ Warnings for schedule ${schedule.id}:`, mqttResult.warnings);
         }
-
-        // Build warnings
-        const warnings: string[] = [];
-        if (!fertilizerTank) {
-          const warningMsg = `Warning: Fertilizer "${schedule.fertilizerType.itemName}" is not configured in any tank for tunnel "${schedule.tunnel.tunnelName}"`;
-          warnings.push(warningMsg);
-          console.warn(warningMsg);
-        }
-
-        // Build MQTT topic data based on tank mapping
-        const topicData = {
-          fertilizer_1: fertilizerTank === "Tank A" ? parseFloat(schedule.quantity.toString()) : 0,
-          fertilizer_2: fertilizerTank === "Tank B" ? parseFloat(schedule.quantity.toString()) : 0,
-          fertilizer_3: fertilizerTank === "Tank C" ? parseFloat(schedule.quantity.toString()) : 0,
-          water_volume: parseFloat(schedule.water.toString()),
-          schedule_time1: schedule.releases && schedule.releases[0] ? schedule.releases[0].time : "",
-          schedule_volume1: schedule.releases && schedule.releases[0] ? parseFloat(schedule.releases[0].releaseQuantity.toString()) : 0,
-          schedule_time2: schedule.releases && schedule.releases[1] ? schedule.releases[1].time : "",
-          schedule_volume2: schedule.releases && schedule.releases[1] ? parseFloat(schedule.releases[1].releaseQuantity.toString()) : 0,
-          schedule_time3: schedule.releases && schedule.releases[2] ? schedule.releases[2].time : "",
-          schedule_volume3: schedule.releases && schedule.releases[2] ? parseFloat(schedule.releases[2].releaseQuantity.toString()) : 0,
-        };
-
-        console.log(`Publishing schedule ${schedule.id} to MQTT:`, topicData);
-
-        // Publish to MQTT
-        const mqttResult = await scheduleV2Publisher.publishScheduleV2(topicData, warnings);
 
         if (mqttResult.overallSuccess) {
           // Update schedule status to sent
@@ -164,11 +136,15 @@ export async function GET(request: NextRequest) {
             data: { status: 'failed' }
           });
 
+          const errorMsg = mqttResult.warnings && mqttResult.warnings.length > 0 
+            ? mqttResult.warnings[0] 
+            : 'MQTT publishing failed';
+
           results.failed.push({
             scheduleId: schedule.id,
-            error: 'MQTT publishing failed'
+            error: errorMsg
           });
-          console.error(`❌ Failed to publish schedule ${schedule.id} - status updated to failed`);
+          console.error(`❌ Failed to publish schedule ${schedule.id}: ${errorMsg}`);
         }
 
       } catch (error) {

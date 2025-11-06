@@ -1,4 +1,8 @@
 import mqttService from './mqtt';
+import { PrismaClient } from '@prisma/client';
+import { getTankTopicFromName } from '@/utils/tankMapping';
+
+const prisma = new PrismaClient();
 
 export interface ScheduleV2TopicData {
   fertilizer_1: number;
@@ -81,6 +85,41 @@ class ScheduleV2Publisher {
     });
   }
 
+  /**
+   * Find which tank contains the specified fertilizer for a tunnel
+   */
+  private async findTankForFertilizer(tunnelId: string, fertilizerItemId: string): Promise<{ tankName: string; topic: string } | null> {
+    try {
+      const tankConfig = await prisma.tankConfiguration.findFirst({
+        where: {
+          tunnelId,
+          itemType: 'fertilizer',
+          itemId: fertilizerItemId
+        },
+        select: {
+          tankName: true
+        }
+      });
+
+      if (!tankConfig) {
+        return null;
+      }
+
+      const topic = getTankTopicFromName(tankConfig.tankName);
+      if (!topic) {
+        return null;
+      }
+
+      return {
+        tankName: tankConfig.tankName,
+        topic
+      };
+    } catch (error) {
+      console.error('Error finding tank for fertilizer:', error);
+      return null;
+    }
+  }
+
   async publishScheduleV2(topicData: ScheduleV2TopicData, warnings: string[] = []): Promise<PublishSummary> {
     console.log('Publishing ScheduleV2 to ESP32 via MQTT...', topicData);
     
@@ -149,6 +188,91 @@ class ScheduleV2Publisher {
       warnings: warnings.length
     });
     
+    return summary;
+  }
+
+  /**
+   * Publish schedule with tank mapping - finds correct tank and publishes to its topic
+   */
+  async publishScheduleV2WithTankMapping(
+    tunnelId: string,
+    fertilizerItemId: string,
+    fertilizerName: string,
+    quantity: number,
+    water: number,
+    releases: Array<{ time: string; releaseQuantity: number }>
+  ): Promise<PublishSummary> {
+    console.log('Publishing schedule with tank mapping...', { tunnelId, fertilizerItemId, fertilizerName, quantity, water, releases });
+    
+    // Find which tank contains this fertilizer
+    const tankMapping = await this.findTankForFertilizer(tunnelId, fertilizerItemId);
+    
+    if (!tankMapping) {
+      const error = `Fertilizer "${fertilizerName}" is not configured in any tank for this tunnel. Please configure it in the Configuration page first.`;
+      console.error(error);
+      return {
+        totalTopics: 0,
+        publishResults: [],
+        overallSuccess: false,
+        timestamp: new Date().toISOString(),
+        warnings: [error]
+      };
+    }
+
+    console.log(`Found fertilizer "${fertilizerName}" in ${tankMapping.tankName}, will publish to topic: ${tankMapping.topic}`);
+
+    // Ensure MQTT connection
+    const connected = await this.ensureConnection();
+    if (!connected) {
+      return {
+        totalTopics: 0,
+        publishResults: [],
+        overallSuccess: false,
+        timestamp: new Date().toISOString(),
+        warnings: ['MQTT connection failed']
+      };
+    }
+
+    const results: MQTTPublishResult[] = [];
+
+    // Publish fertilizer quantity to the correct tank topic (just the quantity as requested)
+    results.push(await this.publishToTopic(tankMapping.topic, quantity.toString()));
+
+    // Publish water volume separately
+    results.push(await this.publishToTopic('water_volume', water.toString()));
+
+    // Publish release schedule details
+    for (let i = 0; i < Math.min(releases.length, 3); i++) {
+      const release = releases[i];
+      const timeESP32 = this.convertTimeToESP32Format(release.time);
+      
+      results.push(await this.publishToTopic(`schedule_time${i + 1}`, timeESP32));
+      results.push(await this.publishToTopic(`schedule_volume${i + 1}`, release.releaseQuantity.toString()));
+    }
+
+    // Fill remaining slots with zeros if less than 3 releases
+    for (let i = releases.length; i < 3; i++) {
+      results.push(await this.publishToTopic(`schedule_time${i + 1}`, '0000'));
+      results.push(await this.publishToTopic(`schedule_volume${i + 1}`, '0'));
+    }
+
+    const overallSuccess = results.every(r => r.success);
+
+    const summary: PublishSummary = {
+      totalTopics: results.length,
+      publishResults: results,
+      overallSuccess,
+      timestamp: new Date().toISOString(),
+      warnings: []
+    };
+
+    console.log('Schedule published with tank mapping:', {
+      tank: tankMapping.tankName,
+      topic: tankMapping.topic,
+      totalTopics: summary.totalTopics,
+      success: summary.overallSuccess
+    });
+
     return summary;
   }
 }

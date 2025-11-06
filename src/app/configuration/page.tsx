@@ -179,11 +179,11 @@ export default function ConfigurationPage() {
 
         const tankPromises = tankConfigs
           .filter(tank => tank.value)
-          .map(tank => {
+          .map(async tank => {
             const itemType = tank.value === 'water' ? 'water' : 'fertilizer';
             const itemId = tank.value === 'water' ? null : tank.value;
             
-            return fetch('/api/configuration/tanks', {
+            const response = await fetch('/api/configuration/tanks', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -195,21 +195,38 @@ export default function ConfigurationPage() {
                 itemId,
               }),
             });
+
+            // Check response and throw error if needed
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.error || 'Failed to save tank configuration');
+            }
+
+            return response;
           });
 
         // Wait for all tank configurations to complete
-        await Promise.all(tankPromises);
-
-        setMessage({ type: 'success', text: 'Configuration saved successfully' });
-        await fetchMappings(); // Refresh mappings
-        setClientId('');
-        setSensorClientId('');
-        setTankA('');
-        setTankB('');
-        setTankC('');
-        setSelectedTunnelId('');
-        setSelectedCustomerId('');
-        setShowAddMappingForm(false);
+        try {
+          await Promise.all(tankPromises);
+          
+          setMessage({ type: 'success', text: 'Configuration saved successfully' });
+          await fetchMappings(); // Refresh mappings
+          setClientId('');
+          setSensorClientId('');
+          setTankA('');
+          setTankB('');
+          setTankC('');
+          setSelectedTunnelId('');
+          setSelectedCustomerId('');
+          setShowAddMappingForm(false);
+        } catch (tankError: any) {
+          // Handle duplicate fertilizer error or other tank config errors
+          setMessage({ 
+            type: 'error', 
+            text: tankError.message || 'Failed to save tank configuration' 
+          });
+          return; // Don't clear form fields on tank configuration error
+        }
       } else {
         setMessage({ type: 'error', text: data.error });
       }
