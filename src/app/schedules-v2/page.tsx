@@ -462,7 +462,7 @@ export default function SchedulesV2Page() {
 
       if (response.ok) {
         const result = await response.json();
-        setOpenDropdownId(null);
+        setOpenReleaseDropdownId(null);
         alert(`✅ Release ${releaseNumber} triggered successfully!\n\nTime: ${result.release.time}\nVolume: ${result.release.volume}L\n\nMQTT Topic: ${result.topic}\nValue: ${result.value}`);
       } else {
         const error = await response.json();
@@ -471,6 +471,34 @@ export default function SchedulesV2Page() {
     } catch (error) {
       console.error('Error running release:', error);
       alert('Failed to run release');
+    }
+  };
+
+  const handleCancelRelease = async (scheduleId: string, releaseIndex: number, releaseNumber: number) => {
+    if (!confirm(`Cancel Release ${releaseNumber}?\n\nThis will send volume "0" to ESP32 to cancel this release.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/schedules-v2/${scheduleId}/cancel-release`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ releaseIndex }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setOpenReleaseDropdownId(null);
+        alert(`✅ Release ${releaseNumber} cancelled successfully!\n\nTime: ${result.release.time}\nOriginal Volume: ${result.release.volume}L\n\nMQTT Topic: ${result.topic}\nValue: ${result.value} (Cancelled)`);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to cancel release');
+      }
+    } catch (error) {
+      console.error('Error cancelling release:', error);
+      alert('Failed to cancel release');
     }
   };
 
@@ -970,6 +998,23 @@ export default function SchedulesV2Page() {
                                       return 'This release cannot be run';
                                   }
                                 };
+
+                                const getCancelTooltipMessage = () => {
+                                  switch (schedule.status) {
+                                    case 'sent':
+                                      return 'Cancel this release by sending volume 0';
+                                    case 'pending':
+                                      return 'Only schedules with "Sent" status can be cancelled';
+                                    case 'cancelled':
+                                      return 'Schedule is already cancelled';
+                                    case 'failed':
+                                      return 'Failed schedules cannot be cancelled';
+                                    default:
+                                      return 'This release cannot be cancelled';
+                                  }
+                                };
+
+                                const isCancelEnabled = schedule.status === 'sent';
                                 
                                 return (
                                   <div key={index} className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
@@ -1017,6 +1062,33 @@ export default function SchedulesV2Page() {
                                               </svg>
                                               <span>Run Now</span>
                                               {!isRunNowEnabled && (
+                                                <span className="ml-auto text-xs text-gray-400">(Disabled)</span>
+                                              )}
+                                            </button>
+
+                                            {/* Divider */}
+                                            <div className="border-t border-gray-200 my-1"></div>
+
+                                            {/* Cancel Release Button */}
+                                            <button
+                                              onClick={() => {
+                                                if (isCancelEnabled) {
+                                                  handleCancelRelease(schedule.id, index, index + 1);
+                                                }
+                                              }}
+                                              disabled={!isCancelEnabled}
+                                              className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${
+                                                isCancelEnabled
+                                                  ? 'text-red-600 hover:bg-red-50 cursor-pointer'
+                                                  : 'text-gray-400 cursor-not-allowed bg-gray-50'
+                                              }`}
+                                              title={getCancelTooltipMessage()}
+                                            >
+                                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                              </svg>
+                                              <span>Cancel Release</span>
+                                              {!isCancelEnabled && (
                                                 <span className="ml-auto text-xs text-gray-400">(Disabled)</span>
                                               )}
                                             </button>

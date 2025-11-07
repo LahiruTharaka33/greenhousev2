@@ -1,0 +1,113 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import mqttService from '@/lib/mqtt';
+import { prisma } from '@/lib/prisma';
+
+// POST /api/schedules-v2/[id]/cancel-release - Cancel a specific release by sending volume 0
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { releaseIndex } = await request.json();
+    const { id: scheduleId } = await params;
+
+    // Validate releaseIndex (0, 1, or 2 for Release 1, 2, 3)
+    if (releaseIndex === undefined || releaseIndex < 0 || releaseIndex > 2) {
+      return NextResponse.json(
+        { error: 'Invalid release index. Must be 0, 1, or 2' },
+        { status: 400 }
+      );
+    }
+
+    // Verify schedule exists
+    const schedule = await prisma.scheduleV2.findUnique({
+      where: { id: scheduleId },
+      include: {
+        releases: {
+          orderBy: { time: 'asc' }
+        }
+      }
+    });
+
+    if (!schedule) {
+      return NextResponse.json(
+        { error: 'Schedule not found' },
+        { status: 404 }
+      );
+    }
+
+    // Verify the release exists at this index
+    if (!schedule.releases || !schedule.releases[releaseIndex]) {
+      return NextResponse.json(
+        { error: `Release ${releaseIndex + 1} does not exist in this schedule` },
+        { status: 400 }
+      );
+    }
+
+    // Map releaseIndex to MQTT volume topic
+    const topicMap: { [key: number]: string } = {
+      0: 'schedule_volume1',
+      1: 'schedule_volume2',
+      2: 'schedule_volume3'
+    };
+
+    const topic = topicMap[releaseIndex];
+    
+    console.log(`🚫 Cancelling Release ${releaseIndex + 1} for schedule ${scheduleId}`);
+    console.log(`   Release details:`, schedule.releases[releaseIndex]);
+
+    // Ensure MQTT connection
+    if (!mqttService.getConnectionStatus()) {
+      console.log('MQTT not connected, attempting to connect...');
+      const connected = await mqttService.connect();
+      if (!connected) {
+        return NextResponse.json(
+          { error: 'Failed to connect to MQTT broker' },
+          { status: 500 }
+        );
+      }
+    }
+
+    // Publish "0" to cancel the release
+    const success = mqttService.publish(topic, '0');
+
+    if (success) {
+      console.log(`✅ Published "0" to ${topic} - Release ${releaseIndex + 1} cancelled`);
+      
+      return NextResponse.json({
+        success: true,
+        message: `Release ${releaseIndex + 1} cancelled successfully`,
+        topic,
+        value: '0',
+        release: {
+          index: releaseIndex + 1,
+          time: schedule.releases[releaseIndex].time,
+          volume: schedule.releases[releaseIndex].releaseQuantity
+        }
+      });
+    } else {
+      console.error(`❌ Failed to publish to ${topic}`);
+      return NextResponse.json(
+        { error: 'Failed to publish to MQTT broker' },
+        { status: 500 }
+      );
+    }
+  } catch (error) {
+    console.error('Error cancelling release:', error);
+    return NextResponse.json(
+      { 
+        error: 'Failed to cancel release',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
+}
