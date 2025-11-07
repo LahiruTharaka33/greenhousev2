@@ -96,6 +96,7 @@ export default function SchedulesV2Page() {
   const [editingSchedule, setEditingSchedule] = useState<ScheduleV2 | null>(null);
   const [activeTab, setActiveTab] = useState<'create' | 'view'>('create');
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [openReleaseDropdownId, setOpenReleaseDropdownId] = useState<string | null>(null);
 
 
   // Fetch initial data
@@ -207,6 +208,12 @@ export default function SchedulesV2Page() {
       return;
     }
 
+    // Validate maximum 3 releases
+    if (releases.length > 3) {
+      alert('Maximum 3 releases allowed per schedule');
+      return;
+    }
+
     // Validate release quantities
     if (!isReleaseQuantityValid) {
       alert(`Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${water}L)`);
@@ -278,6 +285,12 @@ export default function SchedulesV2Page() {
     
     if (!selectedCustomerId || !selectedTunnelId || !scheduledDate || !selectedFertilizerTypeId || !quantity || !water) {
       alert('Please fill in all required fields');
+      return;
+    }
+
+    // Validate maximum 3 releases
+    if (releases.length > 3) {
+      alert('Maximum 3 releases allowed per schedule');
       return;
     }
 
@@ -430,6 +443,34 @@ export default function SchedulesV2Page() {
     } catch (error) {
       console.error('Error cancelling schedule:', error);
       alert('Failed to cancel schedule');
+    }
+  };
+
+  const handleRunReleaseNow = async (scheduleId: string, releaseIndex: number, releaseNumber: number) => {
+    if (!confirm(`Run Release ${releaseNumber} immediately?\n\nThis will trigger the release right now via MQTT.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/schedules-v2/${scheduleId}/run-release`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ releaseIndex }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setOpenDropdownId(null);
+        alert(`✅ Release ${releaseNumber} triggered successfully!\n\nTime: ${result.release.time}\nVolume: ${result.release.volume}L\n\nMQTT Topic: ${result.topic}\nValue: ${result.value}`);
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to run release');
+      }
+    } catch (error) {
+      console.error('Error running release:', error);
+      alert('Failed to run release');
     }
   };
 
@@ -677,14 +718,33 @@ export default function SchedulesV2Page() {
                 {/* Release Sub-List */}
                 <div>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 sm:mb-4">
-                    <h3 className="text-base sm:text-lg font-medium text-gray-900">Release Schedule</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base sm:text-lg font-medium text-gray-900">Release Schedule</h3>
+                      <span className="text-sm text-gray-500">({releases.length}/3)</span>
+                    </div>
                     <button
                       type="button"
                       onClick={addReleaseRow}
-                      className="px-4 py-2 min-h-[44px] text-sm sm:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 active:bg-blue-800 transition-colors w-full sm:w-auto"
+                      disabled={releases.length >= 3}
+                      className={`px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors w-full sm:w-auto ${
+                        releases.length >= 3
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
+                      }`}
+                      title={releases.length >= 3 ? 'Maximum 3 releases allowed' : 'Add another release'}
                     >
-                      + Add Release
+                      {releases.length >= 3 ? 'Maximum 3 Releases' : '+ Add Release'}
                     </button>
+                  </div>
+
+                  {/* Info message */}
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-600 text-lg">ℹ️</span>
+                      <p className="text-sm text-blue-800">
+                        <strong>Maximum 3 releases per schedule.</strong> ESP32 hardware supports up to 3 scheduled releases per day. Each release can have different time and water volume.
+                      </p>
+                    </div>
                   </div>
 
                   <div className="space-y-3 sm:space-y-4">
@@ -845,6 +905,7 @@ export default function SchedulesV2Page() {
                                       onClick={() => setOpenDropdownId(null)}
                                     />
                                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                                      {/* Cancel Schedule */}
                                       <button
                                         onClick={() => handleCancel(schedule.id)}
                                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
@@ -890,15 +951,82 @@ export default function SchedulesV2Page() {
                           <h4 className="text-sm font-medium text-gray-700 mb-3">Release Schedule</h4>
                           {schedule.releases && schedule.releases.length > 0 ? (
                             <div className="space-y-2">
-                              {schedule.releases.map((release, index) => (
-                                <div key={index} className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
-                                  <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                                    <span className="text-sm font-medium text-gray-900">{release.time}</span>
+                              {schedule.releases.map((release, index) => {
+                                const releaseDropdownId = `${schedule.id}-${index}`;
+                                const isRunNowEnabled = schedule.status === 'sent';
+                                
+                                // Tooltip messages based on status
+                                const getTooltipMessage = () => {
+                                  switch (schedule.status) {
+                                    case 'sent':
+                                      return 'Run this release immediately';
+                                    case 'pending':
+                                      return 'Only schedules with "Sent" status can be run immediately';
+                                    case 'cancelled':
+                                      return 'Cancelled schedules cannot be run';
+                                    case 'failed':
+                                      return 'Failed schedules cannot be run. Please check the schedule.';
+                                    default:
+                                      return 'This release cannot be run';
+                                  }
+                                };
+                                
+                                return (
+                                  <div key={index} className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
+                                    <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                                      <span className="text-sm font-medium text-gray-900">{release.time}</span>
+                                      <span className="text-sm font-semibold text-blue-600">{release.releaseQuantity}L</span>
+                                    </div>
+                                    <div className="relative flex-shrink-0 ml-2">
+                                      <button
+                                        onClick={() => setOpenReleaseDropdownId(
+                                          openReleaseDropdownId === releaseDropdownId ? null : releaseDropdownId
+                                        )}
+                                        className="p-1 hover:bg-blue-100 rounded transition-colors"
+                                        aria-label="Release options"
+                                      >
+                                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                        </svg>
+                                      </button>
+                                      {openReleaseDropdownId === releaseDropdownId && (
+                                        <>
+                                          <div 
+                                            className="fixed inset-0 z-10" 
+                                            onClick={() => setOpenReleaseDropdownId(null)}
+                                          />
+                                          <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                                            <button
+                                              onClick={() => {
+                                                if (isRunNowEnabled) {
+                                                  handleRunReleaseNow(schedule.id, index, index + 1);
+                                                }
+                                              }}
+                                              disabled={!isRunNowEnabled}
+                                              className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${
+                                                isRunNowEnabled
+                                                  ? 'text-green-600 hover:bg-green-50 cursor-pointer'
+                                                  : 'text-gray-400 cursor-not-allowed bg-gray-50'
+                                              }`}
+                                              title={getTooltipMessage()}
+                                            >
+                                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                              </svg>
+                                              <span>Run Now</span>
+                                              {!isRunNowEnabled && (
+                                                <span className="ml-auto text-xs text-gray-400">(Disabled)</span>
+                                              )}
+                                            </button>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
                                   </div>
-                                  <span className="text-sm font-semibold text-blue-600 flex-shrink-0 ml-2">{release.releaseQuantity}L</span>
-                                </div>
-                              ))}
+                                );
+                              })}
                               <div className="mt-2 pt-2 border-t border-gray-200">
                                 <div className="flex justify-between text-sm">
                                   <span className="text-gray-500">Total Release:</span>
