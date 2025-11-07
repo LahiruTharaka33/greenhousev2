@@ -97,7 +97,7 @@ export default function SchedulesV2Page() {
   const [activeTab, setActiveTab] = useState<'create' | 'view'>('create');
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [openReleaseDropdownId, setOpenReleaseDropdownId] = useState<string | null>(null);
-
+  const [userCustomerName, setUserCustomerName] = useState('');
 
   // Fetch initial data
   useEffect(() => {
@@ -139,6 +139,20 @@ export default function SchedulesV2Page() {
 
     fetchData();
   }, []);
+
+  // Auto-set customer for normal users
+  useEffect(() => {
+    if (session?.user.role === 'user' && session.user.customerId && customers.length > 0) {
+      // Auto-set customer for normal users
+      setSelectedCustomerId(session.user.customerId);
+      
+      // Find and set customer name
+      const userCustomer = customers.find(c => c.id === session.user.customerId);
+      if (userCustomer) {
+        setUserCustomerName(`${userCustomer.customerName}${userCustomer.company ? ` (${userCustomer.company})` : ''}`);
+      }
+    }
+  }, [session, customers]);
 
   // Fetch tunnels when customer is selected
   useEffect(() => {
@@ -535,8 +549,8 @@ export default function SchedulesV2Page() {
   if (!session) {
     redirect('/login');
   }
-  if (session.user.role !== 'admin') {
-    redirect('/user/dashboard');
+  if (session.user.role !== 'admin' && session.user.role !== 'user') {
+    redirect('/login');
   }
 
   if (loading) {
@@ -614,22 +628,45 @@ export default function SchedulesV2Page() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Customer *
                       </label>
-                      <select
-                        value={selectedCustomerId}
-                        onChange={(e) => {
-                          setSelectedCustomerId(e.target.value);
-                          setSelectedTunnelId(''); // Reset tunnel when customer changes
-                        }}
-                        className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base"
-                        required
-                      >
-                        <option value="">Select Customer</option>
-                        {customers.map((customer) => (
-                          <option key={customer.id} value={customer.id}>
-                            {customer.customerName} {customer.company ? `(${customer.company})` : ''}
-                          </option>
-                        ))}
-                      </select>
+                      {session.user.role === 'admin' ? (
+                        // Admin: Dropdown (enabled)
+                        <select
+                          value={selectedCustomerId}
+                          onChange={(e) => {
+                            setSelectedCustomerId(e.target.value);
+                            setSelectedTunnelId(''); // Reset tunnel when customer changes
+                          }}
+                          className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base"
+                          required
+                        >
+                          <option value="">Select Customer</option>
+                          {customers.map((customer) => (
+                            <option key={customer.id} value={customer.id}>
+                              {customer.customerName} {customer.company ? `(${customer.company})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        // User: Disabled input (read-only)
+                        <>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={userCustomerName}
+                              disabled
+                              className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md bg-gray-100 text-gray-700 cursor-not-allowed"
+                            />
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <p className="mt-1 text-xs text-gray-500">
+                            You can only create schedules for your assigned customer
+                          </p>
+                        </>
+                      )}
                     </div>
 
                     {/* Tunnel */}

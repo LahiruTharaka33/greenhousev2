@@ -8,11 +8,17 @@ export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'user')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Build where clause based on user role
+    const whereClause = session.user.role === 'user' && session.user.customerId
+      ? { customerId: session.user.customerId }
+      : {};
+
     const schedules = await prisma.scheduleV2.findMany({
+      where: whereClause,
       orderBy: {
         scheduledDate: 'desc',
       },
@@ -67,7 +73,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'user')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

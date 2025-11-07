@@ -32,6 +32,12 @@ const userNavigation: NavItem[] = [
     description: 'View schedules assigned by admin'
   },
   {
+    name: 'New Schedule System',
+    href: '/schedules-v2',
+    icon: '🌱',
+    description: 'Create and manage fertilizer schedules'
+  },
+  {
     name: 'Tasks',
     href: '/user/tasks',
     icon: '✅',
