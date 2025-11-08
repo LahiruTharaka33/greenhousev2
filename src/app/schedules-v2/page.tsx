@@ -99,6 +99,11 @@ export default function SchedulesV2Page() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [openReleaseDropdownId, setOpenReleaseDropdownId] = useState<string | null>(null);
   const [userCustomerName, setUserCustomerName] = useState('');
+  
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCustomer, setFilterCustomer] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   // Fetch initial data
   useEffect(() => {
@@ -932,15 +937,88 @@ export default function SchedulesV2Page() {
               <div className="space-y-4 sm:space-y-6">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Saved Schedules</h2>
               
-              {schedules.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-lg border">
-                  <div className="text-gray-400 text-5xl sm:text-6xl mb-4">📅</div>
-                  <p className="text-gray-600 text-base sm:text-lg font-medium">No schedules created yet.</p>
-                  <p className="text-gray-500 text-sm sm:text-base mt-2 px-4">Create your first schedule using the "Create" tab.</p>
+              {/* Search and Filter */}
+              <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search schedules by customer, tunnel, fertilizer..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 placeholder-gray-500 transition-all"
+                  />
                 </div>
-              ) : (
-                <div className="space-y-4 sm:space-y-6">
-                  {schedules.map((schedule) => (
+                <div className="sm:w-48">
+                  <select
+                    value={filterCustomer}
+                    onChange={(e) => setFilterCustomer(e.target.value)}
+                    disabled={session.user.role === 'user'}
+                    className={`w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 transition-all ${
+                      session.user.role === 'user' ? 'bg-gray-100 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <option value="">All Customers</option>
+                    {customers.map(customer => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.customerName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="sm:w-48">
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 transition-all"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="sent">Sent</option>
+                    <option value="completed">Completed</option>
+                    <option value="failed">Failed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+
+              {(() => {
+                // Filter schedules based on search and filters
+                const filteredSchedules = schedules.filter(schedule => {
+                  // Search filter
+                  const matchesSearch = searchTerm === '' ||
+                    schedule.customer.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    schedule.tunnel.tunnelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    schedule.fertilizerType.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    schedule.notes?.toLowerCase().includes(searchTerm.toLowerCase());
+                  
+                  // Customer filter
+                  const matchesCustomer = filterCustomer === '' || schedule.customer.id === filterCustomer;
+                  
+                  // Status filter
+                  const matchesStatus = filterStatus === '' || schedule.status === filterStatus;
+                  
+                  return matchesSearch && matchesCustomer && matchesStatus;
+                });
+
+                return filteredSchedules.length === 0 ? (
+                  <div className="text-center py-12 bg-white rounded-lg border">
+                    <div className="text-gray-400 text-5xl sm:text-6xl mb-4">📅</div>
+                    <p className="text-gray-600 text-base sm:text-lg font-medium">
+                      {schedules.length === 0 ? 'No schedules created yet.' : 'No schedules match your filters.'}
+                    </p>
+                    <p className="text-gray-500 text-sm sm:text-base mt-2 px-4">
+                      {schedules.length === 0 ? 'Create your first schedule using the "Create" tab.' : 'Try adjusting your search or filters.'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Results count */}
+                    <div className="text-sm text-gray-600">
+                      Showing {filteredSchedules.length} of {schedules.length} schedule{schedules.length !== 1 ? 's' : ''}
+                    </div>
+                    
+                    <div className="space-y-4 sm:space-y-6">
+                      {filteredSchedules.map((schedule) => (
                     <div key={schedule.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
                       {/* Card Header */}
                       <div className="bg-gradient-to-r from-emerald-50 to-blue-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
@@ -1199,9 +1277,11 @@ export default function SchedulesV2Page() {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
               </div>
             )}
           </div>
