@@ -138,8 +138,9 @@ class ScheduleV2Publisher {
       };
     }
     
-    // Wait a bit to ensure connection is fully established (critical for Vercel serverless)
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Wait to ensure connection is fully established and stable (critical for Vercel serverless)
+    // MQTT connection now includes 500ms stabilization period
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     const results: MQTTPublishResult[] = [];
     
@@ -239,8 +240,9 @@ class ScheduleV2Publisher {
       };
     }
 
-    // Wait a bit to ensure connection is fully established (critical for Vercel serverless)
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // Wait to ensure connection is fully established and stable (critical for Vercel serverless)
+    // MQTT connection now includes 500ms stabilization period
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const results: MQTTPublishResult[] = [];
 

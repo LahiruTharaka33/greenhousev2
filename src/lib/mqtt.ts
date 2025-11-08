@@ -20,10 +20,21 @@ class MQTTService {
   // Connect to MQTT broker
   async connect(): Promise<boolean> {
     try {
-      if (this.client && this.isConnected) {
+      if (this.client && this.isConnected && this.client.connected) {
+        console.log('MQTT already connected');
         return true;
       }
 
+      // Disconnect existing client if any
+      if (this.client) {
+        console.log('Cleaning up existing MQTT client');
+        this.client.end(true);
+        this.client = null;
+        this.isConnected = false;
+      }
+
+      console.log('Creating new MQTT connection...');
+      
       // Create new MQTT client
       this.client = mqtt.connect(this.config.host, {
         clientId: this.config.clientId,
@@ -39,23 +50,37 @@ class MQTTService {
           return;
         }
 
+        // Set timeout for connection
+        const timeout = setTimeout(() => {
+          console.error('MQTT connection timeout');
+          this.isConnected = false;
+          resolve(false);
+        }, 10000); // 10 second timeout
+
         // Handle successful connection
         this.client.on('connect', () => {
-          console.log('Connected to MQTT broker via HiveMQ');
+          clearTimeout(timeout);
+          console.log('✅ Connected to MQTT broker via HiveMQ');
           this.isConnected = true;
           this.setupEventHandlers();
-          resolve(true);
+          
+          // Wait a bit more to ensure connection is stable
+          setTimeout(() => {
+            console.log('✅ MQTT connection stable and ready');
+            resolve(true);
+          }, 500);
         });
 
         // Handle connection errors
         this.client.on('error', (error) => {
-          console.error('MQTT connection failed:', error);
+          clearTimeout(timeout);
+          console.error('❌ MQTT connection failed:', error);
           this.isConnected = false;
           resolve(false);
         });
       });
     } catch (error) {
-      console.error('Failed to connect to MQTT:', error);
+      console.error('❌ Failed to connect to MQTT:', error);
       return false;
     }
   }
@@ -138,22 +163,33 @@ class MQTTService {
 
   // Publish message to a topic
   publish(topic: string, message: string): boolean {
-    if (!this.client || !this.isConnected) {
-      console.error('MQTT client not connected');
+    if (!this.client) {
+      console.error(`❌ Cannot publish to ${topic}: MQTT client is null`);
+      return false;
+    }
+
+    if (!this.isConnected) {
+      console.error(`❌ Cannot publish to ${topic}: MQTT not connected (isConnected=false)`);
+      return false;
+    }
+
+    if (!this.client.connected) {
+      console.error(`❌ Cannot publish to ${topic}: MQTT client.connected=false`);
       return false;
     }
 
     try {
-      this.client.publish(topic, message, { qos: 1 }, (error) => {
+      console.log(`📤 Publishing to ${topic}: ${message}`);
+      this.client.publish(topic, message, { qos: 1, retain: false }, (error) => {
         if (error) {
-          console.error(`Error publishing to ${topic}:`, error);
+          console.error(`❌ Error publishing to ${topic}:`, error);
         } else {
-          console.log(`Published to ${topic}: ${message}`);
+          console.log(`✅ Successfully published to ${topic}: ${message}`);
         }
       });
       return true;
     } catch (error) {
-      console.error(`Error publishing to ${topic}:`, error);
+      console.error(`❌ Exception publishing to ${topic}:`, error);
       return false;
     }
   }
