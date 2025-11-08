@@ -52,14 +52,21 @@ export async function POST(
       );
     }
 
-    // Map releaseIndex to MQTT volume topic
-    const topicMap: { [key: number]: string } = {
+    // Map releaseIndex to MQTT topics (both volume and time)
+    const volumeTopicMap: { [key: number]: string } = {
       0: 'schedule_volume1',
       1: 'schedule_volume2',
       2: 'schedule_volume3'
     };
 
-    const topic = topicMap[releaseIndex];
+    const timeTopicMap: { [key: number]: string } = {
+      0: 'schedule_time1',
+      1: 'schedule_time2',
+      2: 'schedule_time3'
+    };
+
+    const volumeTopic = volumeTopicMap[releaseIndex];
+    const timeTopic = timeTopicMap[releaseIndex];
     
     console.log(`🚫 Cancelling Release ${releaseIndex + 1} for schedule ${scheduleId}`);
     console.log(`   Release details:`, schedule.releases[releaseIndex]);
@@ -76,17 +83,28 @@ export async function POST(
       }
     }
 
-    // Publish "0" to cancel the release
-    const success = mqttService.publish(topic, '0');
+    // Publish "0" to volume topic and "null" to time topic to completely cancel the release
+    const volumeSuccess = mqttService.publish(volumeTopic, '0');
+    
+    // Add small delay between publishes
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    const timeSuccess = mqttService.publish(timeTopic, 'null');
 
-    if (success) {
-      console.log(`✅ Published "0" to ${topic} - Release ${releaseIndex + 1} cancelled`);
+    if (volumeSuccess && timeSuccess) {
+      console.log(`✅ Published "0" to ${volumeTopic} and "null" to ${timeTopic} - Release ${releaseIndex + 1} cancelled`);
       
       return NextResponse.json({
         success: true,
         message: `Release ${releaseIndex + 1} cancelled successfully`,
-        topic,
-        value: '0',
+        topics: {
+          volume: volumeTopic,
+          time: timeTopic
+        },
+        values: {
+          volume: '0',
+          time: 'null'
+        },
         release: {
           index: releaseIndex + 1,
           time: schedule.releases[releaseIndex].time,
@@ -94,7 +112,7 @@ export async function POST(
         }
       });
     } else {
-      console.error(`❌ Failed to publish to ${topic}`);
+      console.error(`❌ Failed to publish - Volume: ${volumeSuccess}, Time: ${timeSuccess}`);
       return NextResponse.json(
         { error: 'Failed to publish to MQTT broker' },
         { status: 500 }
