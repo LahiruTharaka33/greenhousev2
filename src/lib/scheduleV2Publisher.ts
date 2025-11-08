@@ -67,13 +67,16 @@ class ScheduleV2Publisher {
   private publishToTopic(topic: string, message: string): Promise<MQTTPublishResult> {
     return new Promise((resolve) => {
       try {
-        const success = mqttService.publish(topic, message);
-        resolve({
-          topic,
-          message,
-          success,
-          error: success ? undefined : 'Failed to publish message'
-        });
+        // Add small delay to ensure MQTT client is ready (especially important on Vercel)
+        setTimeout(() => {
+          const success = mqttService.publish(topic, message);
+          resolve({
+            topic,
+            message,
+            success,
+            error: success ? undefined : 'Failed to publish message'
+          });
+        }, 50); // 50ms delay between each publish
       } catch (error) {
         resolve({
           topic,
@@ -134,6 +137,9 @@ class ScheduleV2Publisher {
         warnings
       };
     }
+    
+    // Wait a bit to ensure connection is fully established (critical for Vercel serverless)
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     const results: MQTTPublishResult[] = [];
     
@@ -232,6 +238,9 @@ class ScheduleV2Publisher {
         warnings: ['MQTT connection failed']
       };
     }
+
+    // Wait a bit to ensure connection is fully established (critical for Vercel serverless)
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     const results: MQTTPublishResult[] = [];
 
