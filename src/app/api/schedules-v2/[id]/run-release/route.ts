@@ -76,17 +76,17 @@ export async function POST(
       }
     }
 
-    // Publish "N/A" to trigger immediate execution
-    const success = mqttService.publish(topic, 'N/A');
+    // Publish "null" to trigger immediate execution
+    const success = mqttService.publish(topic, 'null');
 
     if (success) {
-      console.log(`✅ Published "N/A" to ${topic} - Release ${releaseIndex + 1} triggered immediately`);
+      console.log(`✅ Published "null" to ${topic} - Release ${releaseIndex + 1} triggered immediately`);
       
       return NextResponse.json({
         success: true,
         message: `Release ${releaseIndex + 1} triggered successfully`,
         topic,
-        value: 'N/A',
+        value: 'null',
         release: {
           index: releaseIndex + 1,
           time: schedule.releases[releaseIndex].time,
