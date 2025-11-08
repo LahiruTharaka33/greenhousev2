@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
+import UserLayout from '@/components/UserLayout';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 
@@ -557,8 +558,11 @@ export default function SchedulesV2Page() {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
+  // Use correct layout based on user role
+  const LayoutComponent = session.user.role === 'admin' ? Layout : UserLayout;
+
   return (
-    <Layout>
+    <LayoutComponent>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Header with Safe Zone - Sticky with backdrop blur */}
         <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 pl-[72px] pr-4 lg:px-4 py-4 lg:py-6 shadow-sm animate-fade-in">
@@ -1204,6 +1208,6 @@ export default function SchedulesV2Page() {
         </div>
 
       </main>
-    </Layout>
+    </LayoutComponent>
   );
 }

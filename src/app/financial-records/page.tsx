@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 import Layout from '@/components/Layout';
+import UserLayout from '@/components/UserLayout';
 import FinancialRecordForm from '@/components/FinancialRecordForm';
 
 interface FinancialRecord {
@@ -462,14 +463,12 @@ export default function FinancialRecordsPage() {
   // Authentication checks
   if (status === 'loading') {
     return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen bg-gray-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
-          </div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
         </div>
-      </Layout>
+      </div>
     );
   }
 
@@ -477,8 +476,11 @@ export default function FinancialRecordsPage() {
     redirect('/login');
   }
 
+  // Use correct layout based on user role
+  const LayoutComponent = session.user.role === 'admin' ? Layout : UserLayout;
+
   return (
-    <Layout>
+    <LayoutComponent>
       <main className="min-h-screen bg-gray-50 text-gray-900">
         {/* Header with Safe Zone */}
         <div className="bg-white border-b border-gray-200 pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
@@ -1057,7 +1059,7 @@ export default function FinancialRecordsPage() {
           </div>
         )}
       </main>
-    </Layout>
+    </LayoutComponent>
   );
 }
 
