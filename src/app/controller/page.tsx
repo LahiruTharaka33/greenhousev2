@@ -13,11 +13,18 @@ export default function AdminControllerPage() {
 
   useEffect(() => {
     // Set page title
-    document.title = 'Greenhouse Sensor Monitoring';
+    document.title = 'Greenhouse Monitoring';
   }, []);
 
   if (status === 'loading') {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!session || session.user.role !== 'admin') {
@@ -26,41 +33,29 @@ export default function AdminControllerPage() {
 
   return (
     <Layout>
-      <main className="min-h-screen bg-gray-50 text-gray-900">
-        {/* Header with Safe Zone */}
-        <div className="bg-white border-b border-gray-200 pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
-                  Greenhouse Sensor Monitoring
-                </h1>
-                <p className="mt-1 sm:mt-2 text-xs sm:text-sm text-gray-600">
-                  Monitor real-time environmental conditions and soil nutrients
-                </p>
-              </div>
-              <div className="flex items-center space-x-2 flex-shrink-0">
-                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs sm:text-sm text-gray-600">Live</span>
-              </div>
+      <main className="min-h-screen bg-gray-50">
+        {/* Main Content - Simplified Mobile Layout */}
+        <div className="pb-6 sm:pb-8">
+          {/* Water Tank Monitor */}
+          <div className="px-3 pt-4 sm:px-4 sm:pt-5 md:px-6 md:pt-6">
+            <div className="max-w-7xl mx-auto">
+              <WaterTankMonitor />
             </div>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-          {/* Water Tank Monitor - First Section */}
-          <div className="mb-4 sm:mb-6 lg:mb-8">
-            <WaterTankMonitor />
-          </div>
-
-          {/* MQTT Connection Status */}
-          <div className="mb-4 sm:mb-6 lg:mb-8">
-            <MQTTStatus />
+          {/* MQTT Connection */}
+          <div className="px-3 pt-3 sm:px-4 sm:pt-4 md:px-6 md:pt-5">
+            <div className="max-w-7xl mx-auto">
+              <MQTTStatus />
+            </div>
           </div>
 
           {/* Sensor Dashboard */}
-          <GreenhouseSensorDashboard />
+          <div className="px-3 pt-3 sm:px-4 sm:pt-4 md:px-6 md:pt-5">
+            <div className="max-w-7xl mx-auto">
+              <GreenhouseSensorDashboard />
+            </div>
+          </div>
         </div>
       </main>
     </Layout>

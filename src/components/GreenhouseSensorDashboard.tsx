@@ -29,8 +29,6 @@ export default function GreenhouseSensorDashboard() {
   const [lastUpdate, setLastUpdate] = useState<string>('Never');
   const [dataReceived, setDataReceived] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
-  const [lastRawMessage, setLastRawMessage] = useState<string>('');
-  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     console.log('🌡️ GreenhouseSensorDashboard: Component mounted');
@@ -71,7 +69,6 @@ export default function GreenhouseSensorDashboard() {
   const handleSensorData = (message: string) => {
     console.log('🌡️ 📨 RAW MESSAGE RECEIVED on Tempdata:', message);
     setMessageCount(prev => prev + 1);
-    setLastRawMessage(message);
     
     try {
       // Parse JSON message from ESP32
@@ -149,143 +146,82 @@ export default function GreenhouseSensorDashboard() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Status Banner */}
-      <div className={`rounded-lg p-4 ${
+      <div className={`rounded-lg p-3 sm:p-4 ${
         isConnected && dataReceived
           ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
           : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
       }`}>
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center space-x-3">
-            <div className={`w-3 h-3 rounded-full ${
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0 ${
               isConnected && dataReceived ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'
             }`}></div>
-            <span className={`text-sm font-medium ${
+            <span className={`text-xs sm:text-sm font-medium leading-tight ${
               isConnected && dataReceived
                 ? 'text-green-700 dark:text-green-300'
                 : 'text-yellow-700 dark:text-yellow-300'
             }`}>
               {isConnected && dataReceived
-                ? 'Receiving real-time sensor data'
+                ? 'Receiving real-time data'
                 : isConnected
-                  ? 'Connected - Waiting for data...'
-                  : 'Disconnected from MQTT broker'
+                  ? 'Connected - Waiting...'
+                  : 'Disconnected'
               }
             </span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-              Last Update: {lastUpdate}
+          <div className="flex items-center gap-2 sm:gap-4 text-[10px] sm:text-xs">
+            <span className="text-gray-600 dark:text-gray-400">
+              Update: {lastUpdate}
             </span>
-            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-              Messages: {messageCount}
+            <span className="text-blue-600 dark:text-blue-400 font-medium">
+              Msgs: {messageCount}
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Debug Panel */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <button
-          onClick={() => setShowDebug(!showDebug)}
-          className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-lg"
-        >
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            🔧 Debug Information
-          </span>
-          <span className="text-gray-500">{showDebug ? '▼' : '▶'}</span>
-        </button>
-        
-        {showDebug && (
-          <div className="px-4 pb-4 space-y-3 border-t border-gray-200 dark:border-gray-700 pt-3">
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">MQTT Connected:</span>
-                <span className={`ml-2 font-medium ${isConnected ? 'text-green-600' : 'text-red-600'}`}>
-                  {isConnected ? 'Yes ✅' : 'No ❌'}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Data Received:</span>
-                <span className={`ml-2 font-medium ${dataReceived ? 'text-green-600' : 'text-yellow-600'}`}>
-                  {dataReceived ? 'Yes ✅' : 'No ⏳'}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Message Count:</span>
-                <span className="ml-2 font-medium text-blue-600">{messageCount}</span>
-              </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Subscribed Topic:</span>
-                <span className="ml-2 font-mono text-blue-600">Tempdata</span>
-              </div>
-            </div>
-            
-            {lastRawMessage && (
-              <div className="mt-3">
-                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  Last Raw Message:
-                </div>
-                <div className="bg-black text-green-400 p-2 rounded font-mono text-xs overflow-x-auto">
-                  {lastRawMessage}
-                </div>
-              </div>
-            )}
-            
-            <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
-              <div className="font-medium mb-1">💡 Troubleshooting Tips:</div>
-              <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>Ensure MQTT Status panel shows "Connected"</li>
-                <li>Check browser console (F12) for logs starting with 🌡️</li>
-                <li>Verify ESP32 is publishing to "Tempdata" topic</li>
-                <li>Both devices must use broker.hivemq.com</li>
-              </ul>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Sensor Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         {/* Air Temperature (DHT22) */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-all hover:shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Air Temperature</h3>
-            <span className="text-2xl">{getTemperatureIcon(sensorData.temperature)}</span>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 md:p-6 transition-all hover:shadow-lg active:scale-[0.98]">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Air Temperature</h3>
+            <span className="text-xl sm:text-2xl">{getTemperatureIcon(sensorData.temperature)}</span>
           </div>
-          <div className={`text-3xl sm:text-4xl font-bold ${getTemperatureColor(sensorData.temperature)}`}>
+          <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getTemperatureColor(sensorData.temperature)}`}>
             {sensorData.temperature !== null ? `${sensorData.temperature.toFixed(1)}°C` : '--°C'}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">DHT22 Sensor</p>
+          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1.5 sm:mt-2">DHT22 Sensor</p>
         </div>
 
         {/* Air Humidity (DHT22) */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-all hover:shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Air Humidity</h3>
-            <span className="text-2xl">{getHumidityIcon(sensorData.humidity)}</span>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 md:p-6 transition-all hover:shadow-lg active:scale-[0.98]">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Air Humidity</h3>
+            <span className="text-xl sm:text-2xl">{getHumidityIcon(sensorData.humidity)}</span>
           </div>
-          <div className={`text-3xl sm:text-4xl font-bold ${getHumidityColor(sensorData.humidity)}`}>
+          <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getHumidityColor(sensorData.humidity)}`}>
             {sensorData.humidity !== null ? `${sensorData.humidity.toFixed(1)}%` : '--%'}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">DHT22 Sensor</p>
+          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1.5 sm:mt-2">DHT22 Sensor</p>
         </div>
 
         {/* Soil Moisture */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-all hover:shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Soil Moisture</h3>
-            <span className="text-2xl">💦</span>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 md:p-6 transition-all hover:shadow-lg active:scale-[0.98]">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Soil Moisture</h3>
+            <span className="text-xl sm:text-2xl">💦</span>
           </div>
-          <div className={`text-3xl sm:text-4xl font-bold ${getSoilMoistureColor(sensorData.soil_moisture)}`}>
+          <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getSoilMoistureColor(sensorData.soil_moisture)}`}>
             {sensorData.soil_moisture !== null ? `${sensorData.soil_moisture}%` : '--%'}
           </div>
           {sensorData.soil_moisture !== null && (
-            <div className="mt-3">
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+            <div className="mt-2 sm:mt-3">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 sm:h-2">
                 <div 
-                  className={`h-2 rounded-full transition-all duration-500 ${
+                  className={`h-1.5 sm:h-2 rounded-full transition-all duration-500 ${
                     sensorData.soil_moisture < 30 
                       ? 'bg-red-500' 
                       : sensorData.soil_moisture < 70 
@@ -297,60 +233,60 @@ export default function GreenhouseSensorDashboard() {
               </div>
             </div>
           )}
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Capacitive Sensor</p>
+          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1.5 sm:mt-2">Capacitive Sensor</p>
         </div>
 
         {/* Soil Temperature (DS18B20) */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-all hover:shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Soil Temperature</h3>
-            <span className="text-2xl">🌡️</span>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 md:p-6 transition-all hover:shadow-lg active:scale-[0.98]">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Soil Temperature</h3>
+            <span className="text-xl sm:text-2xl">🌡️</span>
           </div>
-          <div className={`text-3xl sm:text-4xl font-bold ${getTemperatureColor(sensorData.soil_temperature)}`}>
+          <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getTemperatureColor(sensorData.soil_temperature)}`}>
             {sensorData.soil_temperature !== null ? `${sensorData.soil_temperature.toFixed(1)}°C` : '--°C'}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">DS18B20 Sensor</p>
+          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1.5 sm:mt-2">DS18B20 Sensor</p>
         </div>
 
-        {/* NPK Sensor (Grouped Card - spans 2 columns on medium screens) */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-all hover:shadow-lg md:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">Soil NPK Levels</h3>
-            <span className="text-2xl">🧪</span>
+        {/* NPK Sensor (Grouped Card - spans 2 columns on small+ screens) */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 sm:p-4 md:p-6 transition-all hover:shadow-lg sm:col-span-2 active:scale-[0.98]">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Soil NPK Levels</h3>
+            <span className="text-xl sm:text-2xl">🧪</span>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
             {/* Nitrogen */}
             <div className="text-center">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Nitrogen (N)</div>
-              <div className={`text-2xl sm:text-3xl font-bold ${getNPKColor(sensorData.N)}`}>
+              <div className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 sm:mb-2">Nitrogen (N)</div>
+              <div className={`text-xl sm:text-2xl md:text-3xl font-bold ${getNPKColor(sensorData.N)}`}>
                 {sensorData.N !== null ? sensorData.N : '--'}
               </div>
-              <div className="text-xs text-gray-400 mt-1">mg/kg</div>
+              <div className="text-[9px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">mg/kg</div>
             </div>
             
             {/* Phosphorus */}
             <div className="text-center border-l border-r border-gray-200 dark:border-gray-700">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Phosphorus (P)</div>
-              <div className={`text-2xl sm:text-3xl font-bold ${getNPKColor(sensorData.P)}`}>
+              <div className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 sm:mb-2">Phosphorus (P)</div>
+              <div className={`text-xl sm:text-2xl md:text-3xl font-bold ${getNPKColor(sensorData.P)}`}>
                 {sensorData.P !== null ? sensorData.P : '--'}
               </div>
-              <div className="text-xs text-gray-400 mt-1">mg/kg</div>
+              <div className="text-[9px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">mg/kg</div>
             </div>
             
             {/* Potassium */}
             <div className="text-center">
-              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Potassium (K)</div>
-              <div className={`text-2xl sm:text-3xl font-bold ${getNPKColor(sensorData.K)}`}>
+              <div className="text-[10px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 sm:mb-2">Potassium (K)</div>
+              <div className={`text-xl sm:text-2xl md:text-3xl font-bold ${getNPKColor(sensorData.K)}`}>
                 {sensorData.K !== null ? sensorData.K : '--'}
               </div>
-              <div className="text-xs text-gray-400 mt-1">mg/kg</div>
+              <div className="text-[9px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1">mg/kg</div>
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
+          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-3 sm:mt-4 text-center">
             RS485 Modbus Sensor (SN-3002-TR-NPK-N01)
           </p>
           {(sensorData.N === null || sensorData.P === null || sensorData.K === null) && (
-            <div className="mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-xs text-yellow-700 dark:text-yellow-300 text-center">
+            <div className="mt-2 sm:mt-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-[10px] sm:text-xs text-yellow-700 dark:text-yellow-300 text-center">
               NPK sensor not detected or offline
             </div>
           )}
@@ -359,10 +295,10 @@ export default function GreenhouseSensorDashboard() {
 
       {/* Connection Warning */}
       {!isConnected && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            <span className="text-sm text-red-700 dark:text-red-300">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
+            <span className="text-xs sm:text-sm text-red-700 dark:text-red-300 leading-tight">
               MQTT connection required to receive sensor data. Please connect using the MQTT Status panel above.
             </span>
           </div>
