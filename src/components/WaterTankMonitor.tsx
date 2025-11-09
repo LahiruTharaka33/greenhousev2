@@ -14,6 +14,7 @@ export default function WaterTankMonitor() {
     timestamp: new Date()
   });
   const [isConnected, setIsConnected] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string>('Never');
   const [dataReceived, setDataReceived] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -32,14 +33,10 @@ export default function WaterTankMonitor() {
       
       setIsConnected(connected);
       
-      if (connected) {
-        console.log('💧 Attempting to subscribe to "watertank_status" topic...');
-        const subscribed = mqttService.subscribe('watertank_status', handleWaterTankData);
-        if (subscribed) {
-          console.log('💧 Successfully subscribed to "watertank_status" topic ✅');
-        } else {
-          console.warn('💧 Failed to subscribe to "watertank_status" topic ❌');
-        }
+      // If MQTT disconnects, reset subscription state
+      if (!connected && isSubscribed) {
+        setIsSubscribed(false);
+        setDataReceived(false);
       }
     };
 
@@ -49,9 +46,11 @@ export default function WaterTankMonitor() {
     return () => {
       console.log('💧 WaterTankMonitor: Component unmounting');
       clearInterval(interval);
-      mqttService.unsubscribe('watertank_status');
+      if (isSubscribed) {
+        mqttService.unsubscribe('watertank_status');
+      }
     };
-  }, []);
+  }, [isSubscribed]);
 
   const handleWaterTankData = (message: string) => {
     console.log('💧 📨 RAW MESSAGE RECEIVED:', message);
@@ -108,6 +107,31 @@ export default function WaterTankMonitor() {
     if (level < 30) return 'text-red-600';
     if (level < 70) return 'text-yellow-600';
     return 'text-blue-600';
+  };
+
+  const handleSubscribe = () => {
+    if (!isConnected) {
+      console.warn('💧 Cannot subscribe: MQTT not connected');
+      return;
+    }
+    
+    console.log('💧 User manually subscribing to "watertank_status" topic...');
+    const subscribed = mqttService.subscribe('watertank_status', handleWaterTankData);
+    if (subscribed) {
+      console.log('💧 Successfully subscribed to "watertank_status" topic ✅');
+      setIsSubscribed(true);
+    } else {
+      console.warn('💧 Failed to subscribe to "watertank_status" topic ❌');
+    }
+  };
+
+  const handleUnsubscribe = () => {
+    console.log('💧 User manually unsubscribing from "watertank_status" topic...');
+    mqttService.unsubscribe('watertank_status');
+    setIsSubscribed(false);
+    setDataReceived(false);
+    setLastUpdate('Never');
+    console.log('💧 Unsubscribed from "watertank_status" topic ✅');
   };
 
   return (
@@ -321,6 +345,65 @@ export default function WaterTankMonitor() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Water Tank Connection Control */}
+      <div className="bg-white rounded-lg shadow-md p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Water Tank Connection</h3>
+            <p className="text-xs text-gray-500 mt-0.5">Subscribe to watertank_status</p>
+          </div>
+          <div className={`w-2.5 h-2.5 rounded-full ${isSubscribed ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+        </div>
+        
+        {!isConnected ? (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></div>
+              <span className="text-xs text-yellow-700 leading-tight">
+                Please connect to MQTT first using the MQTT Status panel below.
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="bg-gray-50 rounded-lg p-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600">Topic:</span>
+                <span className="font-mono text-gray-900">watertank_status</span>
+              </div>
+              <div className="flex items-center justify-between text-xs mt-1.5">
+                <span className="text-gray-600">Status:</span>
+                <span className={`font-medium ${isSubscribed ? 'text-green-600' : 'text-gray-600'}`}>
+                  {isSubscribed ? 'Subscribed' : 'Not Subscribed'}
+                </span>
+              </div>
+            </div>
+            
+            {!isSubscribed ? (
+              <button
+                onClick={handleSubscribe}
+                className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Connect to Water Tank
+              </button>
+            ) : (
+              <button
+                onClick={handleUnsubscribe}
+                className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Disconnect from Water Tank
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Connection Warning */}

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import UserLayout from '@/components/UserLayout';
 import MQTTStatus from '@/components/MQTTStatus';
 import GreenhouseSensorDashboard from '@/components/GreenhouseSensorDashboard';
+import WaterTankMonitor from '@/components/WaterTankMonitor';
  
 export default function ControllerPage() {
   useEffect(() => {
@@ -36,6 +37,11 @@ export default function ControllerPage() {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+          {/* Water Tank Monitor */}
+          <div className="mb-4 sm:mb-6 lg:mb-8">
+            <WaterTankMonitor />
+          </div>
+
           {/* MQTT Connection Status */}
           <div className="mb-4 sm:mb-6 lg:mb-8">
             <MQTTStatus />
