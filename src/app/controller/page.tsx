@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import Layout from '@/components/Layout';
 import MQTTStatus from '@/components/MQTTStatus';
 import GreenhouseSensorDashboard from '@/components/GreenhouseSensorDashboard';
+import WaterTankMonitor from '@/components/WaterTankMonitor';
 
 export default function AdminControllerPage() {
   const { data: session, status } = useSession();
@@ -48,6 +49,11 @@ export default function AdminControllerPage() {
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+          {/* Water Tank Monitor - First Section */}
+          <div className="mb-4 sm:mb-6 lg:mb-8">
+            <WaterTankMonitor />
+          </div>
+
           {/* MQTT Connection Status */}
           <div className="mb-4 sm:mb-6 lg:mb-8">
             <MQTTStatus />
