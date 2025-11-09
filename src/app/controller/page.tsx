@@ -33,28 +33,41 @@ export default function AdminControllerPage() {
 
   return (
     <Layout>
-      <main className="min-h-screen bg-gray-50">
-        {/* Main Content - Simplified Mobile Layout */}
-        <div className="pb-6 sm:pb-8">
-          {/* Water Tank Monitor */}
-          <div className="px-3 pt-4 sm:px-4 sm:pt-5 md:px-6 md:pt-6">
-            <div className="max-w-7xl mx-auto">
-              <WaterTankMonitor />
+      <main className="min-h-screen bg-gray-50 text-gray-900">
+        {/* Sticky Header with Safe Zone */}
+        <div className="bg-white border-b border-gray-200 pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/95">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
+                  Greenhouse Monitoring
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">
+                  Real-time sensor data and water tank status
+                </p>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* MQTT Connection */}
-          <div className="px-3 pt-3 sm:px-4 sm:pt-4 md:px-6 md:pt-5">
-            <div className="max-w-7xl mx-auto">
-              <MQTTStatus />
-            </div>
+        {/* Water Tank Monitor with Safe Zone */}
+        <div className="pl-[72px] pr-4 lg:pl-6 lg:pr-6 py-4 md:py-6 animate-fade-in-up">
+          <div className="max-w-7xl mx-auto">
+            <WaterTankMonitor />
           </div>
+        </div>
 
-          {/* Sensor Dashboard */}
-          <div className="px-3 pt-3 sm:px-4 sm:pt-4 md:px-6 md:pt-5">
-            <div className="max-w-7xl mx-auto">
-              <GreenhouseSensorDashboard />
-            </div>
+        {/* MQTT Connection with Safe Zone */}
+        <div className="pl-[72px] pr-4 lg:pl-6 lg:pr-6 pb-4 md:pb-6">
+          <div className="max-w-7xl mx-auto">
+            <MQTTStatus />
+          </div>
+        </div>
+
+        {/* Sensor Dashboard with Safe Zone */}
+        <div className="pl-[72px] pr-4 lg:pl-6 lg:pr-6 pb-4 md:pb-6">
+          <div className="max-w-7xl mx-auto">
+            <GreenhouseSensorDashboard />
           </div>
         </div>
       </main>
