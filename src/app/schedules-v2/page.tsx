@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import UserLayout from '@/components/UserLayout';
+import ScheduleResponseMonitor from '@/components/ScheduleResponseMonitor';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
 
@@ -95,7 +96,7 @@ export default function SchedulesV2Page() {
   const [savingAndPublishing, setSavingAndPublishing] = useState(false);
   const [selectedFertilizerUnit, setSelectedFertilizerUnit] = useState('');
   const [editingSchedule, setEditingSchedule] = useState<ScheduleV2 | null>(null);
-  const [activeTab, setActiveTab] = useState<'create' | 'view'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'view' | 'monitor'>('create');
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [openReleaseDropdownId, setOpenReleaseDropdownId] = useState<string | null>(null);
   const [userCustomerName, setUserCustomerName] = useState('');
@@ -611,6 +612,17 @@ export default function SchedulesV2Page() {
                   <span className="hidden sm:inline">View Schedules</span>
                   <span className="sm:hidden">View</span>
                   <span className="ml-1">({schedules.length})</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('monitor')}
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
+                    activeTab === 'monitor'
+                      ? 'border-emerald-500 text-emerald-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
+                  }`}
+                >
+                  <span className="hidden sm:inline">📡 ESP32 Monitor</span>
+                  <span className="sm:hidden">📡 Monitor</span>
                 </button>
               </nav>
             </div>
@@ -1282,6 +1294,13 @@ export default function SchedulesV2Page() {
                   </>
                 );
               })()}
+              </div>
+            )}
+
+            {/* ESP32 Monitor Tab */}
+            {activeTab === 'monitor' && (
+              <div className="space-y-4 sm:space-y-6">
+                <ScheduleResponseMonitor />
               </div>
             )}
           </div>
