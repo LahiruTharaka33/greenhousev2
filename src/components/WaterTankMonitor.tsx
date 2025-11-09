@@ -127,13 +127,18 @@ export default function WaterTankMonitor() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Main Water Tank Card */}
-      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-lg p-6 border border-blue-200 dark:border-gray-700">
-        <div className="flex flex-col lg:flex-row items-center gap-6">
+      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900 rounded-lg shadow-lg p-4 sm:p-6 border border-blue-200 dark:border-gray-700">
+        <div className="flex flex-col lg:flex-row items-center justify-center gap-4 sm:gap-6">
           {/* Tank Visualization */}
           <div className="flex-shrink-0">
             <div className="relative">
               {/* Animated Water Tank SVG */}
-              <svg width="200" height="350" viewBox="0 0 200 350" className="drop-shadow-lg">
+              <svg 
+                width="200" 
+                height="350" 
+                viewBox="0 0 200 350" 
+                className="drop-shadow-lg w-[160px] h-[280px] sm:w-[180px] sm:h-[315px] md:w-[200px] md:h-[350px]"
+              >
                 <defs>
                   {/* Water gradient with depth effect */}
                   <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -460,34 +465,37 @@ export default function WaterTankMonitor() {
           </div>
           
           {/* Tank Information */}
-          <div className="flex-1 space-y-4 w-full">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <div className="flex-1 space-y-3 sm:space-y-4 w-full max-w-full lg:max-w-none">
+            <div className="text-center lg:text-left">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">
                 Water Tank Status
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                ESP32 Water Tank Controller (esp32-watertank-controller-01)
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 break-words">
+                ESP32 Water Tank Controller
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 break-all">
+                (esp32-watertank-controller-01)
               </p>
             </div>
             
             {/* Level Display */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-md">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-4 shadow-md">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Current Level</span>
-                <span className={`text-sm font-bold ${getLevelStatusColor(tankData.level)}`}>
+                <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Current Level</span>
+                <span className={`text-xs sm:text-sm font-bold ${getLevelStatusColor(tankData.level)}`}>
                   {getLevelStatus(tankData.level)}
                 </span>
               </div>
-              <div className={`text-5xl font-bold ${getLevelStatusColor(tankData.level)}`}>
+              <div className={`text-4xl sm:text-5xl font-bold text-center lg:text-left ${getLevelStatusColor(tankData.level)}`}>
                 {tankData.level !== null ? `${tankData.level.toFixed(1)}%` : '--%'}
               </div>
               
               {/* Progress bar */}
               {tankData.level !== null && (
-                <div className="mt-4">
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                <div className="mt-3 sm:mt-4">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 sm:h-3">
                     <div
-                      className="h-3 rounded-full transition-all duration-1000 ease-in-out"
+                      className="h-2.5 sm:h-3 rounded-full transition-all duration-1000 ease-in-out"
                       style={{
                         width: `${tankData.level}%`,
                         backgroundColor: getLevelColor(tankData.level)
@@ -499,15 +507,15 @@ export default function WaterTankMonitor() {
             </div>
             
             {/* Status Indicators */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
-                <div className="flex items-center space-x-2 mb-1">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-2.5 sm:p-3 shadow-sm">
+                <div className="flex items-center space-x-1.5 sm:space-x-2 mb-1">
                   <div className={`w-2 h-2 rounded-full ${
                     isConnected && dataReceived ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
                   }`}></div>
                   <span className="text-xs text-gray-600 dark:text-gray-400">Connection</span>
                 </div>
-                <span className={`text-sm font-medium ${
+                <span className={`text-xs sm:text-sm font-medium ${
                   isConnected && dataReceived
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-gray-600 dark:text-gray-400'
@@ -516,11 +524,11 @@ export default function WaterTankMonitor() {
                 </span>
               </div>
               
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
-                <div className="flex items-center space-x-2 mb-1">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-2.5 sm:p-3 shadow-sm">
+                <div className="flex items-center space-x-1.5 sm:space-x-2 mb-1">
                   <span className="text-xs text-gray-600 dark:text-gray-400">Last Update</span>
                 </div>
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate block">
                   {lastUpdate}
                 </span>
               </div>
