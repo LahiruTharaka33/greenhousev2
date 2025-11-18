@@ -5,17 +5,22 @@ class MQTTService {
   private isConnected = false;
   private messageCallbacks: Map<string, (message: string) => void> = new Map();
   private reconnectInterval: NodeJS.Timeout | null = null;
+  private clientId: string;
 
   // MQTT Configuration for Production (HTTPS Compatible)
   private config = {
     // HiveMQ Public WebSocket Broker - Secure WebSocket
     host: 'wss://broker.hivemq.com:8884/mqtt',
-    clientId: `greenhouse_web_${Math.random().toString(16).slice(3)}`,
     clean: true,
     keepalive: 60,
     connectTimeout: 30 * 1000,
     reconnectPeriod: 1000,
   };
+
+  constructor(clientId?: string) {
+    // Use provided clientId or generate a random one for backward compatibility
+    this.clientId = clientId || `greenhouse_web_${Math.random().toString(16).slice(3)}`;
+  }
 
   // Connect to MQTT broker
   async connect(): Promise<boolean> {
@@ -37,7 +42,7 @@ class MQTTService {
       
       // Create new MQTT client
       this.client = mqtt.connect(this.config.host, {
-        clientId: this.config.clientId,
+        clientId: this.clientId,
         clean: this.config.clean,
         keepalive: this.config.keepalive,
         connectTimeout: this.config.connectTimeout,
@@ -216,7 +221,10 @@ class MQTTService {
   }
 }
 
-// Create singleton instance
+// Create singleton instance for backward compatibility
 const mqttService = new MQTTService();
+
+// Export the class for creating custom instances
+export { MQTTService };
 
 export default mqttService;

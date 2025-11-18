@@ -1,4 +1,4 @@
-import mqttService from './mqtt';
+import mqttService, { MQTTService } from './mqtt';
 import { PrismaClient } from '@prisma/client';
 import { getTankTopicFromName } from '@/utils/tankMapping';
 
@@ -33,6 +33,16 @@ export interface PublishSummary {
 }
 
 class ScheduleV2Publisher {
+  // Dedicated MQTT clients for different controllers
+  private fertilizerController: MQTTService;
+  private waterTankController: MQTTService;
+
+  constructor() {
+    // Initialize dedicated MQTT clients with fixed client IDs
+    this.fertilizerController = new MQTTService('esp32-fertilizer-controller-01');
+    this.waterTankController = new MQTTService('esp32-watertank-controller-01');
+  }
+
   private async ensureConnection(): Promise<boolean> {
     try {
       if (!mqttService.getConnectionStatus()) {
@@ -46,6 +56,40 @@ class ScheduleV2Publisher {
       return true;
     } catch (error) {
       console.error('Error ensuring MQTT connection:', error);
+      return false;
+    }
+  }
+
+  private async ensureFertilizerConnection(): Promise<boolean> {
+    try {
+      if (!this.fertilizerController.getConnectionStatus()) {
+        console.log('Fertilizer controller MQTT not connected, attempting to connect...');
+        const connected = await this.fertilizerController.connect();
+        if (!connected) {
+          console.error('Failed to connect fertilizer controller to MQTT broker');
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error('Error ensuring fertilizer controller MQTT connection:', error);
+      return false;
+    }
+  }
+
+  private async ensureWaterTankConnection(): Promise<boolean> {
+    try {
+      if (!this.waterTankController.getConnectionStatus()) {
+        console.log('Water tank controller MQTT not connected, attempting to connect...');
+        const connected = await this.waterTankController.connect();
+        if (!connected) {
+          console.error('Failed to connect water tank controller to MQTT broker');
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      console.error('Error ensuring water tank controller MQTT connection:', error);
       return false;
     }
   }
@@ -199,7 +243,60 @@ class ScheduleV2Publisher {
   }
 
   /**
+   * Publish to topic using fertilizer controller
+   */
+  private publishToFertilizerTopic(topic: string, message: string): Promise<MQTTPublishResult> {
+    return new Promise((resolve) => {
+      try {
+        setTimeout(() => {
+          const success = this.fertilizerController.publish(topic, message);
+          resolve({
+            topic,
+            message,
+            success,
+            error: success ? undefined : 'Failed to publish message'
+          });
+        }, 50);
+      } catch (error) {
+        resolve({
+          topic,
+          message,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+  }
+
+  /**
+   * Publish to topic using water tank controller
+   */
+  private publishToWaterTankTopic(topic: string, message: string): Promise<MQTTPublishResult> {
+    return new Promise((resolve) => {
+      try {
+        setTimeout(() => {
+          const success = this.waterTankController.publish(topic, message);
+          resolve({
+            topic,
+            message,
+            success,
+            error: success ? undefined : 'Failed to publish message'
+          });
+        }, 50);
+      } catch (error) {
+        resolve({
+          topic,
+          message,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
+    });
+  }
+
+  /**
    * Publish schedule with tank mapping - finds correct tank and publishes to its topic
+   * Uses separate MQTT clients: fertilizer controller for fertilizer data, water tank controller for water/release data
    */
   async publishScheduleV2WithTankMapping(
     tunnelId: string,
@@ -228,43 +325,50 @@ class ScheduleV2Publisher {
 
     console.log(`Found fertilizer "${fertilizerName}" in ${tankMapping.tankName}, will publish to topic: ${tankMapping.topic}`);
 
-    // Ensure MQTT connection
-    const connected = await this.ensureConnection();
-    if (!connected) {
+    // Ensure both MQTT connections are established
+    const fertilizerConnected = await this.ensureFertilizerConnection();
+    const waterTankConnected = await this.ensureWaterTankConnection();
+    
+    if (!fertilizerConnected || !waterTankConnected) {
+      const warnings = [];
+      if (!fertilizerConnected) warnings.push('Fertilizer controller MQTT connection failed');
+      if (!waterTankConnected) warnings.push('Water tank controller MQTT connection failed');
+      
       return {
         totalTopics: 0,
         publishResults: [],
         overallSuccess: false,
         timestamp: new Date().toISOString(),
-        warnings: ['MQTT connection failed']
+        warnings
       };
     }
 
-    // Wait to ensure connection is fully established and stable (critical for Vercel serverless)
-    // MQTT connection now includes 500ms stabilization period
+    // Wait to ensure connections are fully established and stable
     await new Promise(resolve => setTimeout(resolve, 100));
 
     const results: MQTTPublishResult[] = [];
 
-    // Publish fertilizer quantity to the correct tank topic (just the quantity as requested)
-    results.push(await this.publishToTopic(tankMapping.topic, quantity.toString()));
+    console.log('📤 Publishing fertilizer quantity via esp32-fertilizer-controller-01...');
+    // Publish fertilizer quantity to the correct tank topic using FERTILIZER CONTROLLER
+    results.push(await this.publishToFertilizerTopic(tankMapping.topic, quantity.toString()));
 
-    // Publish water volume separately
-    results.push(await this.publishToTopic('water_volume', water.toString()));
+    console.log('📤 Publishing water and release schedule via esp32-watertank-controller-01...');
+    // Publish water volume using WATER TANK CONTROLLER
+    results.push(await this.publishToWaterTankTopic('water_volume', water.toString()));
 
-    // Publish release schedule details
+    // Publish release schedule details using WATER TANK CONTROLLER
     for (let i = 0; i < Math.min(releases.length, 3); i++) {
       const release = releases[i];
       const timeESP32 = this.convertTimeToESP32Format(release.time);
       
-      results.push(await this.publishToTopic(`schedule_time${i + 1}`, timeESP32));
-      results.push(await this.publishToTopic(`schedule_volume${i + 1}`, release.releaseQuantity.toString()));
+      results.push(await this.publishToWaterTankTopic(`schedule_time${i + 1}`, timeESP32));
+      results.push(await this.publishToWaterTankTopic(`schedule_volume${i + 1}`, release.releaseQuantity.toString()));
     }
 
-    // Fill remaining slots with zeros if less than 3 releases
+    // Fill remaining slots with zeros if less than 3 releases using WATER TANK CONTROLLER
     for (let i = releases.length; i < 3; i++) {
-      results.push(await this.publishToTopic(`schedule_time${i + 1}`, '0000'));
-      results.push(await this.publishToTopic(`schedule_volume${i + 1}`, '0'));
+      results.push(await this.publishToWaterTankTopic(`schedule_time${i + 1}`, '0000'));
+      results.push(await this.publishToWaterTankTopic(`schedule_volume${i + 1}`, '0'));
     }
 
     const overallSuccess = results.every(r => r.success);
@@ -280,6 +384,8 @@ class ScheduleV2Publisher {
     console.log('Schedule published with tank mapping:', {
       tank: tankMapping.tankName,
       topic: tankMapping.topic,
+      fertilizerController: 'esp32-fertilizer-controller-01',
+      waterTankController: 'esp32-watertank-controller-01',
       totalTopics: summary.totalTopics,
       success: summary.overallSuccess
     });
