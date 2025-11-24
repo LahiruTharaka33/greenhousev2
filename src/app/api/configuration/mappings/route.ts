@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
         tunnelName: true,
         clientId: true,
         sensorClientId: true,
+        fertilizerClientId: true,
         customerId: true,
         customer: {
           select: {
@@ -83,6 +84,7 @@ export async function GET(request: NextRequest) {
         tunnelName: tunnel.tunnelName,
         clientId: tunnel.clientId,
         sensorClientId: tunnel.sensorClientId,
+        fertilizerClientId: tunnel.fertilizerClientId,
         tankConfigs: tunnel.tankConfigs
       });
       return acc;
@@ -123,7 +125,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tunnelId, clientId, sensorClientId } = body;
+    const { tunnelId, clientId, sensorClientId, fertilizerClientId } = body;
 
     // Validate input
     if (!tunnelId) {
@@ -136,7 +138,7 @@ export async function POST(request: NextRequest) {
     // Validate clientId (can be null or a non-empty string)
     if (clientId !== null && clientId !== undefined && (typeof clientId !== 'string' || clientId.trim() === '')) {
       return NextResponse.json(
-        { error: 'Control Client ID must be a non-empty string or null' },
+        { error: 'Water Control Client ID must be a non-empty string or null' },
         { status: 400 }
       );
     }
@@ -149,6 +151,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate fertilizerClientId (can be null or a non-empty string)
+    if (fertilizerClientId !== null && fertilizerClientId !== undefined && (typeof fertilizerClientId !== 'string' || fertilizerClientId.trim() === '')) {
+      return NextResponse.json(
+        { error: 'Fertilizer Client ID must be a non-empty string or null' },
+        { status: 400 }
+      );
+    }
+
     // Check if tunnel exists
     const existingTunnel = await prisma.tunnel.findUnique({
       where: { id: tunnelId },
@@ -157,6 +167,7 @@ export async function POST(request: NextRequest) {
         tunnelName: true, 
         clientId: true,
         sensorClientId: true,
+        fertilizerClientId: true,
         customer: {
           select: {
             customerName: true
@@ -228,6 +239,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Check if fertilizer clientId is already in use by another tunnel (if not null and being updated)
+    if (fertilizerClientId !== null && fertilizerClientId !== undefined) {
+      const existingFertilizerClientId = await prisma.tunnel.findFirst({
+        where: {
+          fertilizerClientId: fertilizerClientId.trim(),
+          id: { not: tunnelId }
+        },
+        select: { 
+          id: true, 
+          tunnelName: true,
+          customer: {
+            select: {
+              customerName: true
+            }
+          }
+        }
+      });
+
+      if (existingFertilizerClientId) {
+        return NextResponse.json(
+          { 
+            error: `Fertilizer Client ID "${fertilizerClientId.trim()}" is already assigned to tunnel "${existingFertilizerClientId.tunnelName}" (${existingFertilizerClientId.customer.customerName})` 
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     // Prepare update data - only include fields that are being updated
     const updateData: any = {
       updatedAt: new Date()
@@ -239,6 +278,10 @@ export async function POST(request: NextRequest) {
 
     if (sensorClientId !== undefined) {
       updateData.sensorClientId = sensorClientId ? sensorClientId.trim() : null;
+    }
+
+    if (fertilizerClientId !== undefined) {
+      updateData.fertilizerClientId = fertilizerClientId ? fertilizerClientId.trim() : null;
     }
 
     // Update tunnel client IDs
@@ -257,12 +300,18 @@ export async function POST(request: NextRequest) {
 
     // Generate appropriate success message
     let message = '';
-    if (clientId !== undefined && sensorClientId !== undefined) {
+    const updateCount = [clientId, sensorClientId, fertilizerClientId].filter(id => id !== undefined).length;
+    
+    if (updateCount > 1) {
       message = `Client IDs updated for tunnel "${updatedTunnel.tunnelName}"`;
     } else if (clientId !== undefined) {
       message = clientId 
-        ? `Control Client ID "${clientId.trim()}" assigned to tunnel "${updatedTunnel.tunnelName}"`
-        : `Control Client ID removed from tunnel "${updatedTunnel.tunnelName}"`;
+        ? `Water Control Client ID "${clientId.trim()}" assigned to tunnel "${updatedTunnel.tunnelName}"`
+        : `Water Control Client ID removed from tunnel "${updatedTunnel.tunnelName}"`;
+    } else if (fertilizerClientId !== undefined) {
+      message = fertilizerClientId 
+        ? `Fertilizer Client ID "${fertilizerClientId.trim()}" assigned to tunnel "${updatedTunnel.tunnelName}"`
+        : `Fertilizer Client ID removed from tunnel "${updatedTunnel.tunnelName}"`;
     } else if (sensorClientId !== undefined) {
       message = sensorClientId 
         ? `Sensor Client ID "${sensorClientId.trim()}" assigned to tunnel "${updatedTunnel.tunnelName}"`

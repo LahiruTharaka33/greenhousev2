@@ -124,21 +124,22 @@ model Task {
 }
 
 model Tunnel {
-  id              String              @id @default(cuid())
-  tunnelId        String              @unique
-  tunnelName      String
-  description     String?
-  cultivationType String?
-  location        String?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  customerId      String
-  clientId        String?
-  sensorClientId  String?
-  schedules       Schedule[]
-  schedulesV2     ScheduleV2[]        @relation("ScheduleV2Tunnel")
-  tankConfigs     TankConfiguration[]
-  customer        Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  id                 String              @id @default(cuid())
+  tunnelId           String              @unique
+  tunnelName         String
+  description        String?
+  cultivationType    String?
+  location           String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  customerId         String
+  clientId           String?
+  sensorClientId     String?
+  fertilizerClientId String?
+  schedules          Schedule[]
+  schedulesV2        ScheduleV2[]        @relation("ScheduleV2Tunnel")
+  tankConfigs        TankConfiguration[]
+  customer           Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model CustomerInventory {

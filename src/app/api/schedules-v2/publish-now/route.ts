@@ -50,11 +50,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify that the tunnel exists and belongs to the customer
+    // Verify that the tunnel exists and belongs to the customer, and get client IDs
     const tunnelExists = await prisma.tunnel.findFirst({
       where: { 
         id: tunnelId,
         customerId: customerId,
+      },
+      select: {
+        id: true,
+        tunnelId: true,
+        tunnelName: true,
+        clientId: true,
+        fertilizerClientId: true,
       },
     });
 
@@ -155,14 +162,16 @@ export async function POST(request: NextRequest) {
 
     console.log('Schedule created successfully. Publishing immediately to ESP32...');
 
-    // Use the new tank-mapping publisher
+    // Use the new tank-mapping publisher with client IDs from database
     const mqttResult = await scheduleV2Publisher.publishScheduleV2WithTankMapping(
       schedule.tunnelId,
       schedule.fertilizerTypeId,
       schedule.fertilizerType.itemName,
       parseFloat(schedule.quantity.toString()),
       parseFloat(schedule.water.toString()),
-      schedule.releases || []
+      schedule.releases || [],
+      tunnelExists.fertilizerClientId || undefined,
+      tunnelExists.clientId || undefined
     );
 
     if (mqttResult.overallSuccess) {
