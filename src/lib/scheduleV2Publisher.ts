@@ -207,9 +207,15 @@ class ScheduleV2Publisher {
     fertilizerName: string,
     quantity: number,
     water: number,
-    releases: Array<{ time: string; releaseQuantity: number }>
+    releases: Array<{ time: string; releaseQuantity: number }>,
+    fertilizerClientId?: string,
+    waterClientId?: string
   ): Promise<PublishSummary> {
-    console.log('Publishing schedule with tank mapping...', { tunnelId, fertilizerItemId, fertilizerName, quantity, water, releases });
+    console.log('Publishing schedule with tank mapping...', { tunnelId, fertilizerItemId, fertilizerName, quantity, water, releases, fertilizerClientId, waterClientId });
+    
+    // Use provided client IDs or fall back to hardcoded defaults
+    const FERTILIZER_CLIENT_ID = fertilizerClientId || 'esp32-fertilizer-controller-01';
+    const WATER_CLIENT_ID = waterClientId || 'esp32-watertank-controller-01';
     
     // Find which tank contains this fertilizer
     const tankMapping = await this.findTankForFertilizer(tunnelId, fertilizerItemId);
@@ -226,7 +232,7 @@ class ScheduleV2Publisher {
       };
     }
 
-    console.log(`Found fertilizer "${fertilizerName}" in ${tankMapping.tankName}, will publish to topic: ${tankMapping.topic}`);
+    console.log(`Found fertilizer "${fertilizerName}" in ${tankMapping.tankName}, will publish to topic: ${FERTILIZER_CLIENT_ID}/${tankMapping.topic}`);
 
     // Ensure MQTT connection
     const connected = await this.ensureConnection();
@@ -246,25 +252,25 @@ class ScheduleV2Publisher {
 
     const results: MQTTPublishResult[] = [];
 
-    // Publish fertilizer quantity to the correct tank topic (just the quantity as requested)
-    results.push(await this.publishToTopic(tankMapping.topic, quantity.toString()));
+    // Publish fertilizer quantity to the correct tank topic with fertilizer client ID prefix
+    results.push(await this.publishToTopic(`${FERTILIZER_CLIENT_ID}/${tankMapping.topic}`, quantity.toString()));
 
-    // Publish water volume separately
-    results.push(await this.publishToTopic('water_volume', water.toString()));
+    // Publish water volume to water ESP32 with client ID prefix
+    results.push(await this.publishToTopic(`${WATER_CLIENT_ID}/water_volume`, water.toString()));
 
-    // Publish release schedule details
+    // Publish release schedule details to water ESP32 with client ID prefix
     for (let i = 0; i < Math.min(releases.length, 3); i++) {
       const release = releases[i];
       const timeESP32 = this.convertTimeToESP32Format(release.time);
       
-      results.push(await this.publishToTopic(`schedule_time${i + 1}`, timeESP32));
-      results.push(await this.publishToTopic(`schedule_volume${i + 1}`, release.releaseQuantity.toString()));
+      results.push(await this.publishToTopic(`${WATER_CLIENT_ID}/schedule_time${i + 1}`, timeESP32));
+      results.push(await this.publishToTopic(`${WATER_CLIENT_ID}/schedule_volume${i + 1}`, release.releaseQuantity.toString()));
     }
 
     // Fill remaining slots with zeros if less than 3 releases
     for (let i = releases.length; i < 3; i++) {
-      results.push(await this.publishToTopic(`schedule_time${i + 1}`, '0000'));
-      results.push(await this.publishToTopic(`schedule_volume${i + 1}`, '0'));
+      results.push(await this.publishToTopic(`${WATER_CLIENT_ID}/schedule_time${i + 1}`, '0000'));
+      results.push(await this.publishToTopic(`${WATER_CLIENT_ID}/schedule_volume${i + 1}`, '0'));
     }
 
     const overallSuccess = results.every(r => r.success);
@@ -279,7 +285,8 @@ class ScheduleV2Publisher {
 
     console.log('Schedule published with tank mapping:', {
       tank: tankMapping.tankName,
-      topic: tankMapping.topic,
+      fertilizerTopic: `${FERTILIZER_CLIENT_ID}/${tankMapping.topic}`,
+      waterClientId: WATER_CLIENT_ID,
       totalTopics: summary.totalTopics,
       success: summary.overallSuccess
     });

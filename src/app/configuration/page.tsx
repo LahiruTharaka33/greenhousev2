@@ -28,6 +28,7 @@ interface Tunnel {
   tunnelName: string;
   clientId: string | null;
   sensorClientId: string | null;
+  fertilizerClientId: string | null;
   tankConfigs: TankConfig[];
 }
 
@@ -61,6 +62,7 @@ export default function ConfigurationPage() {
   const [selectedTunnelId, setSelectedTunnelId] = useState('');
   const [clientId, setClientId] = useState('');
   const [sensorClientId, setSensorClientId] = useState('');
+  const [fertilizerClientId, setFertilizerClientId] = useState('');
   const [tankA, setTankA] = useState('');
   const [tankB, setTankB] = useState('');
   const [tankC, setTankC] = useState('');
@@ -164,6 +166,7 @@ export default function ConfigurationPage() {
           tunnelId: selectedTunnelId,
           clientId: clientId.trim() || null,
           sensorClientId: sensorClientId.trim() || null,
+          fertilizerClientId: fertilizerClientId.trim() || null,
         }),
       });
 
@@ -213,6 +216,7 @@ export default function ConfigurationPage() {
           await fetchMappings(); // Refresh mappings
           setClientId('');
           setSensorClientId('');
+          setFertilizerClientId('');
           setTankA('');
           setTankB('');
           setTankC('');
@@ -239,7 +243,7 @@ export default function ConfigurationPage() {
   };
 
   const handleClearAssignment = async (tunnelId: string) => {
-    if (!confirm('Are you sure you want to clear both client ID assignments?')) {
+    if (!confirm('Are you sure you want to clear all client ID assignments?')) {
       return;
     }
 
@@ -253,6 +257,7 @@ export default function ConfigurationPage() {
           tunnelId: tunnelId,
           clientId: null,
           sensorClientId: null,
+          fertilizerClientId: null,
         }),
       });
 
@@ -270,11 +275,12 @@ export default function ConfigurationPage() {
     }
   };
 
-  const handleEditMapping = (customerId: string, tunnelId: string, currentClientId: string | null, currentSensorClientId: string | null, tankConfigs: TankConfig[]) => {
+  const handleEditMapping = (customerId: string, tunnelId: string, currentClientId: string | null, currentSensorClientId: string | null, currentFertilizerClientId: string | null, tankConfigs: TankConfig[]) => {
     setSelectedCustomerId(customerId);
     setSelectedTunnelId(tunnelId);
     setClientId(currentClientId || '');
     setSensorClientId(currentSensorClientId || '');
+    setFertilizerClientId(currentFertilizerClientId || '');
     
     // Load tank configurations
     const tankAConfig = tankConfigs.find(config => config.tankName === 'Tank A');
@@ -381,10 +387,10 @@ export default function ConfigurationPage() {
                       </select>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label htmlFor="clientId" className="block text-sm font-medium text-gray-700 mb-1">
-                          Control Client ID <span className="text-xs text-gray-500">(for sending commands)</span>
+                          Water Control Client ID <span className="text-xs text-gray-500">(water/schedules)</span>
                         </label>
                         <input
                           type="text"
@@ -392,10 +398,27 @@ export default function ConfigurationPage() {
                           value={clientId}
                           onChange={(e) => setClientId(e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                          placeholder="e.g., greenhouse_control_01"
+                          placeholder="e.g., esp32-watertank-controller-01"
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          Device ID for sending schedules and commands
+                          💧 Water system ESP32
+                        </p>
+                      </div>
+
+                      <div>
+                        <label htmlFor="fertilizerClientId" className="block text-sm font-medium text-gray-700 mb-1">
+                          Fertilizer Client ID <span className="text-xs text-gray-500">(fertilizer system)</span>
+                        </label>
+                        <input
+                          type="text"
+                          id="fertilizerClientId"
+                          value={fertilizerClientId}
+                          onChange={(e) => setFertilizerClientId(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                          placeholder="e.g., esp32-fertilizer-controller-01"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          🧪 Fertilizer system ESP32
                         </p>
                       </div>
 
@@ -412,12 +435,12 @@ export default function ConfigurationPage() {
                           placeholder="e.g., greenhouse_sensor_01"
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          Device ID for receiving sensor readings
+                          📡 Sensor data ESP32
                         </p>
                       </div>
                     </div>
                     <p className="text-sm text-gray-500 mt-2">
-                      Leave either field empty to remove that client ID assignment
+                      Leave any field empty to remove that client ID assignment
                     </p>
 
                     {/* Tank Configurations */}
@@ -509,6 +532,7 @@ export default function ConfigurationPage() {
                           setSelectedTunnelId('');
                           setClientId('');
                           setSensorClientId('');
+                          setFertilizerClientId('');
                           setTankA('');
                           setTankB('');
                           setTankC('');
@@ -523,7 +547,7 @@ export default function ConfigurationPage() {
                         disabled={saving || !selectedTunnelId}
                         className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {saving ? 'Saving...' : (selectedTunnelId && (clientId || sensorClientId) ? 'Update Mapping' : 'Clear Assignments')}
+                        {saving ? 'Saving...' : (selectedTunnelId && (clientId || sensorClientId || fertilizerClientId) ? 'Update Mapping' : 'Clear Assignments')}
                       </button>
                     </div>
                   </form>
@@ -579,13 +603,13 @@ export default function ConfigurationPage() {
                                    
                                    <div className="flex items-center space-x-2">
                                      <button
-                                       onClick={() => handleEditMapping(mapping.customer.id, tunnel.id, tunnel.clientId, tunnel.sensorClientId, tunnel.tankConfigs || [])}
+                                       onClick={() => handleEditMapping(mapping.customer.id, tunnel.id, tunnel.clientId, tunnel.sensorClientId, tunnel.fertilizerClientId, tunnel.tankConfigs || [])}
                                        className="text-xs px-2 py-1 text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded transition-colors"
                                      >
                                        Edit
                                      </button>
                                      
-                                     {(tunnel.clientId || tunnel.sensorClientId) && (
+                                     {(tunnel.clientId || tunnel.sensorClientId || tunnel.fertilizerClientId) && (
                                        <button
                                          onClick={() => handleClearAssignment(tunnel.id)}
                                          className="text-xs px-2 py-1 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded transition-colors"
@@ -597,14 +621,28 @@ export default function ConfigurationPage() {
                                  </div>
 
                                  {/* Client IDs Display */}
-                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-8">
+                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pl-8">
                                    <div className="flex items-start space-x-2">
-                                     <span className="text-xs text-gray-500 mt-0.5">🎮</span>
+                                     <span className="text-xs text-gray-500 mt-0.5">💧</span>
                                      <div className="flex-1 min-w-0">
-                                       <p className="text-xs font-medium text-gray-600">Control Client ID</p>
+                                       <p className="text-xs font-medium text-gray-600">Water Control</p>
                                        {tunnel.clientId ? (
                                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 mt-1">
                                            {tunnel.clientId}
+                                         </span>
+                                       ) : (
+                                         <span className="text-xs text-gray-400 italic">Not assigned</span>
+                                       )}
+                                     </div>
+                                   </div>
+
+                                   <div className="flex items-start space-x-2">
+                                     <span className="text-xs text-gray-500 mt-0.5">🧪</span>
+                                     <div className="flex-1 min-w-0">
+                                       <p className="text-xs font-medium text-gray-600">Fertilizer Control</p>
+                                       {tunnel.fertilizerClientId ? (
+                                         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 mt-1">
+                                           {tunnel.fertilizerClientId}
                                          </span>
                                        ) : (
                                          <span className="text-xs text-gray-400 italic">Not assigned</span>
@@ -615,7 +653,7 @@ export default function ConfigurationPage() {
                                    <div className="flex items-start space-x-2">
                                      <span className="text-xs text-gray-500 mt-0.5">📡</span>
                                      <div className="flex-1 min-w-0">
-                                       <p className="text-xs font-medium text-gray-600">Sensor Client ID</p>
+                                       <p className="text-xs font-medium text-gray-600">Sensor Data</p>
                                        {tunnel.sensorClientId ? (
                                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mt-1">
                                            {tunnel.sensorClientId}
