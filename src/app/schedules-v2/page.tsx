@@ -512,7 +512,7 @@ export default function SchedulesV2Page() {
       if (response.ok) {
         const result = await response.json();
         setOpenReleaseDropdownId(null);
-        alert(`✅ Release ${releaseNumber} cancelled successfully!\n\nTime: ${result.release.time}\nOriginal Volume: ${result.release.volume}L\n\nMQTT Topic: ${result.topic}\nValue: ${result.value} (Cancelled)`);
+        alert(`✅ Release ${releaseNumber} cancelled successfully!\n\nTime: ${result.release.time}\nOriginal Volume: ${result.release.volume}L\n\nMQTT Topic: ${result.topics.volume}\nValue: ${result.values.volume} (Cancelled)`);
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to cancel release');

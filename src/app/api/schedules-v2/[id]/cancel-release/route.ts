@@ -27,15 +27,36 @@ export async function POST(
       );
     }
 
-    // Verify schedule exists
+    // Verify schedule exists and get tunnel info
     const schedule = await prisma.scheduleV2.findUnique({
       where: { id: scheduleId },
       include: {
         releases: {
           orderBy: { time: 'asc' }
+        },
+        tunnel: {
+          select: {
+            clientId: true
+          }
         }
       }
     });
+
+    if (!schedule) {
+      return NextResponse.json(
+        { error: 'Schedule not found' },
+        { status: 404 }
+      );
+    }
+
+    // Get the water control value (clientId) from the tunnel
+    const waterControlValue = schedule.tunnel?.clientId;
+    if (!waterControlValue) {
+      return NextResponse.json(
+        { error: 'Water control value not found for this tunnel. Please configure it in the Configuration page.' },
+        { status: 400 }
+      );
+    }
 
     if (!schedule) {
       return NextResponse.json(
@@ -65,11 +86,14 @@ export async function POST(
       2: 'schedule_time3'
     };
 
-    const volumeTopic = volumeTopicMap[releaseIndex];
-    const timeTopic = timeTopicMap[releaseIndex];
+    // Prepend water control value to the topic names
+    const volumeTopic = `${waterControlValue}/${volumeTopicMap[releaseIndex]}`;
+    const timeTopic = `${waterControlValue}/${timeTopicMap[releaseIndex]}`;
     
     console.log(`🚫 Cancelling Release ${releaseIndex + 1} for schedule ${scheduleId}`);
+    console.log(`   Water Control Value: ${waterControlValue}`);
     console.log(`   Release details:`, schedule.releases[releaseIndex]);
+    console.log(`   MQTT Topics - Volume: ${volumeTopic}, Time: ${timeTopic}`);
 
     // Ensure MQTT connection
     if (!mqttService.getConnectionStatus()) {
