@@ -27,12 +27,17 @@ export async function POST(
       );
     }
 
-    // Verify schedule exists
+    // Verify schedule exists and get tunnel info
     const schedule = await prisma.scheduleV2.findUnique({
       where: { id: scheduleId },
       include: {
         releases: {
           orderBy: { time: 'asc' }
+        },
+        tunnel: {
+          select: {
+            clientId: true
+          }
         }
       }
     });
@@ -59,10 +64,23 @@ export async function POST(
       2: 'schedule_time3'
     };
 
-    const topic = topicMap[releaseIndex];
+    // Get the water control value (clientId) from the tunnel
+    const waterControlValue = schedule.tunnel?.clientId;
+    if (!waterControlValue) {
+      return NextResponse.json(
+        { error: 'Water control value not found for this tunnel. Please configure it in the Configuration page.' },
+        { status: 400 }
+      );
+    }
+
+    // Prepend water control value to the topic name
+    const baseTopic = topicMap[releaseIndex];
+    const fullTopic = `${waterControlValue}/${baseTopic}`;
     
     console.log(`🚀 Triggering Release ${releaseIndex + 1} immediately for schedule ${scheduleId}`);
+    console.log(`   Water Control Value: ${waterControlValue}`);
     console.log(`   Release details:`, schedule.releases[releaseIndex]);
+    console.log(`   MQTT Topic: ${fullTopic}`);
 
     // Ensure MQTT connection
     if (!mqttService.getConnectionStatus()) {
@@ -77,15 +95,15 @@ export async function POST(
     }
 
     // Publish "null" to trigger immediate execution
-    const success = mqttService.publish(topic, 'null');
+    const success = mqttService.publish(fullTopic, 'null');
 
     if (success) {
-      console.log(`✅ Published "null" to ${topic} - Release ${releaseIndex + 1} triggered immediately`);
+      console.log(`✅ Published "null" to ${fullTopic} - Release ${releaseIndex + 1} triggered immediately`);
       
       return NextResponse.json({
         success: true,
         message: `Release ${releaseIndex + 1} triggered successfully`,
-        topic,
+        topic: fullTopic,
         value: 'null',
         release: {
           index: releaseIndex + 1,
@@ -94,7 +112,7 @@ export async function POST(
         }
       });
     } else {
-      console.error(`❌ Failed to publish to ${topic}`);
+      console.error(`❌ Failed to publish to ${fullTopic}`);
       return NextResponse.json(
         { error: 'Failed to publish to MQTT broker' },
         { status: 500 }
