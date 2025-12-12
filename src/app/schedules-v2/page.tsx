@@ -32,7 +32,7 @@ interface FertilizerType {
 interface Release {
   id?: string;
   time: string;
-  releaseQuantity: number;
+  releaseQuantity: number | string;
 }
 
 interface ScheduleV2 {
@@ -87,7 +87,7 @@ export default function SchedulesV2Page() {
   
   // Release sub-list state
   const [releases, setReleases] = useState<Release[]>([
-    { time: '', releaseQuantity: 0 }
+    { time: '', releaseQuantity: '' }
   ]);
   
   // UI state
@@ -196,15 +196,19 @@ export default function SchedulesV2Page() {
 
   // Calculate total release quantity
   const totalReleaseQuantity = releases.reduce((sum, release) => {
-    return sum + (Number(release.releaseQuantity) || 0);
+    const quantity = typeof release.releaseQuantity === 'string' && release.releaseQuantity === '' 
+      ? 0 
+      : Number(release.releaseQuantity) || 0;
+    return sum + quantity;
   }, 0);
 
   // Check if total exceeds water limit
-  const isReleaseQuantityValid = totalReleaseQuantity <= parseFloat(water || '0');
+  const waterAmount = parseFloat(water) || 0;
+  const isReleaseQuantityValid = totalReleaseQuantity <= waterAmount;
 
   // Add new release row
   const addReleaseRow = () => {
-    setReleases([...releases, { time: '', releaseQuantity: 0 }]);
+    setReleases([...releases, { time: '', releaseQuantity: '' }]);
   };
 
   // Remove release row
@@ -217,7 +221,11 @@ export default function SchedulesV2Page() {
   // Update release row
   const updateReleaseRow = (index: number, field: keyof Release, value: any) => {
     const updatedReleases = [...releases];
-    updatedReleases[index] = { ...updatedReleases[index], [field]: value };
+    // For releaseQuantity, keep as string in the UI but convert to number for calculations
+    updatedReleases[index] = { 
+      ...updatedReleases[index], 
+      [field]: field === 'releaseQuantity' ? value : value 
+    };
     setReleases(updatedReleases);
   };
 
@@ -235,9 +243,11 @@ export default function SchedulesV2Page() {
       return;
     }
 
+    const waterAmount = parseFloat(water) || 0;
+    
     // Validate release quantities
-    if (!isReleaseQuantityValid) {
-      alert(`Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${water}L)`);
+    if (totalReleaseQuantity > waterAmount) {
+      alert(`Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${waterAmount}L)`);
       return;
     }
 
@@ -251,7 +261,19 @@ export default function SchedulesV2Page() {
         quantity: parseFloat(quantity),
         water: parseFloat(water),
         notes: notes || '',
-        releases: releases.filter(release => release.time && release.releaseQuantity > 0)
+        releases: releases
+          .filter(release => {
+            const qty = typeof release.releaseQuantity === 'string' 
+              ? parseFloat(release.releaseQuantity) || 0 
+              : Number(release.releaseQuantity) || 0;
+            return release.time && qty > 0;
+          })
+          .map(release => ({
+            time: release.time,
+            releaseQuantity: typeof release.releaseQuantity === 'string' 
+              ? parseFloat(release.releaseQuantity) || 0
+              : Number(release.releaseQuantity) || 0
+          }))
       };
 
       const url = editingSchedule ? `/api/schedules-v2/${editingSchedule.id}` : '/api/schedules-v2';
@@ -315,9 +337,11 @@ export default function SchedulesV2Page() {
       return;
     }
 
+    const waterAmount = parseFloat(water) || 0;
+    
     // Validate release quantities
-    if (!isReleaseQuantityValid) {
-      alert(`Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${water}L)`);
+    if (totalReleaseQuantity > waterAmount) {
+      alert(`Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${waterAmount}L)`);
       return;
     }
 
@@ -331,7 +355,19 @@ export default function SchedulesV2Page() {
         quantity: parseFloat(quantity),
         water: parseFloat(water),
         notes: notes || '',
-        releases: releases.filter(release => release.time && release.releaseQuantity > 0)
+        releases: releases
+          .filter(release => {
+            const qty = typeof release.releaseQuantity === 'string' 
+              ? parseFloat(release.releaseQuantity) || 0 
+              : Number(release.releaseQuantity) || 0;
+            return release.time && qty > 0;
+          })
+          .map(release => ({
+            time: release.time,
+            releaseQuantity: typeof release.releaseQuantity === 'string' 
+              ? parseFloat(release.releaseQuantity) || 0
+              : Number(release.releaseQuantity) || 0
+          }))
       };
 
       const response = await fetch('/api/schedules-v2/publish-now', {
