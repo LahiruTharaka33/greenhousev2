@@ -19,20 +19,10 @@ const userNavigation: NavItem[] = [
     icon: '🏠',
     description: 'Overview and statistics'
   },
+
+
   {
-    name: 'Schedules',
-    href: '/user/schedules',
-    icon: '📅',
-    description: 'My greenhouse schedules'
-  },
-  {
-    name: 'New Schedules',
-    href: '/user/new-schedules',
-    icon: '📋',
-    description: 'View schedules assigned by admin'
-  },
-  {
-    name: 'New Schedule System',
+    name: 'My Schedule',
     href: '/schedules-v2',
     icon: '🌱',
     description: 'Create and manage fertilizer schedules'

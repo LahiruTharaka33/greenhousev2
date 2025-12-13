@@ -56,7 +56,7 @@ const navigation: NavItem[] = [
     description: 'Customer-specific inventory'
   },
   {
-    name: 'Schedules',
+    name: 'My Schedule',
     href: '/schedules-v2',
     icon: '📅',
     description: 'Schedule management system'
