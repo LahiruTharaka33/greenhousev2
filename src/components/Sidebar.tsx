@@ -10,6 +10,7 @@ interface NavItem {
   href: string;
   icon: string;
   description: string;
+  roles?: string[]; // Optional array of allowed roles
 }
 
 const navigation: NavItem[] = [
@@ -29,49 +30,57 @@ const navigation: NavItem[] = [
     name: 'Customers',
     href: '/customers',
     icon: '👥',
-    description: 'Manage customer information'
+    description: 'Manage customer information',
+    roles: ['admin']
   },
   {
     name: 'Main Inventory',
     href: '/inventory',
     icon: '📦',
-    description: 'Main inventory management'
+    description: 'Main inventory management',
+    roles: ['admin']
   },
   {
     name: 'Tunnels',
     href: '/tunnels',
     icon: '🌱',
-    description: 'Greenhouse tunnel tracking'
+    description: 'Greenhouse tunnel tracking',
+    roles: ['admin']
   },
   {
     name: 'Items',
     href: '/items',
     icon: '🏷️',
-    description: 'Individual items and SKUs'
+    description: 'Individual items and SKUs',
+    roles: ['admin']
   },
   {
     name: 'Customer Inventory',
     href: '/customer-inventory',
     icon: '📋',
-    description: 'Customer-specific inventory'
+    description: 'Customer-specific inventory',
+    roles: ['admin']
   },
   {
     name: 'My Schedule',
     href: '/schedules-v2',
     icon: '📅',
-    description: 'Schedule management system'
+    description: 'Schedule management system',
+    roles: ['admin']
   },
   {
     name: 'Tasks',
     href: '/tasks',
     icon: '✅',
-    description: 'Task management'
+    description: 'Task management',
+    roles: ['admin']
   },
   {
     name: 'Financial Records',
     href: '/financial-records',
     icon: '💰',
-    description: 'Track income and expenses'
+    description: 'Track income and expenses',
+    roles: ['admin']
   },
 ];
 
@@ -179,7 +188,9 @@ export default function Sidebar() {
       {/* Navigation - Enhanced with smooth scrolling */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar">
         <ul className="space-y-2">
-          {navigation.map((item) => {
+          {navigation
+            .filter(item => !item.roles || (session?.user?.role && item.roles.includes(session.user.role)))
+            .map((item) => {
             const isActive = pathname === item.href;
             return (
               <li key={item.name}>
