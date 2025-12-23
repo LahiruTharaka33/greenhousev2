@@ -10,7 +10,7 @@ export async function GET(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || (session.user.role !== 'admin' && session.user.role !== 'user')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -48,6 +48,7 @@ export async function GET(
             id: true,
             time: true,
             releaseQuantity: true,
+            cancelled: true,
           },
         }
       }
@@ -71,7 +72,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || (session.user.role !== 'admin' && session.user.role !== 'user')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -88,12 +89,38 @@ export async function PUT(
       return NextResponse.json({ error: 'Schedule not found' }, { status: 404 });
     }
 
+    // Validate edit permissions based on status
+    // Sent and cancelled schedules can only have their releases edited
+    if (existingSchedule.status === 'sent' || existingSchedule.status === 'cancelled') {
+      // Check if any non-release fields are being modified
+      const isModifyingRestrictedFields =
+        (customerId && customerId !== existingSchedule.customerId) ||
+        (tunnelId && tunnelId !== existingSchedule.tunnelId) ||
+        (scheduledDate && new Date(scheduledDate).getTime() !== existingSchedule.scheduledDate.getTime()) ||
+        (fertilizerTypeId && fertilizerTypeId !== existingSchedule.fertilizerTypeId) ||
+        (quantity !== undefined && parseFloat(quantity) !== parseFloat(existingSchedule.quantity.toString())) ||
+        (water !== undefined && parseFloat(water) !== parseFloat(existingSchedule.water.toString())) ||
+        (notes !== undefined && notes !== existingSchedule.notes) ||
+        (status && status !== existingSchedule.status);
+
+      if (isModifyingRestrictedFields) {
+        return NextResponse.json(
+          {
+            error: 'Cannot modify schedule details for sent/cancelled schedules. Only release schedules can be edited.',
+            allowedFields: ['releases'],
+            currentStatus: existingSchedule.status
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Validate releases if provided
     if (releases && Array.isArray(releases)) {
       const totalReleaseQuantity = releases.reduce((sum, release) => {
         return sum + (parseFloat(release.releaseQuantity) || 0);
       }, 0);
-      
+
       const waterAmount = parseFloat(water || existingSchedule.water.toString());
       if (totalReleaseQuantity > waterAmount) {
         return NextResponse.json(
@@ -155,6 +182,7 @@ export async function PUT(
             id: true,
             time: true,
             releaseQuantity: true,
+            cancelled: true,
           },
         }
       }
@@ -174,7 +202,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || (session.user.role !== 'admin' && session.user.role !== 'user')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

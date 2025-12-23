@@ -11,7 +11,7 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || (session.user.role !== 'admin' && session.user.role !== 'user')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -89,7 +89,7 @@ export async function POST(
     // Prepend water control value to the topic names
     const volumeTopic = `${waterControlValue}/${volumeTopicMap[releaseIndex]}`;
     const timeTopic = `${waterControlValue}/${timeTopicMap[releaseIndex]}`;
-    
+
     console.log(`🚫 Cancelling Release ${releaseIndex + 1} for schedule ${scheduleId}`);
     console.log(`   Water Control Value: ${waterControlValue}`);
     console.log(`   Release details:`, schedule.releases[releaseIndex]);
@@ -109,15 +109,24 @@ export async function POST(
 
     // Publish "0" to volume topic and "null" to time topic to completely cancel the release
     const volumeSuccess = mqttService.publish(volumeTopic, '0');
-    
+
     // Add small delay between publishes
     await new Promise(resolve => setTimeout(resolve, 50));
-    
+
     const timeSuccess = mqttService.publish(timeTopic, 'null');
 
     if (volumeSuccess && timeSuccess) {
       console.log(`✅ Published "0" to ${volumeTopic} and "null" to ${timeTopic} - Release ${releaseIndex + 1} cancelled`);
-      
+
+      // Mark the release as cancelled in the database
+      const releaseId = schedule.releases[releaseIndex].id;
+      await prisma.scheduleV2Release.update({
+        where: { id: releaseId },
+        data: { cancelled: true }
+      });
+
+      console.log(`✅ Release ${releaseIndex + 1} marked as cancelled in database`);
+
       return NextResponse.json({
         success: true,
         message: `Release ${releaseIndex + 1} cancelled successfully`,
@@ -132,7 +141,8 @@ export async function POST(
         release: {
           index: releaseIndex + 1,
           time: schedule.releases[releaseIndex].time,
-          volume: schedule.releases[releaseIndex].releaseQuantity
+          volume: schedule.releases[releaseIndex].releaseQuantity,
+          cancelled: true
         }
       });
     } else {
@@ -145,7 +155,7 @@ export async function POST(
   } catch (error) {
     console.error('Error cancelling release:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to cancel release',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

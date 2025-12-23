@@ -213,6 +213,7 @@ model ScheduleV2Release {
   scheduleV2Id    String
   time            String
   releaseQuantity Decimal    @db.Decimal(10, 2)
+  cancelled       Boolean    @default(false)
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   scheduleV2      ScheduleV2 @relation(fields: [scheduleV2Id], references: [id], onDelete: Cascade)

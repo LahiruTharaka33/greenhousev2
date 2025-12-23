@@ -7,7 +7,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || (session.user.role !== 'admin' && session.user.role !== 'user')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -53,11 +53,12 @@ export async function GET(request: NextRequest) {
             id: true,
             time: true,
             releaseQuantity: true,
+            cancelled: true,
           },
         },
       },
     });
-    
+
     return NextResponse.json(schedules);
   } catch (error) {
     console.error('Error fetching schedules v2:', error);
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || (session.user.role !== 'admin' && session.user.role !== 'user')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -93,7 +94,7 @@ export async function POST(request: NextRequest) {
       const totalReleaseQuantity = releases.reduce((sum, release) => {
         return sum + (parseFloat(release.releaseQuantity) || 0);
       }, 0);
-      
+
       if (totalReleaseQuantity > parseFloat(water)) {
         return NextResponse.json(
           { error: `Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${water}L)` },
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
 
     // Verify that the tunnel exists and belongs to the customer
     const tunnelExists = await prisma.tunnel.findFirst({
-      where: { 
+      where: {
         id: tunnelId,
         customerId: customerId,
       },
@@ -189,6 +190,7 @@ export async function POST(request: NextRequest) {
             id: true,
             time: true,
             releaseQuantity: true,
+            cancelled: true,
           },
         },
       },
@@ -206,7 +208,7 @@ export async function POST(request: NextRequest) {
       name: error instanceof Error ? error.name : undefined
     });
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to create schedule',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

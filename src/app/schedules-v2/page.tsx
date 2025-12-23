@@ -33,6 +33,7 @@ interface Release {
   id?: string;
   time: string;
   releaseQuantity: number | string;
+  cancelled?: boolean | null;
 }
 
 interface ScheduleV2 {
@@ -75,7 +76,7 @@ export default function SchedulesV2Page() {
   const [tunnels, setTunnels] = useState<Tunnel[]>([]);
   const [fertilizerTypes, setFertilizerTypes] = useState<FertilizerType[]>([]);
   const [schedules, setSchedules] = useState<ScheduleV2[]>([]);
-  
+
   // Form state
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [selectedTunnelId, setSelectedTunnelId] = useState('');
@@ -84,12 +85,12 @@ export default function SchedulesV2Page() {
   const [quantity, setQuantity] = useState('');
   const [water, setWater] = useState('');
   const [notes, setNotes] = useState('');
-  
+
   // Release sub-list state
   const [releases, setReleases] = useState<Release[]>([
     { time: '', releaseQuantity: '' }
   ]);
-  
+
   // UI state
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -100,7 +101,7 @@ export default function SchedulesV2Page() {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [openReleaseDropdownId, setOpenReleaseDropdownId] = useState<string | null>(null);
   const [userCustomerName, setUserCustomerName] = useState('');
-  
+
   // Search and filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCustomer, setFilterCustomer] = useState('');
@@ -124,7 +125,7 @@ export default function SchedulesV2Page() {
         if (fertilizerTypesResponse.ok) {
           const itemsData = await fertilizerTypesResponse.json();
           // Filter for fertilizer and related items
-          const filteredItems = itemsData.filter((item: FertilizerType) => 
+          const filteredItems = itemsData.filter((item: FertilizerType) =>
             item.itemCategory.toLowerCase().includes('fertilizer') ||
             item.itemCategory.toLowerCase().includes('chemical') ||
             item.itemCategory.toLowerCase().includes('nutrient')
@@ -152,7 +153,7 @@ export default function SchedulesV2Page() {
     if (session?.user.role === 'user' && session.user.customerId && customers.length > 0) {
       // Auto-set customer for normal users
       setSelectedCustomerId(session.user.customerId);
-      
+
       // Find and set customer name
       const userCustomer = customers.find(c => c.id === session.user.customerId);
       if (userCustomer) {
@@ -196,8 +197,8 @@ export default function SchedulesV2Page() {
 
   // Calculate total release quantity
   const totalReleaseQuantity = releases.reduce((sum, release) => {
-    const quantity = typeof release.releaseQuantity === 'string' && release.releaseQuantity === '' 
-      ? 0 
+    const quantity = typeof release.releaseQuantity === 'string' && release.releaseQuantity === ''
+      ? 0
       : Number(release.releaseQuantity) || 0;
     return sum + quantity;
   }, 0);
@@ -205,6 +206,12 @@ export default function SchedulesV2Page() {
   // Check if total exceeds water limit
   const waterAmount = parseFloat(water) || 0;
   const isReleaseQuantityValid = totalReleaseQuantity <= waterAmount;
+
+  // Determine if fields should be locked based on status
+  // Sent and cancelled schedules can only edit releases
+  const isFieldsLocked = !!(editingSchedule && (editingSchedule.status === 'sent' || editingSchedule.status === 'cancelled'));
+  const canEditAllFields = !editingSchedule || editingSchedule.status === 'pending' || editingSchedule.status === 'failed';
+
 
   // Add new release row
   const addReleaseRow = () => {
@@ -222,16 +229,16 @@ export default function SchedulesV2Page() {
   const updateReleaseRow = (index: number, field: keyof Release, value: any) => {
     const updatedReleases = [...releases];
     // For releaseQuantity, keep as string in the UI but convert to number for calculations
-    updatedReleases[index] = { 
-      ...updatedReleases[index], 
-      [field]: field === 'releaseQuantity' ? value : value 
+    updatedReleases[index] = {
+      ...updatedReleases[index],
+      [field]: field === 'releaseQuantity' ? value : value
     };
     setReleases(updatedReleases);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedCustomerId || !selectedTunnelId || !scheduledDate || !selectedFertilizerTypeId || !quantity || !water) {
       alert('Please fill in all required fields');
       return;
@@ -244,7 +251,7 @@ export default function SchedulesV2Page() {
     }
 
     const waterAmount = parseFloat(water) || 0;
-    
+
     // Validate release quantities
     if (totalReleaseQuantity > waterAmount) {
       alert(`Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${waterAmount}L)`);
@@ -263,14 +270,14 @@ export default function SchedulesV2Page() {
         notes: notes || '',
         releases: releases
           .filter(release => {
-            const qty = typeof release.releaseQuantity === 'string' 
-              ? parseFloat(release.releaseQuantity) || 0 
+            const qty = typeof release.releaseQuantity === 'string'
+              ? parseFloat(release.releaseQuantity) || 0
               : Number(release.releaseQuantity) || 0;
             return release.time && qty > 0;
           })
           .map(release => ({
             time: release.time,
-            releaseQuantity: typeof release.releaseQuantity === 'string' 
+            releaseQuantity: typeof release.releaseQuantity === 'string'
               ? parseFloat(release.releaseQuantity) || 0
               : Number(release.releaseQuantity) || 0
           }))
@@ -290,7 +297,7 @@ export default function SchedulesV2Page() {
       if (response.ok) {
         const result = await response.json();
         const scheduleData = result.schedule || result;
-        
+
         // Build success message
         let successMessage = '';
         if (editingSchedule) {
@@ -305,9 +312,9 @@ export default function SchedulesV2Page() {
           // Add new schedule to the list
           setSchedules([scheduleData, ...schedules]);
         }
-        
+
         alert(successMessage);
-        
+
         // Reset form
         resetForm();
       } else {
@@ -325,7 +332,7 @@ export default function SchedulesV2Page() {
 
   const handleSubmitAndPublish = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!selectedCustomerId || !selectedTunnelId || !scheduledDate || !selectedFertilizerTypeId || !quantity || !water) {
       alert('Please fill in all required fields');
       return;
@@ -338,7 +345,7 @@ export default function SchedulesV2Page() {
     }
 
     const waterAmount = parseFloat(water) || 0;
-    
+
     // Validate release quantities
     if (totalReleaseQuantity > waterAmount) {
       alert(`Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${waterAmount}L)`);
@@ -357,14 +364,14 @@ export default function SchedulesV2Page() {
         notes: notes || '',
         releases: releases
           .filter(release => {
-            const qty = typeof release.releaseQuantity === 'string' 
-              ? parseFloat(release.releaseQuantity) || 0 
+            const qty = typeof release.releaseQuantity === 'string'
+              ? parseFloat(release.releaseQuantity) || 0
               : Number(release.releaseQuantity) || 0;
             return release.time && qty > 0;
           })
           .map(release => ({
             time: release.time,
-            releaseQuantity: typeof release.releaseQuantity === 'string' 
+            releaseQuantity: typeof release.releaseQuantity === 'string'
               ? parseFloat(release.releaseQuantity) || 0
               : Number(release.releaseQuantity) || 0
           }))
@@ -381,30 +388,30 @@ export default function SchedulesV2Page() {
       if (response.ok) {
         const result = await response.json();
         const scheduleData = result.schedule || result;
-        
+
         // Build success message
         let successMessage = 'Schedule created and sent to ESP32 successfully!';
-        
+
         if (result.publishResult?.warnings && result.publishResult.warnings.length > 0) {
           successMessage += '\n\n⚠️ Warnings:\n' + result.publishResult.warnings.join('\n');
         }
-        
+
         alert(successMessage);
-        
+
         // Add new schedule to the list
         setSchedules([scheduleData, ...schedules]);
-        
+
         // Reset form
         resetForm();
       } else {
         const error = await response.json();
         console.error('API Error:', error);
-        
+
         // If schedule was created but publishing failed, still show it in the list
         if (error.schedule) {
           setSchedules([error.schedule, ...schedules]);
         }
-        
+
         alert(error.details || error.error || 'Failed to create and publish schedule');
       }
     } catch (error) {
@@ -437,13 +444,14 @@ export default function SchedulesV2Page() {
     setQuantity(schedule.quantity.toString());
     setWater(schedule.water.toString());
     setNotes(schedule.notes || '');
-    
+
     // Ensure proper data type conversion for releases
     if (schedule.releases && schedule.releases.length > 0) {
       const convertedReleases = schedule.releases.map(release => ({
         id: release.id,
         time: release.time,
-        releaseQuantity: parseFloat(release.releaseQuantity.toString()) || 0
+        releaseQuantity: parseFloat(release.releaseQuantity.toString()) || 0,
+        cancelled: release.cancelled
       }));
       setReleases(convertedReleases);
     } else {
@@ -547,6 +555,14 @@ export default function SchedulesV2Page() {
 
       if (response.ok) {
         const result = await response.json();
+
+        // Fetch updated schedule data to show the cancelled badge
+        const scheduleResponse = await fetch(`/api/schedules-v2/${scheduleId}`);
+        if (scheduleResponse.ok) {
+          const updatedSchedule = await scheduleResponse.json();
+          setSchedules(schedules.map(s => s.id === scheduleId ? updatedSchedule : s));
+        }
+
         setOpenReleaseDropdownId(null);
         alert(`✅ Release ${releaseNumber} cancelled successfully!\n\nTime: ${result.release.time}\nOriginal Volume: ${result.release.volume}L\n\nMQTT Topic: ${result.topics.volume}\nValue: ${result.values.volume} (Cancelled)`);
       } else {
@@ -629,21 +645,19 @@ export default function SchedulesV2Page() {
               <nav className="-mb-px flex space-x-4 sm:space-x-8">
                 <button
                   onClick={() => setActiveTab('create')}
-                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
-                    activeTab === 'create'
-                      ? 'border-emerald-500 text-emerald-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
-                  }`}
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${activeTab === 'create'
+                    ? 'border-emerald-500 text-emerald-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
+                    }`}
                 >
                   Create
                 </button>
                 <button
                   onClick={() => setActiveTab('view')}
-                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
-                    activeTab === 'view'
-                      ? 'border-emerald-500 text-emerald-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
-                  }`}
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${activeTab === 'view'
+                    ? 'border-emerald-500 text-emerald-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
+                    }`}
                 >
                   <span className="hidden sm:inline">View Schedules</span>
                   <span className="sm:hidden">View</span>
@@ -651,11 +665,10 @@ export default function SchedulesV2Page() {
                 </button>
                 <button
                   onClick={() => setActiveTab('monitor')}
-                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
-                    activeTab === 'monitor'
-                      ? 'border-emerald-500 text-emerald-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
-                  }`}
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${activeTab === 'monitor'
+                    ? 'border-emerald-500 text-emerald-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
+                    }`}
                 >
                   <span className="hidden sm:inline">📡 ESP32 Monitor</span>
                   <span className="sm:hidden">📡 Monitor</span>
@@ -671,665 +684,715 @@ export default function SchedulesV2Page() {
             {/* Create Schedule Tab */}
             {activeTab === 'create' && (
               <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">
-                {editingSchedule ? 'Edit Schedule' : 'Create New Schedule'}
-              </h2>
-              
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                {/* Header Section - Customer, Tunnel, Date */}
-                <div className="border-b border-gray-200 pb-4 sm:pb-6">
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Schedule Head</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-                    {/* Customer */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Customer *
-                      </label>
-                      {session.user.role === 'admin' ? (
-                        // Admin: Dropdown (enabled)
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">
+                  {editingSchedule ? 'Edit Schedule' : 'Create New Schedule'}
+                </h2>
+
+                {/* Status Warning Banner for Sent/Cancelled Schedules */}
+                {isFieldsLocked && (
+                  <div className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0">
+                        <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-amber-800 mb-1">
+                          ⚠️ Limited Editing Mode
+                        </h3>
+                        <p className="text-sm text-amber-700">
+                          This schedule has status: <span className="font-semibold">{editingSchedule?.status}</span>.
+                          You can only edit <strong>release schedules</strong> (time and quantity).
+                          All other fields are locked to prevent changes to already-sent data.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                  {/* Header Section - Customer, Tunnel, Date */}
+                  <div className="border-b border-gray-200 pb-4 sm:pb-6">
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Schedule Head</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                      {/* Customer */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Customer *
+                        </label>
+                        {session.user.role === 'admin' ? (
+                          // Admin: Dropdown (enabled)
+                          <select
+                            value={selectedCustomerId}
+                            onChange={(e) => {
+                              setSelectedCustomerId(e.target.value);
+                              setSelectedTunnelId(''); // Reset tunnel when customer changes
+                            }}
+                            disabled={isFieldsLocked}
+                            className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                            required
+                          >
+                            <option value="">Select Customer</option>
+                            {customers.map((customer) => (
+                              <option key={customer.id} value={customer.id}>
+                                {customer.customerName} {customer.company ? `(${customer.company})` : ''}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          // User: Disabled input (read-only)
+                          <>
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={userCustomerName}
+                                disabled
+                                className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md bg-gray-100 text-gray-700 cursor-not-allowed"
+                              />
+                              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                              </div>
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500">
+                              You can only create schedules for your assigned customer
+                            </p>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Tunnel */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Tunnel *
+                        </label>
                         <select
-                          value={selectedCustomerId}
-                          onChange={(e) => {
-                            setSelectedCustomerId(e.target.value);
-                            setSelectedTunnelId(''); // Reset tunnel when customer changes
-                          }}
-                          className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base"
+                          value={selectedTunnelId}
+                          onChange={(e) => setSelectedTunnelId(e.target.value)}
+                          disabled={isFieldsLocked || !selectedCustomerId}
+                          className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                           required
                         >
-                          <option value="">Select Customer</option>
-                          {customers.map((customer) => (
-                            <option key={customer.id} value={customer.id}>
-                              {customer.customerName} {customer.company ? `(${customer.company})` : ''}
+                          <option value="">Select Tunnel</option>
+                          {tunnels.map((tunnel) => (
+                            <option key={tunnel.id} value={tunnel.id}>
+                              {tunnel.tunnelName}
                             </option>
                           ))}
                         </select>
-                      ) : (
-                        // User: Disabled input (read-only)
-                        <>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              value={userCustomerName}
-                              disabled
-                              className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md bg-gray-100 text-gray-700 cursor-not-allowed"
-                            />
-                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                              </svg>
-                            </div>
-                          </div>
-                          <p className="mt-1 text-xs text-gray-500">
-                            You can only create schedules for your assigned customer
-                          </p>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Tunnel */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tunnel *
-                      </label>
-                      <select
-                        value={selectedTunnelId}
-                        onChange={(e) => setSelectedTunnelId(e.target.value)}
-                        className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base"
-                        disabled={!selectedCustomerId}
-                        required
-                      >
-                        <option value="">Select Tunnel</option>
-                        {tunnels.map((tunnel) => (
-                          <option key={tunnel.id} value={tunnel.id}>
-                            {tunnel.tunnelName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Date */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Date *
-                      </label>
-                      <input
-                        type="date"
-                        value={scheduledDate}
-                        onChange={(e) => setScheduledDate(e.target.value)}
-                        className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Details Section - Fertilizer, Quantity, Water */}
-                <div>
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Schedule Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
-                    {/* Fertilizer Type */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Fertilizer Type *
-                      </label>
-                      <select
-                        value={selectedFertilizerTypeId}
-                        onChange={(e) => setSelectedFertilizerTypeId(e.target.value)}
-                        className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base"
-                        required
-                      >
-                        <option value="">Select Fertilizer</option>
-                        {fertilizerTypes.map((fertilizer) => (
-                          <option key={fertilizer.id} value={fertilizer.id}>
-                            {fertilizer.itemName} ({fertilizer.itemCategory})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Quantity */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Quantity {selectedFertilizerUnit && `(${selectedFertilizerUnit})`} *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          value={quantity}
-                          onChange={(e) => setQuantity(e.target.value)}
-                          className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base pr-12"
-                          placeholder={selectedFertilizerUnit ? `Enter in ${selectedFertilizerUnit}` : 'Enter quantity'}
-                          required
-                        />
-                        {selectedFertilizerUnit && (
-                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <span className="text-gray-500 text-sm font-medium">
-                              {selectedFertilizerUnit}
-                            </span>
-                          </div>
-                        )}
                       </div>
-                    </div>
 
-                    {/* Water */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Water (L) *
-                      </label>
-                      <div className="relative">
+                      {/* Date */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Date *
+                        </label>
                         <input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          value={water}
-                          onChange={(e) => setWater(e.target.value)}
-                          className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base pr-8"
-                          placeholder="Enter water amount"
+                          type="date"
+                          value={scheduledDate}
+                          onChange={(e) => setScheduledDate(e.target.value)}
+                          disabled={isFieldsLocked}
+                          className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                           required
                         />
-                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                          <span className="text-gray-500 text-sm font-medium">L</span>
-                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Release Sub-List */}
-                <div>
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 sm:mb-4">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base sm:text-lg font-medium text-gray-900">Release Schedule</h3>
-                      <span className="text-sm text-gray-500">({releases.length}/3)</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={addReleaseRow}
-                      disabled={releases.length >= 3}
-                      className={`px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors w-full sm:w-auto ${
-                        releases.length >= 3
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
-                      }`}
-                      title={releases.length >= 3 ? 'Maximum 3 releases allowed' : 'Add another release'}
-                    >
-                      {releases.length >= 3 ? 'Maximum 3 Releases' : '+ Add Release'}
-                    </button>
-                  </div>
+                  {/* Details Section - Fertilizer, Quantity, Water */}
+                  <div>
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Schedule Details</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+                      {/* Fertilizer Type */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Fertilizer Type *
+                        </label>
+                        <select
+                          value={selectedFertilizerTypeId}
+                          onChange={(e) => setSelectedFertilizerTypeId(e.target.value)}
+                          disabled={isFieldsLocked}
+                          className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                          required
+                        >
+                          <option value="">Select Fertilizer</option>
+                          {fertilizerTypes.map((fertilizer) => (
+                            <option key={fertilizer.id} value={fertilizer.id}>
+                              {fertilizer.itemName} ({fertilizer.itemCategory})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-                  {/* Info message */}
-                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <div className="flex items-start gap-2">
-                      <span className="text-blue-600 text-lg">ℹ️</span>
-                      <p className="text-sm text-blue-800">
-                        <strong>Maximum 3 releases per schedule.</strong> ESP32 hardware supports up to 3 scheduled releases per day. Each release can have different time and water volume.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 sm:space-y-4">
-                    {releases.map((release, index) => (
-                      <div key={index} className="flex flex-col sm:flex-row sm:items-end gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg bg-gray-50">
-                        <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Time
-                          </label>
+                      {/* Quantity */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Quantity {selectedFertilizerUnit && `(${selectedFertilizerUnit})`} *
+                        </label>
+                        <div className="relative">
                           <input
-                            type="time"
-                            value={release.time}
-                            onChange={(e) => updateReleaseRow(index, 'time', e.target.value)}
-                            className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base"
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            value={quantity}
+                            onChange={(e) => setQuantity(e.target.value)}
+                            disabled={isFieldsLocked}
+                            className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base pr-12 ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                            placeholder={selectedFertilizerUnit ? `Enter in ${selectedFertilizerUnit}` : 'Enter quantity'}
+                            required
                           />
-                        </div>
-                        <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Release Quantity (L)
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              step="0.1"
-                              min="0"
-                              value={release.releaseQuantity}
-                              onChange={(e) => updateReleaseRow(index, 'releaseQuantity', parseFloat(e.target.value) || 0)}
-                              className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base pr-8"
-                              placeholder="Enter quantity"
-                            />
+                          {selectedFertilizerUnit && (
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                              <span className="text-gray-500 text-sm font-medium">L</span>
+                              <span className="text-gray-500 text-sm font-medium">
+                                {selectedFertilizerUnit}
+                              </span>
                             </div>
-                          </div>
-                        </div>
-                        <div className="flex sm:items-end">
-                          {releases.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeReleaseRow(index)}
-                              className="w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base text-red-600 hover:text-red-800 hover:bg-red-50 active:bg-red-100 rounded-md transition-colors font-medium"
-                            >
-                              Remove
-                            </button>
                           )}
                         </div>
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Validation Summary */}
-                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-md border bg-white">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                      <span className="text-sm sm:text-base font-medium text-gray-700">
-                        Total Release Quantity:
-                      </span>
-                      <span className={`text-base sm:text-lg font-bold ${isReleaseQuantityValid ? 'text-green-600' : 'text-red-600'}`}>
-                        {totalReleaseQuantity.toFixed(1)}L / {water || '0'}L
-                      </span>
-                    </div>
-                    {!isReleaseQuantityValid && (
-                      <div className="mt-2 text-sm sm:text-base text-red-600 font-medium">
-                        ⚠️ Total release quantity cannot exceed water amount
+                      {/* Water */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Water (L) *
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.1"
+                            min="0"
+                            value={water}
+                            onChange={(e) => setWater(e.target.value)}
+                            disabled={isFieldsLocked}
+                            className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base pr-8 ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                            placeholder="Enter water amount"
+                            required
+                          />
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <span className="text-gray-500 text-sm font-medium">L</span>
+                          </div>
+                        </div>
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Notes */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
-                    Notes
-                  </label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-base"
-                    rows={3}
-                    placeholder="Add any additional notes..."
-                  />
-                </div>
+                  {/* Release Sub-List */}
+                  <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 sm:mb-4">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900">Release Schedule</h3>
+                        <span className="text-sm text-gray-500">({releases.length}/3)</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addReleaseRow}
+                        disabled={releases.length >= 3}
+                        className={`px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors w-full sm:w-auto ${releases.length >= 3
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
+                          }`}
+                        title={releases.length >= 3 ? 'Maximum 3 releases allowed' : 'Add another release'}
+                      >
+                        {releases.length >= 3 ? 'Maximum 3 Releases' : '+ Add Release'}
+                      </button>
+                    </div>
 
-                {/* Form Actions */}
-                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={resetForm}
-                    className="w-full sm:w-auto px-6 py-3 min-h-[44px] text-gray-700 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-md transition-colors font-medium"
-                  >
-                    {editingSchedule ? 'Cancel' : 'Reset'}
-                  </button>
-                  {!editingSchedule && (
+                    {/* Info message */}
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <div className="flex items-start gap-2">
+                        <span className="text-blue-600 text-lg">ℹ️</span>
+                        <p className="text-sm text-blue-800">
+                          <strong>Maximum 3 releases per schedule.</strong> ESP32 hardware supports up to 3 scheduled releases per day. Each release can have different time and water volume.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 sm:space-y-4">
+                      {releases.map((release, index) => (
+                        <div key={index} className={`flex flex-col sm:flex-row sm:items-end gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg ${release.cancelled ? 'bg-red-50' : 'bg-gray-50'}`}>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-center mb-2">
+                              <label className="block text-sm font-medium text-gray-700">
+                                Time
+                              </label>
+                              {release.cancelled && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                                  Cancelled
+                                </span>
+                              )}
+                            </div>
+                            <input
+                              type="time"
+                              value={release.time}
+                              onChange={(e) => updateReleaseRow(index, 'time', e.target.value)}
+                              disabled={!!release.cancelled}
+                              className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base ${release.cancelled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Release Quantity (L)
+                            </label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                value={release.releaseQuantity}
+                                onChange={(e) => updateReleaseRow(index, 'releaseQuantity', parseFloat(e.target.value) || 0)}
+                                disabled={!!release.cancelled}
+                                className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base pr-8 ${release.cancelled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                                placeholder="Enter quantity"
+                              />
+                              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span className="text-gray-500 text-sm font-medium">L</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex sm:items-end">
+                            {releases.length > 1 && !release.cancelled && (
+                              <button
+                                type="button"
+                                onClick={() => removeReleaseRow(index)}
+                                className="w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base text-red-600 hover:text-red-800 hover:bg-red-50 active:bg-red-100 rounded-md transition-colors font-medium"
+                              >
+                                Remove
+                              </button>
+                            )}
+                            {release.cancelled && (
+                              <div className="w-full sm:w-auto px-4 py-2 min-h-[44px] flex items-center text-sm text-red-500 font-medium opacity-50 cursor-not-allowed">
+                                Locked
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Validation Summary */}
+                    <div className="mt-3 sm:mt-4 p-3 sm:p-4 rounded-md border bg-white">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                        <span className="text-sm sm:text-base font-medium text-gray-700">
+                          Total Release Quantity:
+                        </span>
+                        <span className={`text-base sm:text-lg font-bold ${isReleaseQuantityValid ? 'text-green-600' : 'text-red-600'}`}>
+                          {totalReleaseQuantity.toFixed(1)}L / {water || '0'}L
+                        </span>
+                      </div>
+                      {!isReleaseQuantityValid && (
+                        <div className="mt-2 text-sm sm:text-base text-red-600 font-medium">
+                          ⚠️ Total release quantity cannot exceed water amount
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                      Notes
+                    </label>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      disabled={isFieldsLocked}
+                      className={`w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-base ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                      rows={3}
+                      placeholder="Add any additional notes..."
+                    />
+                  </div>
+
+                  {/* Form Actions */}
+                  <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
                     <button
                       type="button"
-                      onClick={handleSubmitAndPublish}
-                      disabled={savingAndPublishing || saving}
-                      className="w-full sm:w-auto px-6 py-3 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      onClick={resetForm}
+                      className="w-full sm:w-auto px-6 py-3 min-h-[44px] text-gray-700 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-md transition-colors font-medium"
                     >
-                      {savingAndPublishing ? 'Creating & Sending...' : 'Create Now'}
+                      {editingSchedule ? 'Cancel' : 'Reset'}
                     </button>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={saving || savingAndPublishing}
-                    className="w-full sm:w-auto px-6 py-3 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                  >
-                    {saving ? 'Saving...' : (editingSchedule ? 'Update Schedule' : 'Create Schedule')}
-                  </button>
-                </div>
-              </form>
+                    {!editingSchedule && (
+                      <button
+                        type="button"
+                        onClick={handleSubmitAndPublish}
+                        disabled={savingAndPublishing || saving}
+                        className="w-full sm:w-auto px-6 py-3 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      >
+                        {savingAndPublishing ? 'Creating & Sending...' : 'Create Now'}
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={saving || savingAndPublishing}
+                      className="w-full sm:w-auto px-6 py-3 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    >
+                      {saving ? 'Saving...' : (editingSchedule ? 'Update Schedule' : 'Create Schedule')}
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
 
             {/* View Schedules Tab */}
             {activeTab === 'view' && (
               <div className="space-y-4 sm:space-y-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Saved Schedules</h2>
-              
-              {/* Search and Filter */}
-              <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    placeholder="Search schedules by customer, tunnel, fertilizer..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 placeholder-gray-500 transition-all"
-                  />
-                </div>
-                <div className="sm:w-48">
-                  <select
-                    value={filterCustomer}
-                    onChange={(e) => setFilterCustomer(e.target.value)}
-                    disabled={session.user.role === 'user'}
-                    className={`w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 transition-all ${
-                      session.user.role === 'user' ? 'bg-gray-100 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    <option value="">All Customers</option>
-                    {customers.map(customer => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.customerName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="sm:w-48">
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 transition-all"
-                  >
-                    <option value="">All Statuses</option>
-                    <option value="pending">Pending</option>
-                    <option value="sent">Sent</option>
-                    <option value="completed">Completed</option>
-                    <option value="failed">Failed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-              </div>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Saved Schedules</h2>
 
-              {(() => {
-                // Filter schedules based on search and filters
-                const filteredSchedules = schedules.filter(schedule => {
-                  // Search filter
-                  const matchesSearch = searchTerm === '' ||
-                    schedule.customer.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    schedule.tunnel.tunnelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    schedule.fertilizerType.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    schedule.notes?.toLowerCase().includes(searchTerm.toLowerCase());
-                  
-                  // Customer filter
-                  const matchesCustomer = filterCustomer === '' || schedule.customer.id === filterCustomer;
-                  
-                  // Status filter
-                  const matchesStatus = filterStatus === '' || schedule.status === filterStatus;
-                  
-                  return matchesSearch && matchesCustomer && matchesStatus;
-                });
-
-                return filteredSchedules.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-lg border">
-                    <div className="text-gray-400 text-5xl sm:text-6xl mb-4">📅</div>
-                    <p className="text-gray-600 text-base sm:text-lg font-medium">
-                      {schedules.length === 0 ? 'No schedules created yet.' : 'No schedules match your filters.'}
-                    </p>
-                    <p className="text-gray-500 text-sm sm:text-base mt-2 px-4">
-                      {schedules.length === 0 ? 'Create your first schedule using the "Create" tab.' : 'Try adjusting your search or filters.'}
-                    </p>
+                {/* Search and Filter */}
+                <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Search schedules by customer, tunnel, fertilizer..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 placeholder-gray-500 transition-all"
+                    />
                   </div>
-                ) : (
-                  <>
-                    {/* Results count */}
-                    <div className="text-sm text-gray-600">
-                      Showing {filteredSchedules.length} of {schedules.length} schedule{schedules.length !== 1 ? 's' : ''}
+                  <div className="sm:w-48">
+                    <select
+                      value={filterCustomer}
+                      onChange={(e) => setFilterCustomer(e.target.value)}
+                      disabled={session.user.role === 'user'}
+                      className={`w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 transition-all ${session.user.role === 'user' ? 'bg-gray-100 cursor-not-allowed' : ''
+                        }`}
+                    >
+                      <option value="">All Customers</option>
+                      {customers.map(customer => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.customerName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="sm:w-48">
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 transition-all"
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="pending">Pending</option>
+                      <option value="sent">Sent</option>
+                      <option value="completed">Completed</option>
+                      <option value="failed">Failed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+
+                {(() => {
+                  // Filter schedules based on search and filters
+                  const filteredSchedules = schedules.filter(schedule => {
+                    // Search filter
+                    const matchesSearch = searchTerm === '' ||
+                      schedule.customer.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      schedule.tunnel.tunnelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      schedule.fertilizerType.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      schedule.notes?.toLowerCase().includes(searchTerm.toLowerCase());
+
+                    // Customer filter
+                    const matchesCustomer = filterCustomer === '' || schedule.customer.id === filterCustomer;
+
+                    // Status filter
+                    const matchesStatus = filterStatus === '' || schedule.status === filterStatus;
+
+                    return matchesSearch && matchesCustomer && matchesStatus;
+                  });
+
+                  return filteredSchedules.length === 0 ? (
+                    <div className="text-center py-12 bg-white rounded-lg border">
+                      <div className="text-gray-400 text-5xl sm:text-6xl mb-4">📅</div>
+                      <p className="text-gray-600 text-base sm:text-lg font-medium">
+                        {schedules.length === 0 ? 'No schedules created yet.' : 'No schedules match your filters.'}
+                      </p>
+                      <p className="text-gray-500 text-sm sm:text-base mt-2 px-4">
+                        {schedules.length === 0 ? 'Create your first schedule using the "Create" tab.' : 'Try adjusting your search or filters.'}
+                      </p>
                     </div>
-                    
-                    <div className="space-y-4 sm:space-y-6">
-                      {filteredSchedules.map((schedule) => (
-                    <div key={schedule.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                      {/* Card Header */}
-                      <div className="bg-gradient-to-r from-emerald-50 to-blue-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                              {schedule.customer.customerName}
-                            </h3>
-                            <p className="text-sm text-gray-600 truncate">{schedule.tunnel.tunnelName}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(schedule.status)} self-start sm:self-auto`}>
-                              {schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}
-                            </span>
-                            {/* Dropdown Menu */}
-                            {(schedule.status === 'pending' || schedule.status === 'sent') && (
-                              <div className="relative">
-                                <button
-                                  onClick={() => setOpenDropdownId(openDropdownId === schedule.id ? null : schedule.id)}
-                                  className="p-2 hover:bg-white/50 rounded-lg transition-colors"
-                                  aria-label="More options"
-                                >
-                                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                                  </svg>
-                                </button>
-                                {openDropdownId === schedule.id && (
-                                  <>
-                                    <div 
-                                      className="fixed inset-0 z-10" 
-                                      onClick={() => setOpenDropdownId(null)}
-                                    />
-                                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
-                                      {/* Cancel Schedule */}
-                                      <button
-                                        onClick={() => handleCancel(schedule.id)}
-                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
-                                      >
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                        Cancel Schedule
-                                      </button>
-                                    </div>
-                                  </>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                  ) : (
+                    <>
+                      {/* Results count */}
+                      <div className="text-sm text-gray-600">
+                        Showing {filteredSchedules.length} of {schedules.length} schedule{schedules.length !== 1 ? 's' : ''}
                       </div>
 
-                      {/* Card Body */}
-                      <div className="p-4 sm:p-6 space-y-4">
-                        {/* Schedule Details */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
-                          <div>
-                            <span className="text-gray-500">Date:</span>
-                            <p className="font-medium text-gray-900">{formatDate(schedule.scheduledDate)}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Fertilizer:</span>
-                            <p className="font-medium text-gray-900">{schedule.fertilizerType.itemName}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Quantity:</span>
-                            <p className="font-medium text-gray-900">{schedule.quantity} {schedule.fertilizerType.unit}</p>
-                          </div>
-                          <div>
-                            <span className="text-gray-500">Water:</span>
-                            <p className="font-medium text-gray-900">{schedule.water}L</p>
-                          </div>
-                        </div>
-
-                        {/* Release Schedule */}
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-700 mb-3">Release Schedule</h4>
-                          {schedule.releases && schedule.releases.length > 0 ? (
-                            <div className="space-y-2">
-                              {schedule.releases.map((release, index) => {
-                                const releaseDropdownId = `${schedule.id}-${index}`;
-                                const isRunNowEnabled = schedule.status === 'sent';
-                                
-                                // Tooltip messages based on status
-                                const getTooltipMessage = () => {
-                                  switch (schedule.status) {
-                                    case 'sent':
-                                      return 'Run this release immediately';
-                                    case 'pending':
-                                      return 'Only schedules with "Sent" status can be run immediately';
-                                    case 'cancelled':
-                                      return 'Cancelled schedules cannot be run';
-                                    case 'failed':
-                                      return 'Failed schedules cannot be run. Please check the schedule.';
-                                    default:
-                                      return 'This release cannot be run';
-                                  }
-                                };
-
-                                const getCancelTooltipMessage = () => {
-                                  switch (schedule.status) {
-                                    case 'sent':
-                                      return 'Cancel this release by sending volume 0';
-                                    case 'pending':
-                                      return 'Only schedules with "Sent" status can be cancelled';
-                                    case 'cancelled':
-                                      return 'Schedule is already cancelled';
-                                    case 'failed':
-                                      return 'Failed schedules cannot be cancelled';
-                                    default:
-                                      return 'This release cannot be cancelled';
-                                  }
-                                };
-
-                                const isCancelEnabled = schedule.status === 'sent';
-                                
-                                return (
-                                  <div key={index} className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
-                                    <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-                                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                                      <span className="text-sm font-medium text-gray-900">{release.time}</span>
-                                      <span className="text-sm font-semibold text-blue-600">{release.releaseQuantity}L</span>
-                                    </div>
-                                    <div className="relative flex-shrink-0 ml-2">
+                      <div className="space-y-4 sm:space-y-6">
+                        {filteredSchedules.map((schedule) => (
+                          <div key={schedule.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                            {/* Card Header */}
+                            <div className="bg-gradient-to-r from-emerald-50 to-blue-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+                                    {schedule.customer.customerName}
+                                  </h3>
+                                  <p className="text-sm text-gray-600 truncate">{schedule.tunnel.tunnelName}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(schedule.status)} self-start sm:self-auto`}>
+                                    {schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}
+                                  </span>
+                                  {/* Dropdown Menu */}
+                                  {(schedule.status === 'pending' || schedule.status === 'sent') && (
+                                    <div className="relative">
                                       <button
-                                        onClick={() => setOpenReleaseDropdownId(
-                                          openReleaseDropdownId === releaseDropdownId ? null : releaseDropdownId
-                                        )}
-                                        className="p-1 hover:bg-blue-100 rounded transition-colors"
-                                        aria-label="Release options"
+                                        onClick={() => setOpenDropdownId(openDropdownId === schedule.id ? null : schedule.id)}
+                                        className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+                                        aria-label="More options"
                                       >
-                                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                                         </svg>
                                       </button>
-                                      {openReleaseDropdownId === releaseDropdownId && (
+                                      {openDropdownId === schedule.id && (
                                         <>
-                                          <div 
-                                            className="fixed inset-0 z-10" 
-                                            onClick={() => setOpenReleaseDropdownId(null)}
+                                          <div
+                                            className="fixed inset-0 z-10"
+                                            onClick={() => setOpenDropdownId(null)}
                                           />
-                                          <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                                            {/* Cancel Schedule */}
                                             <button
-                                              onClick={() => {
-                                                if (isRunNowEnabled) {
-                                                  handleRunReleaseNow(schedule.id, index, index + 1);
-                                                }
-                                              }}
-                                              disabled={!isRunNowEnabled}
-                                              className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${
-                                                isRunNowEnabled
-                                                  ? 'text-green-600 hover:bg-green-50 cursor-pointer'
-                                                  : 'text-gray-400 cursor-not-allowed bg-gray-50'
-                                              }`}
-                                              title={getTooltipMessage()}
-                                            >
-                                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                              </svg>
-                                              <span>Run Now</span>
-                                              {!isRunNowEnabled && (
-                                                <span className="ml-auto text-xs text-gray-400">(Disabled)</span>
-                                              )}
-                                            </button>
-
-                                            {/* Divider */}
-                                            <div className="border-t border-gray-200 my-1"></div>
-
-                                            {/* Cancel Release Button */}
-                                            <button
-                                              onClick={() => {
-                                                if (isCancelEnabled) {
-                                                  handleCancelRelease(schedule.id, index, index + 1);
-                                                }
-                                              }}
-                                              disabled={!isCancelEnabled}
-                                              className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${
-                                                isCancelEnabled
-                                                  ? 'text-red-600 hover:bg-red-50 cursor-pointer'
-                                                  : 'text-gray-400 cursor-not-allowed bg-gray-50'
-                                              }`}
-                                              title={getCancelTooltipMessage()}
+                                              onClick={() => handleCancel(schedule.id)}
+                                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
                                             >
                                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                               </svg>
-                                              <span>Cancel Release</span>
-                                              {!isCancelEnabled && (
-                                                <span className="ml-auto text-xs text-gray-400">(Disabled)</span>
-                                              )}
+                                              Cancel Schedule
                                             </button>
                                           </div>
                                         </>
                                       )}
                                     </div>
-                                  </div>
-                                );
-                              })}
-                              <div className="mt-2 pt-2 border-t border-gray-200">
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-gray-500">Total Release:</span>
-                                  <span className="font-semibold text-gray-900">
-                                    {schedule.releases.reduce((sum, r) => sum + r.releaseQuantity, 0)}L
-                                  </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
-                          ) : (
-                            <div className="text-center py-4 text-gray-400 text-sm">
-                              <div className="text-2xl mb-1">💧</div>
-                              No releases scheduled
+
+                            {/* Card Body */}
+                            <div className="p-4 sm:p-6 space-y-4">
+                              {/* Schedule Details */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-500">Date:</span>
+                                  <p className="font-medium text-gray-900">{formatDate(schedule.scheduledDate)}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Fertilizer:</span>
+                                  <p className="font-medium text-gray-900">{schedule.fertilizerType.itemName}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Quantity:</span>
+                                  <p className="font-medium text-gray-900">{schedule.quantity} {schedule.fertilizerType.unit}</p>
+                                </div>
+                                <div>
+                                  <span className="text-gray-500">Water:</span>
+                                  <p className="font-medium text-gray-900">{schedule.water}L</p>
+                                </div>
+                              </div>
+
+                              {/* Release Schedule */}
+                              <div>
+                                <h4 className="text-sm font-medium text-gray-700 mb-3">Release Schedule</h4>
+                                {schedule.releases && schedule.releases.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {schedule.releases.map((release, index) => {
+                                      const releaseDropdownId = `${schedule.id}-${index}`;
+                                      // Disable buttons if release is cancelled OR if schedule status doesn't allow it
+                                      const isRunNowEnabled = schedule.status === 'sent' && !release.cancelled;
+
+                                      // Tooltip messages based on status
+                                      const getTooltipMessage = () => {
+                                        if (release.cancelled) {
+                                          return 'This release has been cancelled';
+                                        }
+                                        switch (schedule.status) {
+                                          case 'sent':
+                                            return 'Run this release immediately';
+                                          case 'pending':
+                                            return 'Only schedules with "Sent" status can be run immediately';
+                                          case 'cancelled':
+                                            return 'Cancelled schedules cannot be run';
+                                          case 'failed':
+                                            return 'Failed schedules cannot be run. Please check the schedule.';
+                                          default:
+                                            return 'This release cannot be run';
+                                        }
+                                      };
+
+                                      const getCancelTooltipMessage = () => {
+                                        if (release.cancelled) {
+                                          return 'This release is already cancelled';
+                                        }
+                                        switch (schedule.status) {
+                                          case 'sent':
+                                            return 'Cancel this release by sending volume 0';
+                                          case 'pending':
+                                            return 'Only schedules with "Sent" status can be cancelled';
+                                          case 'cancelled':
+                                            return 'Schedule is already cancelled';
+                                          case 'failed':
+                                            return 'Failed schedules cannot be cancelled';
+                                          default:
+                                            return 'This release cannot be cancelled';
+                                        }
+                                      };
+
+                                      const isCancelEnabled = schedule.status === 'sent' && !release.cancelled;
+
+                                      return (
+                                        <div key={index} className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
+                                          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                                            <span className="text-sm font-medium text-gray-900">{release.time}</span>
+                                            <span className="text-sm font-semibold text-blue-600">{release.releaseQuantity}L</span>
+                                            {/* Cancelled Badge */}
+                                            {release.cancelled && (
+                                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                                                Cancelled
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="relative flex-shrink-0 ml-2">
+                                            <button
+                                              onClick={() => setOpenReleaseDropdownId(
+                                                openReleaseDropdownId === releaseDropdownId ? null : releaseDropdownId
+                                              )}
+                                              className="p-1 hover:bg-blue-100 rounded transition-colors"
+                                              aria-label="Release options"
+                                            >
+                                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                              </svg>
+                                            </button>
+                                            {openReleaseDropdownId === releaseDropdownId && (
+                                              <>
+                                                <div
+                                                  className="fixed inset-0 z-10"
+                                                  onClick={() => setOpenReleaseDropdownId(null)}
+                                                />
+                                                <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                                                  <button
+                                                    onClick={() => {
+                                                      if (isRunNowEnabled) {
+                                                        handleRunReleaseNow(schedule.id, index, index + 1);
+                                                      }
+                                                    }}
+                                                    disabled={!isRunNowEnabled}
+                                                    className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${isRunNowEnabled
+                                                      ? 'text-green-600 hover:bg-green-50 cursor-pointer'
+                                                      : 'text-gray-400 cursor-not-allowed bg-gray-50'
+                                                      }`}
+                                                    title={getTooltipMessage()}
+                                                  >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    <span>Run Now</span>
+                                                    {!isRunNowEnabled && (
+                                                      <span className="ml-auto text-xs text-gray-400">(Disabled)</span>
+                                                    )}
+                                                  </button>
+
+                                                  {/* Divider */}
+                                                  <div className="border-t border-gray-200 my-1"></div>
+
+                                                  {/* Cancel Release Button */}
+                                                  <button
+                                                    onClick={() => {
+                                                      if (isCancelEnabled) {
+                                                        handleCancelRelease(schedule.id, index, index + 1);
+                                                      }
+                                                    }}
+                                                    disabled={!isCancelEnabled}
+                                                    className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${isCancelEnabled
+                                                      ? 'text-red-600 hover:bg-red-50 cursor-pointer'
+                                                      : 'text-gray-400 cursor-not-allowed bg-gray-50'
+                                                      }`}
+                                                    title={getCancelTooltipMessage()}
+                                                  >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                    <span>Cancel Release</span>
+                                                    {!isCancelEnabled && (
+                                                      <span className="ml-auto text-xs text-gray-400">(Disabled)</span>
+                                                    )}
+                                                  </button>
+                                                </div>
+                                              </>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                    <div className="mt-2 pt-2 border-t border-gray-200">
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Total Release:</span>
+                                        <span className="font-semibold text-gray-900">
+                                          {schedule.releases.reduce((sum, r) => sum + (Number(r.releaseQuantity) || 0), 0)}L
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-4 text-gray-400 text-sm">
+                                    <div className="text-2xl mb-1">💧</div>
+                                    No releases scheduled
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Notes */}
+                              {schedule.notes && (
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-700 mb-2">Notes</h4>
+                                  <p className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-md break-words">
+                                    {schedule.notes}
+                                  </p>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
 
-                        {/* Notes */}
-                        {schedule.notes && (
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-700 mb-2">Notes</h4>
-                            <p className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-md break-words">
-                              {schedule.notes}
-                            </p>
+                            {/* Card Footer */}
+                            <div className="bg-gray-50 px-4 sm:px-6 py-3 border-t border-gray-200">
+                              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
+                                <button
+                                  onClick={() => {
+                                    setActiveTab('create');
+                                    handleEdit(schedule);
+                                  }}
+                                  disabled={schedule.status === 'cancelled'}
+                                  className={`w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors font-medium ${schedule.status === 'cancelled'
+                                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                                    : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 active:bg-blue-100'
+                                    }`}
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(schedule.id)}
+                                  disabled={schedule.status === 'cancelled'}
+                                  className={`w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors font-medium ${schedule.status === 'cancelled'
+                                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                                    : 'text-red-600 hover:text-red-800 hover:bg-red-50 active:bg-red-100'
+                                    }`}
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
-
-                      {/* Card Footer */}
-                      <div className="bg-gray-50 px-4 sm:px-6 py-3 border-t border-gray-200">
-                        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
-                          <button 
-                            onClick={() => {
-                              setActiveTab('create');
-                              handleEdit(schedule);
-                            }}
-                            disabled={schedule.status === 'cancelled'}
-                            className={`w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors font-medium ${
-                              schedule.status === 'cancelled'
-                                ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                                : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 active:bg-blue-100'
-                            }`}
-                          >
-                            Edit
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(schedule.id)}
-                            disabled={schedule.status === 'cancelled'}
-                            className={`w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors font-medium ${
-                              schedule.status === 'cancelled'
-                                ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                                : 'text-red-600 hover:text-red-800 hover:bg-red-50 active:bg-red-100'
-                            }`}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                      ))}
-                    </div>
-                  </>
-                );
-              })()}
+                    </>
+                  );
+                })()}
               </div>
             )}
 
