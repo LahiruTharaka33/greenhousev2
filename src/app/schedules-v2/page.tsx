@@ -276,10 +276,12 @@ export default function SchedulesV2Page() {
             return release.time && qty > 0;
           })
           .map(release => ({
+            id: release.id,
             time: release.time,
             releaseQuantity: typeof release.releaseQuantity === 'string'
               ? parseFloat(release.releaseQuantity) || 0
-              : Number(release.releaseQuantity) || 0
+              : Number(release.releaseQuantity) || 0,
+            cancelled: release.cancelled
           }))
       };
 

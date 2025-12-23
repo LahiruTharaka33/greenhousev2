@@ -143,12 +143,35 @@ export async function PUT(
         notes: notes !== undefined ? notes : existingSchedule.notes,
         status: status || existingSchedule.status,
         // Handle releases update
+        // Handle releases update using update/create/delete strategy
         releases: releases && Array.isArray(releases) ? {
-          deleteMany: {}, // Delete all existing releases
-          create: releases.filter(release => release.time && release.releaseQuantity > 0).map((release: any) => ({
-            time: release.time,
-            releaseQuantity: parseFloat(release.releaseQuantity)
-          }))
+          // 1. Delete releases that are not in the new list (if they have IDs)
+          deleteMany: {
+            id: {
+              notIn: releases
+                .filter((r: any) => r.id)
+                .map((r: any) => r.id)
+            }
+          },
+          // 2. Update existing releases
+          update: releases
+            .filter((r: any) => r.id && r.time && r.releaseQuantity > 0)
+            .map((r: any) => ({
+              where: { id: r.id },
+              data: {
+                time: r.time,
+                releaseQuantity: parseFloat(r.releaseQuantity),
+                cancelled: r.cancelled
+              }
+            })),
+          // 3. Create new releases (no ID)
+          create: releases
+            .filter((r: any) => !r.id && r.time && r.releaseQuantity > 0)
+            .map((r: any) => ({
+              time: r.time,
+              releaseQuantity: parseFloat(r.releaseQuantity),
+              cancelled: r.cancelled || false
+            }))
         } : undefined
       },
       include: {
