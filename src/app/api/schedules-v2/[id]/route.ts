@@ -6,8 +6,9 @@ import { prisma } from '@/lib/prisma';
 // GET /api/schedules-v2/[id] - Fetch specific schedule
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -68,8 +69,9 @@ export async function GET(
 // PUT /api/schedules-v2/[id] - Update schedule
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
 
@@ -221,8 +223,9 @@ export async function PUT(
 // DELETE /api/schedules-v2/[id] - Delete schedule
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
+  const params = await props.params;
   try {
     const session = await getServerSession(authOptions);
 
