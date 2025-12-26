@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import scheduleV2Resubscriber from '@/lib/scheduleV2Resubscriber';
 
 // GET /api/schedules-v2/[id] - Fetch specific schedule
 export async function GET(
@@ -84,7 +85,17 @@ export async function PUT(
 
     // Check if schedule exists
     const existingSchedule = await prisma.scheduleV2.findUnique({
-      where: { id: params.id }
+      where: { id: params.id },
+      include: {
+        releases: {
+          select: {
+            id: true,
+            time: true,
+            releaseQuantity: true,
+            cancelled: true,
+          }
+        }
+      }
     });
 
     if (!existingSchedule) {
@@ -211,7 +222,55 @@ export async function PUT(
           },
         }
       }
-    });
+    })
+
+    // MQTT Resubscription Logic for Sent Schedules
+    // If this is a sent schedule and releases were modified, resubscribe to the relevant topics
+    let resubscribeResult = null;
+    if (existingSchedule.status === 'sent' && releases && Array.isArray(releases)) {
+      try {
+        console.log('📡 Sent schedule releases were modified, initiating MQTT resubscription...');
+
+        // Get the tunnel's waterClientId
+        const tunnelInfo = await prisma.tunnel.findUnique({
+          where: { id: updatedSchedule.tunnelId },
+          select: { clientId: true }
+        });
+
+        if (tunnelInfo?.clientId) {
+          const waterClientId = tunnelInfo.clientId;
+
+          // Detect which release slots were modified
+          const releaseChanges = scheduleV2Resubscriber.detectReleaseChanges(
+            existingSchedule.releases || [],
+            releases
+          );
+
+          if (releaseChanges.length > 0) {
+            console.log(`📡 Detected ${releaseChanges.length} release slot(s) modified:`, releaseChanges);
+
+            // Resubscribe to the modified release topics
+            resubscribeResult = await scheduleV2Resubscriber.resubscribeToModifiedReleases(
+              waterClientId,
+              releaseChanges
+            );
+
+            if (resubscribeResult.success) {
+              console.log(`✅ Successfully resubscribed to ${resubscribeResult.subscribedTopics.length} topic(s)`);
+            } else {
+              console.warn(`⚠️ Resubscription completed with errors:`, resubscribeResult.errors);
+            }
+          } else {
+            console.log('📡 No release changes detected, skipping resubscription');
+          }
+        } else {
+          console.warn('⚠️ Could not find waterClientId for tunnel, skipping resubscription');
+        }
+      } catch (error) {
+        console.error('❌ Error during MQTT resubscription:', error);
+        // Don't fail the entire request if resubscription fails
+      }
+    }
 
     return NextResponse.json(updatedSchedule);
   } catch (error) {
