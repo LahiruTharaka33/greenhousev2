@@ -195,13 +195,15 @@ export default function SchedulesV2Page() {
     }
   }, [selectedFertilizerTypeId, fertilizerTypes]);
 
-  // Calculate total release quantity
-  const totalReleaseQuantity = releases.reduce((sum, release) => {
-    const quantity = typeof release.releaseQuantity === 'string' && release.releaseQuantity === ''
-      ? 0
-      : Number(release.releaseQuantity) || 0;
-    return sum + quantity;
-  }, 0);
+  // Calculate total release quantity (excluding cancelled releases)
+  const totalReleaseQuantity = releases
+    .filter(release => !release.cancelled)
+    .reduce((sum, release) => {
+      const quantity = typeof release.releaseQuantity === 'string' && release.releaseQuantity === ''
+        ? 0
+        : Number(release.releaseQuantity) || 0;
+      return sum + quantity;
+    }, 0);
 
   // Check if total exceeds water limit
   const waterAmount = parseFloat(water) || 0;

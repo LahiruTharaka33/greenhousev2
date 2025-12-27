@@ -117,22 +117,19 @@ export default function Sidebar() {
           aria-expanded={isMobileOpen}
         >
           <div className="relative w-6 h-5 flex flex-col justify-center items-center">
-            <span className={`absolute w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${
-              isMobileOpen ? 'rotate-45 translate-y-0' : '-translate-y-2'
-            }`}></span>
-            <span className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${
-              isMobileOpen ? 'opacity-0 scale-0' : 'opacity-100 scale-100'
-            }`}></span>
-            <span className={`absolute w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${
-              isMobileOpen ? '-rotate-45 translate-y-0' : 'translate-y-2'
-            }`}></span>
+            <span className={`absolute w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${isMobileOpen ? 'rotate-45 translate-y-0' : '-translate-y-2'
+              }`}></span>
+            <span className={`w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${isMobileOpen ? 'opacity-0 scale-0' : 'opacity-100 scale-100'
+              }`}></span>
+            <span className={`absolute w-6 h-0.5 bg-gray-600 transition-all duration-300 ease-in-out ${isMobileOpen ? '-rotate-45 translate-y-0' : 'translate-y-2'
+              }`}></span>
           </div>
         </button>
       </div>
 
       {/* Mobile overlay - Enhanced animation */}
       {isMobileOpen && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 animate-fade-in"
           onClick={() => setIsMobileOpen(false)}
           aria-hidden="true"
@@ -140,108 +137,111 @@ export default function Sidebar() {
       )}
 
       {/* Sidebar - Enhanced animations with proper scroll */}
-      <div className={`bg-white shadow-2xl transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'w-16' : 'w-64'
-      } h-screen fixed left-0 top-0 z-50 lg:translate-x-0 ${
-        isMobileOpen ? 'translate-x-0' : '-translate-x-full'
-      } flex flex-col overflow-hidden`}>
-      {/* Header - Fixed at top */}
-      <div className="flex-none flex items-center justify-between p-4 border-b border-gray-200">
-        {!isCollapsed && (
-          <h1 className="text-xl font-bold text-gray-900">GreenHouseV2</h1>
-        )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 rounded-md hover:bg-gray-50 transition-colors hidden lg:block"
-          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {isCollapsed ? '→' : '←'}
-        </button>
-      </div>
-
-      {/* Admin user info - Fixed */}
-      {!isCollapsed && session && (
-        <div className="flex-none p-4 bg-emerald-50 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center min-w-0 flex-1">
-              <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-emerald-600 font-medium">
-                  {session.user?.name?.charAt(0).toUpperCase() || 'A'}
-                </span>
-              </div>
-              <div className="ml-3 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{session.user?.name}</p>
-                <p className="text-xs text-emerald-600 capitalize">{session.user?.role || 'User'}</p>
-              </div>
-            </div>
-            <Link
-              href="/configuration"
-              className="p-2 rounded-lg hover:bg-emerald-100 active:bg-emerald-200 transition-colors flex-shrink-0 ml-2"
-              title="Configuration Settings"
-            >
-              <span className="text-lg">⚙️</span>
-            </Link>
-          </div>
+      <div className={`bg-white shadow-2xl transition-all duration-300 ease-in-out ${isCollapsed ? 'w-16' : 'w-64'
+        } h-screen fixed left-0 top-0 z-50 lg:translate-x-0 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+        } flex flex-col overflow-hidden`}>
+        {/* Header - Fixed at top */}
+        <div className="flex-none flex items-center justify-between p-4 border-b border-gray-200">
+          {!isCollapsed && (
+            <h1 className="text-xl font-bold text-gray-900">GreenHouseV2</h1>
+          )}
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 rounded-md hover:bg-gray-50 transition-colors hidden lg:block"
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {isCollapsed ? '→' : '←'}
+          </button>
         </div>
-      )}
 
-      {/* Navigation - Enhanced with smooth scrolling */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar">
-        <ul className="space-y-2">
-          {navigation
-            .filter(item => !item.roles || (session?.user?.role && item.roles.includes(session.user.role)))
-            .map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <li key={item.name}>
-                <Link
-                  href={item.href}
-                  onClick={() => setIsMobileOpen(false)}
-                  className={`flex items-center p-3 min-h-[44px] rounded-lg transition-all duration-200 group ${
-                    isActive
-                      ? 'bg-emerald-50 text-emerald-700 border-l-4 border-emerald-500 shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
-                  }`}
-                  title={isCollapsed ? item.name : undefined}
-                >
-                  <span className="text-xl mr-3 flex-shrink-0">{item.icon}</span>
-                  {!isCollapsed && (
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">{item.name}</div>
-                      <div className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity lg:block hidden truncate">
-                        {item.description}
-                      </div>
-                    </div>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      {/* Sign out button - Fixed at bottom */}
-      <div className="flex-none p-4 border-t border-gray-200 bg-white">
-        {!isCollapsed ? (
-          <button
-            onClick={handleSignOut}
-            className="w-full flex items-center p-3 min-h-[44px] text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
-          >
-            <span className="text-lg mr-3">🚪</span>
-            Sign Out
-          </button>
-        ) : (
-          <button
-            onClick={handleSignOut}
-            className="w-full flex items-center justify-center p-3 min-h-[44px] text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
-            title="Sign Out"
-            aria-label="Sign Out"
-          >
-            <span className="text-lg">🚪</span>
-          </button>
+        {/* Admin user info - Fixed */}
+        {!isCollapsed && session && (
+          <div className="flex-none p-4 bg-emerald-50 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center min-w-0 flex-1">
+                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <span className="text-emerald-600 font-medium">
+                    {session.user?.name?.charAt(0).toUpperCase() || 'A'}
+                  </span>
+                </div>
+                <div className="ml-3 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{session.user?.name}</p>
+                  <p className="text-xs text-emerald-600 capitalize">{session.user?.role || 'User'}</p>
+                  <Link
+                    href="/user-settings"
+                    className="text-xs text-emerald-700 hover:text-emerald-900 hover:underline transition-colors block mt-0.5"
+                  >
+                    User Settings
+                  </Link>
+                </div>
+              </div>
+              <Link
+                href="/configuration"
+                className="p-2 rounded-lg hover:bg-emerald-100 active:bg-emerald-200 transition-colors flex-shrink-0 ml-2"
+                title="Configuration Settings"
+              >
+                <span className="text-lg">⚙️</span>
+              </Link>
+            </div>
+          </div>
         )}
+
+        {/* Navigation - Enhanced with smooth scrolling */}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-4 custom-scrollbar">
+          <ul className="space-y-2">
+            {navigation
+              .filter(item => !item.roles || (session?.user?.role && item.roles.includes(session.user.role)))
+              .map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <li key={item.name}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setIsMobileOpen(false)}
+                      className={`flex items-center p-3 min-h-[44px] rounded-lg transition-all duration-200 group ${isActive
+                        ? 'bg-emerald-50 text-emerald-700 border-l-4 border-emerald-500 shadow-sm'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 active:bg-gray-100'
+                        }`}
+                      title={isCollapsed ? item.name : undefined}
+                    >
+                      <span className="text-xl mr-3 flex-shrink-0">{item.icon}</span>
+                      {!isCollapsed && (
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{item.name}</div>
+                          <div className="text-xs text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity lg:block hidden truncate">
+                            {item.description}
+                          </div>
+                        </div>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+          </ul>
+        </nav>
+
+        {/* Sign out button - Fixed at bottom */}
+        <div className="flex-none p-4 border-t border-gray-200 bg-white">
+          {!isCollapsed ? (
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center p-3 min-h-[44px] text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
+            >
+              <span className="text-lg mr-3">🚪</span>
+              Sign Out
+            </button>
+          ) : (
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center p-3 min-h-[44px] text-gray-600 hover:bg-gray-100 hover:text-gray-900 active:bg-gray-200 rounded-lg transition-colors"
+              title="Sign Out"
+              aria-label="Sign Out"
+            >
+              <span className="text-lg">🚪</span>
+            </button>
+          )}
+        </div>
       </div>
-    </div>
     </>
   );
 } 
