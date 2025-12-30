@@ -5,12 +5,14 @@ import mqttService from '@/lib/mqtt';
 
 interface WaterTankData {
   level: number | null;
+  rawValue: number | null;
   timestamp: Date;
 }
 
 export default function WaterTankMonitor() {
   const [tankData, setTankData] = useState<WaterTankData>({
     level: null,
+    rawValue: null,
     timestamp: new Date()
   });
   const [isConnected, setIsConnected] = useState(false);
@@ -107,6 +109,7 @@ export default function WaterTankMonitor() {
           
           setTankData({
             level,
+            rawValue,
             timestamp: new Date()
           });
           
@@ -338,6 +341,11 @@ export default function WaterTankMonitor() {
           <div className="text-xs text-gray-500 mb-1">Water Level</div>
           <div className={`text-2xl font-bold ${getLevelStatusColor(tankData.level)}`}>
             {tankData.level !== null ? `${tankData.level.toFixed(1)}%` : '--%'}
+            {tankData.rawValue !== null && (
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                ({tankData.rawValue})
+              </span>
+            )}
           </div>
           <div className={`text-xs font-medium mt-1 ${getLevelStatusColor(tankData.level)}`}>
             {getLevelStatus(tankData.level)}
