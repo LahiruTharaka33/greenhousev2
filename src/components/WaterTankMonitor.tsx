@@ -47,7 +47,7 @@ export default function WaterTankMonitor() {
       console.log('💧 WaterTankMonitor: Component unmounting');
       clearInterval(interval);
       if (isSubscribed) {
-        mqttService.unsubscribe('watertank_status');
+        mqttService.unsubscribe('esp32-watertank-controller-01/watertank_status');
       }
     };
   }, [isSubscribed]);
@@ -56,32 +56,69 @@ export default function WaterTankMonitor() {
     console.log('💧 📨 RAW MESSAGE RECEIVED:', message);
     
     try {
-      const data = JSON.parse(message);
-      console.log('💧 ✅ Parsed JSON data:', data);
+      let level: number | null = null;
+      let rawValue: number | null = null;
       
-      const level = data.level !== undefined && data.level !== null ? parseFloat(data.level) : null;
-      
-      if (level !== null && level >= 0 && level <= 100) {
-        console.log('💧 📊 Setting water tank data:', { level });
-        
-        if (previousLevel !== null) {
-          setIsRising(level > previousLevel);
+      // Try to parse as JSON first
+      try {
+        const data = JSON.parse(message);
+        // Check if it's a simple number in the JSON parsing result (e.g. "196") or an object
+        if (typeof data === 'number') {
+           rawValue = data;
+        } else if (typeof data === 'object' && data !== null) {
+           console.log('💧 ✅ Parsed JSON data:', data);
+           if (data.level !== undefined && data.level !== null) {
+             rawValue = parseFloat(data.level);
+           }
         }
-        setPreviousLevel(level);
+      } catch (e) {
+        // If JSON parse fails, try to parse the raw string as a number
+        const parsed = parseFloat(message);
+        if (!isNaN(parsed)) {
+          rawValue = parsed;
+        }
+      }
+
+      console.log('💧 📏 Extracted Raw Value:', rawValue);
+
+      if (rawValue !== null) {
+        // If value is > 100, assume it's CM and convert to %
+        // Assuming Max Tank Height is 200cm. 
+        // You can adjust MAX_TANK_HEIGHT as needed.
+        const MAX_TANK_HEIGHT = 200; 
         
-        setTankData({
-          level,
-          timestamp: new Date()
-        });
+        if (rawValue > 100) {
+           // Logic: Raw Value is Height in CM
+           level = (rawValue / MAX_TANK_HEIGHT) * 100;
+           // Cap at 100%
+           if (level > 100) level = 100;
+        } else {
+           // Value is likely already a percentage
+           level = rawValue;
+        }
+
+        console.log(`💧 📊 Calculated Level: ${level?.toFixed(2)}% (from raw: ${rawValue})`);
         
-        setIsAnimating(true);
-        setTimeout(() => setIsAnimating(false), 2000);
-        
-        setDataReceived(true);
-        const now = new Date();
-        setLastUpdate(now.toLocaleTimeString());
-        
-        console.log(`💧 ✅ Updated at ${now.toLocaleTimeString()}`);
+        if (level !== null && level >= 0) {
+          if (previousLevel !== null) {
+            setIsRising(level > previousLevel);
+          }
+          setPreviousLevel(level);
+          
+          setTankData({
+            level,
+            timestamp: new Date()
+          });
+          
+          setIsAnimating(true);
+          setTimeout(() => setIsAnimating(false), 2000);
+          
+          setDataReceived(true);
+          const now = new Date();
+          setLastUpdate(now.toLocaleTimeString());
+          
+          console.log(`💧 ✅ Updated at ${now.toLocaleTimeString()}`);
+        }
       }
     } catch (error) {
       console.error('💧 ❌ Error parsing water tank data:', error);
@@ -115,23 +152,23 @@ export default function WaterTankMonitor() {
       return;
     }
     
-    console.log('💧 User manually subscribing to "watertank_status" topic...');
-    const subscribed = mqttService.subscribe('watertank_status', handleWaterTankData);
+    console.log('💧 User manually subscribing to "esp32-watertank-controller-01/watertank_status" topic...');
+    const subscribed = mqttService.subscribe('esp32-watertank-controller-01/watertank_status', handleWaterTankData);
     if (subscribed) {
-      console.log('💧 Successfully subscribed to "watertank_status" topic ✅');
+      console.log('💧 Successfully subscribed to "esp32-watertank-controller-01/watertank_status" topic ✅');
       setIsSubscribed(true);
     } else {
-      console.warn('💧 Failed to subscribe to "watertank_status" topic ❌');
+      console.warn('💧 Failed to subscribe to "esp32-watertank-controller-01/watertank_status" topic ❌');
     }
   };
 
   const handleUnsubscribe = () => {
-    console.log('💧 User manually unsubscribing from "watertank_status" topic...');
-    mqttService.unsubscribe('watertank_status');
+    console.log('💧 User manually unsubscribing from "esp32-watertank-controller-01/watertank_status" topic...');
+    mqttService.unsubscribe('esp32-watertank-controller-01/watertank_status');
     setIsSubscribed(false);
     setDataReceived(false);
     setLastUpdate('Never');
-    console.log('💧 Unsubscribed from "watertank_status" topic ✅');
+    console.log('💧 Unsubscribed from "esp32-watertank-controller-01/watertank_status" topic ✅');
   };
 
   return (
@@ -371,7 +408,7 @@ export default function WaterTankMonitor() {
             <div className="bg-gray-50 rounded-lg p-2.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-600">Topic:</span>
-                <span className="font-mono text-gray-900">watertank_status</span>
+                <span className="font-mono text-gray-900">esp32-watertank-controller-01/watertank_status</span>
               </div>
               <div className="flex items-center justify-between text-xs mt-1.5">
                 <span className="text-gray-600">Status:</span>
