@@ -84,20 +84,12 @@ export default function WaterTankMonitor() {
       console.log('💧 📏 Extracted Raw Value:', rawValue);
 
       if (rawValue !== null) {
-        // If value is > 100, assume it's CM and convert to %
-        // Assuming Max Tank Height is 200cm. 
-        // You can adjust MAX_TANK_HEIGHT as needed.
-        const MAX_TANK_HEIGHT = 200; 
-        
-        if (rawValue > 100) {
-           // Logic: Raw Value is Height in CM
-           level = (rawValue / MAX_TANK_HEIGHT) * 100;
-           // Cap at 100%
-           if (level > 100) level = 100;
-        } else {
-           // Value is likely already a percentage
-           level = rawValue;
-        }
+        // Calculate percentage based on 500 capacity
+        const MAX_CAPACITY = 500;
+        level = (rawValue / MAX_CAPACITY) * 100;
+
+        // Cap at 100%
+        if (level > 100) level = 100;
 
         console.log(`💧 📊 Calculated Level: ${level?.toFixed(2)}% (from raw: ${rawValue})`);
         
