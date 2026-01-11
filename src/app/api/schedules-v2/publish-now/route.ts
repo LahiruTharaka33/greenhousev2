@@ -8,7 +8,7 @@ import scheduleV2Publisher from '@/lib/scheduleV2Publisher';
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session || (session.user.role !== 'admin' && session.user.role !== 'user')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { customerId, tunnelId, scheduledDate, fertilizerTypeId, quantity, water, notes, releases } = body;
 
-    // Validate required fields
-    if (!customerId || !tunnelId || !scheduledDate || !fertilizerTypeId || !quantity || !water) {
+    // Validate required fields (except quantity which can be 0 for Water)
+    if (!customerId || !tunnelId || !scheduledDate || !fertilizerTypeId || quantity === undefined || quantity === null || !water) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       const totalReleaseQuantity = releases.reduce((sum, release) => {
         return sum + (parseFloat(release.releaseQuantity) || 0);
       }, 0);
-      
+
       if (totalReleaseQuantity > parseFloat(water)) {
         return NextResponse.json(
           { error: `Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${water}L)` },
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     // Verify that the tunnel exists and belongs to the customer, and get client IDs
     const tunnelExists = await prisma.tunnel.findFirst({
-      where: { 
+      where: {
         id: tunnelId,
         customerId: customerId,
       },
@@ -84,26 +84,38 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // CRITICAL VALIDATION: Check if this fertilizer is configured in a tank for this tunnel
-    const tankWithFertilizer = await prisma.tankConfiguration.findFirst({
-      where: {
-        tunnelId,
-        itemType: 'fertilizer',
-        itemId: fertilizerTypeId
-      },
-      select: {
-        tankName: true
-      }
-    });
-
-    if (!tankWithFertilizer) {
+    // Validate quantity: must be > 0 unless fertilizer is Water
+    const isWater = fertilizerExists.itemName.toLowerCase() === 'water';
+    if (!isWater && (!quantity || parseFloat(quantity) <= 0)) {
       return NextResponse.json(
-        { 
-          error: `Fertilizer "${fertilizerExists.itemName}" is not configured in any tank for this tunnel. Please configure it in the Configuration page first.`,
-          fertilizerName: fertilizerExists.itemName
-        },
+        { error: 'Quantity must be greater than 0 for non-water fertilizers' },
         { status: 400 }
       );
+    }
+
+    // CRITICAL VALIDATION: Check if this fertilizer is configured in a tank for this tunnel
+    // Skip this check for Water since it doesn't need tank configuration
+    if (!isWater) {
+      const tankWithFertilizer = await prisma.tankConfiguration.findFirst({
+        where: {
+          tunnelId,
+          itemType: 'fertilizer',
+          itemId: fertilizerTypeId
+        },
+        select: {
+          tankName: true
+        }
+      });
+
+      if (!tankWithFertilizer) {
+        return NextResponse.json(
+          {
+            error: `Fertilizer "${fertilizerExists.itemName}" is not configured in any tank for this tunnel. Please configure it in the Configuration page first.`,
+            fertilizerName: fertilizerExists.itemName
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Create the schedule with status 'pending' initially
@@ -169,7 +181,11 @@ export async function POST(request: NextRequest) {
       schedule.fertilizerType.itemName,
       parseFloat(schedule.quantity.toString()),
       parseFloat(schedule.water.toString()),
-      schedule.releases || [],
+      schedule.releases?.map(r => ({
+        id: r.id,
+        time: r.time,
+        releaseQuantity: parseFloat(r.releaseQuantity.toString())
+      })) || [],
       tunnelExists.fertilizerClientId || undefined,
       tunnelExists.clientId || undefined
     );
@@ -217,7 +233,7 @@ export async function POST(request: NextRequest) {
 
       console.log(`✅ Successfully published schedule ${schedule.id} to ESP32`);
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         schedule: updatedSchedule,
         publishResult: {
           success: true,
@@ -269,7 +285,7 @@ export async function POST(request: NextRequest) {
       console.error(`❌ Failed to publish schedule ${schedule.id} to ESP32`);
 
       return NextResponse.json(
-        { 
+        {
           error: 'Schedule created but failed to publish to ESP32',
           schedule: updatedSchedule,
           publishResult: {
@@ -290,7 +306,7 @@ export async function POST(request: NextRequest) {
       name: error instanceof Error ? error.name : undefined
     });
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to create and publish schedule',
         details: error instanceof Error ? error.message : 'Unknown error'
       },

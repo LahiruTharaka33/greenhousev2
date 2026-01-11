@@ -81,10 +81,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { customerId, tunnelId, scheduledDate, fertilizerTypeId, quantity, water, notes, releases } = body;
 
-    // Validate required fields
-    if (!customerId || !tunnelId || !scheduledDate || !fertilizerTypeId || !quantity || !water) {
+    // Validate required fields (except quantity which can be 0 for Water)
+    if (!customerId || !tunnelId || !scheduledDate || !fertilizerTypeId || quantity === undefined || quantity === null || !water) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    // Get fertilizer type to check if it's Water
+    const fertilizerType = await prisma.item.findUnique({
+      where: { id: fertilizerTypeId },
+      select: { itemName: true }
+    });
+
+    // Validate quantity: must be > 0 unless fertilizer is Water
+    const isWater = fertilizerType?.itemName.toLowerCase() === 'water';
+    if (!isWater && (!quantity || parseFloat(quantity) <= 0)) {
+      return NextResponse.json(
+        { error: 'Quantity must be greater than 0 for non-water fertilizers' },
         { status: 400 }
       );
     }
@@ -130,17 +145,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify that the fertilizer type exists
-    const fertilizerExists = await prisma.item.findUnique({
-      where: { id: fertilizerTypeId },
-    });
-
-    if (!fertilizerExists) {
-      return NextResponse.json(
-        { error: 'Selected fertilizer type does not exist' },
-        { status: 400 }
-      );
-    }
+    // Fertilizer type already verified above (removed duplicate check)
 
     const schedule = await prisma.scheduleV2.create({
       data: {

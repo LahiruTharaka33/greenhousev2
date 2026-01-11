@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     // Verify this is a legitimate cron request from Vercel
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
-    
+
     // TEMPORARILY DISABLED FOR TESTING - RE-ENABLE AFTER TESTING!
     // In production, verify the cron secret
     // if (process.env.NODE_ENV === 'production' && cronSecret) {
@@ -22,11 +22,11 @@ export async function GET(request: NextRequest) {
     //     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     //   }
     // }
-    
+
     console.log('⚠️ WARNING: Auth check is disabled for testing!');
 
     console.log('🕐 Cron job started: Publishing schedules for today...');
-    
+
     // Get current date (start and end of day in UTC)
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
@@ -37,14 +37,20 @@ export async function GET(request: NextRequest) {
       end: endOfDay.toISOString()
     });
 
-    // Query all pending schedules for today
+    // Query all pending schedules for today (excluding Water schedules)
+    // Water schedules are handled by a separate cron job: /api/cron/publish-water-schedules
     const schedulesToPublish = await prisma.scheduleV2.findMany({
       where: {
         scheduledDate: {
           gte: startOfDay,
           lte: endOfDay
         },
-        status: 'pending'
+        status: 'pending',
+        fertilizerType: {
+          itemName: {
+            not: 'Water' // Exclude Water schedules
+          }
+        }
       },
       include: {
         customer: {
@@ -112,7 +118,10 @@ export async function GET(request: NextRequest) {
           schedule.fertilizerType.itemName,
           parseFloat(schedule.quantity.toString()),
           parseFloat(schedule.water.toString()),
-          schedule.releases || []
+          schedule.releases?.map(r => ({
+            time: r.time,
+            releaseQuantity: parseFloat(r.releaseQuantity.toString())
+          })) || []
         );
 
         // Log warnings if any
@@ -136,8 +145,8 @@ export async function GET(request: NextRequest) {
             data: { status: 'failed' }
           });
 
-          const errorMsg = mqttResult.warnings && mqttResult.warnings.length > 0 
-            ? mqttResult.warnings[0] 
+          const errorMsg = mqttResult.warnings && mqttResult.warnings.length > 0
+            ? mqttResult.warnings[0]
             : 'MQTT publishing failed';
 
           results.failed.push({
@@ -149,7 +158,7 @@ export async function GET(request: NextRequest) {
 
       } catch (error) {
         console.error(`Error processing schedule ${schedule.id}:`, error);
-        
+
         // Update schedule status to failed
         try {
           await prisma.scheduleV2.update({
@@ -159,7 +168,7 @@ export async function GET(request: NextRequest) {
         } catch (updateError) {
           console.error(`Failed to update status for schedule ${schedule.id}:`, updateError);
         }
-        
+
         results.failed.push({
           scheduleId: schedule.id,
           error: error instanceof Error ? error.message : 'Unknown error'

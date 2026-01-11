@@ -190,10 +190,18 @@ export default function SchedulesV2Page() {
     if (selectedFertilizerTypeId) {
       const selectedFertilizer = fertilizerTypes.find(f => f.id === selectedFertilizerTypeId);
       setSelectedFertilizerUnit(selectedFertilizer?.unit || '');
+
+      // Auto-set quantity to 0 if Water is selected
+      if (selectedFertilizer?.itemName.toLowerCase() === 'water') {
+        setQuantity('0');
+      }
     } else {
       setSelectedFertilizerUnit('');
     }
   }, [selectedFertilizerTypeId, fertilizerTypes]);
+
+  // Check if selected fertilizer is Water
+  const isWaterSelected = fertilizerTypes.find(f => f.id === selectedFertilizerTypeId)?.itemName.toLowerCase() === 'water';
 
   // Calculate total release quantity (excluding cancelled releases)
   const totalReleaseQuantity = releases
@@ -241,7 +249,10 @@ export default function SchedulesV2Page() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedCustomerId || !selectedTunnelId || !scheduledDate || !selectedFertilizerTypeId || !quantity || !water) {
+    // Check if Water is selected (quantity can be 0 for Water)
+    const isWaterFertilizer = fertilizerTypes.find(f => f.id === selectedFertilizerTypeId)?.itemName.toLowerCase() === 'water';
+
+    if (!selectedCustomerId || !selectedTunnelId || !scheduledDate || !selectedFertilizerTypeId || (!isWaterFertilizer && !quantity) || !water) {
       alert('Please fill in all required fields');
       return;
     }
@@ -337,7 +348,10 @@ export default function SchedulesV2Page() {
   const handleSubmitAndPublish = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedCustomerId || !selectedTunnelId || !scheduledDate || !selectedFertilizerTypeId || !quantity || !water) {
+    // Check if Water is selected (quantity can be 0 for Water)
+    const isWaterFertilizer = fertilizerTypes.find(f => f.id === selectedFertilizerTypeId)?.itemName.toLowerCase() === 'water';
+
+    if (!selectedCustomerId || !selectedTunnelId || !scheduledDate || !selectedFertilizerTypeId || (!isWaterFertilizer && !quantity) || !water) {
       alert('Please fill in all required fields');
       return;
     }
@@ -833,7 +847,8 @@ export default function SchedulesV2Page() {
                       {/* Quantity */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Quantity {selectedFertilizerUnit && `(${selectedFertilizerUnit})`} *
+                          Quantity {selectedFertilizerUnit && `(${selectedFertilizerUnit})`} {!isWaterSelected && '*'}
+                          {isWaterSelected && <span className="text-xs text-gray-500 ml-1">(Not applicable for Water)</span>}
                         </label>
                         <div className="relative">
                           <input
@@ -842,10 +857,10 @@ export default function SchedulesV2Page() {
                             min="0"
                             value={quantity}
                             onChange={(e) => setQuantity(e.target.value)}
-                            disabled={isFieldsLocked}
-                            className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base pr-12 ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                            placeholder={selectedFertilizerUnit ? `Enter in ${selectedFertilizerUnit}` : 'Enter quantity'}
-                            required
+                            disabled={isFieldsLocked || isWaterSelected}
+                            className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base pr-12 ${(isFieldsLocked || isWaterSelected) ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                            placeholder={isWaterSelected ? 'N/A for Water' : (selectedFertilizerUnit ? `Enter in ${selectedFertilizerUnit}` : 'Enter quantity')}
+                            required={!isWaterSelected}
                           />
                           {selectedFertilizerUnit && (
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">

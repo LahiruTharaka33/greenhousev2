@@ -59,7 +59,7 @@ class ScheduleV2Publisher {
     if (!timeString || timeString === "") {
       return "0000";  // Default empty time (4-digit format)
     }
-    
+
     // Remove colon to create numeric string: "13:45" -> "1345"
     return timeString.replace(':', '');
   }
@@ -125,7 +125,7 @@ class ScheduleV2Publisher {
 
   async publishScheduleV2(topicData: ScheduleV2TopicData, warnings: string[] = []): Promise<PublishSummary> {
     console.log('Publishing ScheduleV2 to ESP32 via MQTT...', topicData);
-    
+
     // Ensure MQTT connection
     const connected = await this.ensureConnection();
     if (!connected) {
@@ -137,48 +137,48 @@ class ScheduleV2Publisher {
         warnings
       };
     }
-    
+
     // Wait to ensure connection is fully established and stable (critical for Vercel serverless)
     // MQTT connection now includes 500ms stabilization period
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     const results: MQTTPublishResult[] = [];
-    
+
     // Publish fertilizer topics
     results.push(await this.publishToTopic('fertilizer_1', topicData.fertilizer_1.toString()));
     results.push(await this.publishToTopic('fertilizer_2', topicData.fertilizer_2.toString()));
     results.push(await this.publishToTopic('fertilizer_3', topicData.fertilizer_3.toString()));
-    
+
     // Publish water volume
     results.push(await this.publishToTopic('water_volume', topicData.water_volume.toString()));
-    
+
     // Convert times to ESP32 format (HH:mm -> HHmm)
     const time1 = this.convertTimeToESP32Format(topicData.schedule_time1);
     const time2 = this.convertTimeToESP32Format(topicData.schedule_time2);
     const time3 = this.convertTimeToESP32Format(topicData.schedule_time3);
-    
+
     console.log('Converted times for ESP32:', {
       original: [topicData.schedule_time1, topicData.schedule_time2, topicData.schedule_time3],
       converted: [time1, time2, time3]
     });
-    
+
     // Publish schedule time 1 and volume 1
     results.push(await this.publishToTopic('schedule_time1', time1));
     results.push(await this.publishToTopic('schedule_volume1', topicData.schedule_volume1.toString()));
-    
+
     // Publish schedule time 2 and volume 2
     results.push(await this.publishToTopic('schedule_time2', time2));
     results.push(await this.publishToTopic('schedule_volume2', topicData.schedule_volume2.toString()));
-    
+
     // Publish schedule time 3 and volume 3
     results.push(await this.publishToTopic('schedule_time3', time3));
     results.push(await this.publishToTopic('schedule_volume3', topicData.schedule_volume3.toString()));
-    
+
     // Add small delay to avoid overwhelming the ESP32
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
     const overallSuccess = results.every(r => r.success);
-    
+
     const summary: PublishSummary = {
       totalTopics: results.length,
       publishResults: results,
@@ -186,7 +186,7 @@ class ScheduleV2Publisher {
       timestamp: new Date().toISOString(),
       warnings
     };
-    
+
     console.log('ScheduleV2 MQTT publishing summary:', {
       totalTopics: summary.totalTopics,
       overallSuccess: summary.overallSuccess,
@@ -194,7 +194,7 @@ class ScheduleV2Publisher {
       failedTopics: results.filter(r => !r.success).length,
       warnings: warnings.length
     });
-    
+
     return summary;
   }
 
@@ -212,27 +212,35 @@ class ScheduleV2Publisher {
     waterClientId?: string
   ): Promise<PublishSummary> {
     console.log('Publishing schedule with tank mapping...', { tunnelId, fertilizerItemId, fertilizerName, quantity, water, releases, fertilizerClientId, waterClientId });
-    
+
     // Use provided client IDs or fall back to hardcoded defaults
     const FERTILIZER_CLIENT_ID = fertilizerClientId || 'esp32-fertilizer-controller-01';
     const WATER_CLIENT_ID = waterClientId || 'esp32-watertank-controller-01';
-    
-    // Find which tank contains this fertilizer
-    const tankMapping = await this.findTankForFertilizer(tunnelId, fertilizerItemId);
-    
-    if (!tankMapping) {
-      const error = `Fertilizer "${fertilizerName}" is not configured in any tank for this tunnel. Please configure it in the Configuration page first.`;
-      console.error(error);
-      return {
-        totalTopics: 0,
-        publishResults: [],
-        overallSuccess: false,
-        timestamp: new Date().toISOString(),
-        warnings: [error]
-      };
-    }
 
-    console.log(`Found fertilizer "${fertilizerName}" in ${tankMapping.tankName}, will publish to topic: ${FERTILIZER_CLIENT_ID}/${tankMapping.topic}`);
+    // Check if this is a Water fertilizer (Water doesn't need tank mapping)
+    const isWater = fertilizerName.toLowerCase() === 'water';
+
+    // Find which tank contains this fertilizer (skip for Water)
+    let tankMapping = null;
+    if (!isWater) {
+      tankMapping = await this.findTankForFertilizer(tunnelId, fertilizerItemId);
+
+      if (!tankMapping) {
+        const error = `Fertilizer "${fertilizerName}" is not configured in any tank for this tunnel. Please configure it in the Configuration page first.`;
+        console.error(error);
+        return {
+          totalTopics: 0,
+          publishResults: [],
+          overallSuccess: false,
+          timestamp: new Date().toISOString(),
+          warnings: [error]
+        };
+      }
+
+      console.log(`Found fertilizer "${fertilizerName}" in ${tankMapping.tankName}, will publish to topic: ${FERTILIZER_CLIENT_ID}/${tankMapping.topic}`);
+    } else {
+      console.log(`Water fertilizer detected - will send 0 to all fertilizer topics`);
+    }
 
     // Ensure MQTT connection
     const connected = await this.ensureConnection();
@@ -252,8 +260,16 @@ class ScheduleV2Publisher {
 
     const results: MQTTPublishResult[] = [];
 
-    // Publish fertilizer quantity to the correct tank topic with fertilizer client ID prefix
-    results.push(await this.publishToTopic(`${FERTILIZER_CLIENT_ID}/${tankMapping.topic}`, quantity.toString()));
+    // Publish fertilizer quantity
+    if (isWater) {
+      // For Water, send 0 to all fertilizer topics
+      results.push(await this.publishToTopic(`${FERTILIZER_CLIENT_ID}/fertilizer_1`, '0'));
+      results.push(await this.publishToTopic(`${FERTILIZER_CLIENT_ID}/fertilizer_2`, '0'));
+      results.push(await this.publishToTopic(`${FERTILIZER_CLIENT_ID}/fertilizer_3`, '0'));
+    } else {
+      // For actual fertilizers, send quantity to the correct tank topic
+      results.push(await this.publishToTopic(`${FERTILIZER_CLIENT_ID}/${tankMapping!.topic}`, quantity.toString()));
+    }
 
     // Publish water volume to water ESP32 with client ID prefix
     results.push(await this.publishToTopic(`${WATER_CLIENT_ID}/water_volume`, water.toString()));
@@ -262,7 +278,7 @@ class ScheduleV2Publisher {
     for (let i = 0; i < Math.min(releases.length, 3); i++) {
       const release = releases[i];
       const timeESP32 = this.convertTimeToESP32Format(release.time);
-      
+
       results.push(await this.publishToTopic(`${WATER_CLIENT_ID}/schedule_time${i + 1}`, timeESP32));
       results.push(await this.publishToTopic(`${WATER_CLIENT_ID}/schedule_volume${i + 1}`, release.releaseQuantity.toString()));
     }
@@ -284,8 +300,10 @@ class ScheduleV2Publisher {
     };
 
     console.log('Schedule published with tank mapping:', {
-      tank: tankMapping.tankName,
-      fertilizerTopic: `${FERTILIZER_CLIENT_ID}/${tankMapping.topic}`,
+      fertilizerType: fertilizerName,
+      isWater,
+      tank: tankMapping?.tankName || 'N/A (Water)',
+      fertilizerTopic: isWater ? `${FERTILIZER_CLIENT_ID}/fertilizer_1,2,3 (all set to 0)` : `${FERTILIZER_CLIENT_ID}/${tankMapping!.topic}`,
       waterClientId: WATER_CLIENT_ID,
       totalTopics: summary.totalTopics,
       success: summary.overallSuccess
