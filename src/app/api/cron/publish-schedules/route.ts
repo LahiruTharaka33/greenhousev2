@@ -67,6 +67,8 @@ export async function GET(request: NextRequest) {
             tunnelId: true,
             tunnelName: true,
             description: true,
+            clientId: true,
+            fertilizerClientId: true,
           },
         },
         fertilizerType: {
@@ -111,7 +113,7 @@ export async function GET(request: NextRequest) {
       try {
         console.log(`Processing schedule ${schedule.id} for ${schedule.customer.customerName} - ${schedule.tunnel.tunnelName}`);
 
-        // Use the new tank-mapping publisher
+        // Use the new tank-mapping publisher with client IDs from database
         const mqttResult = await scheduleV2Publisher.publishScheduleV2WithTankMapping(
           schedule.tunnelId,
           schedule.fertilizerTypeId,
@@ -121,7 +123,9 @@ export async function GET(request: NextRequest) {
           schedule.releases?.map(r => ({
             time: r.time,
             releaseQuantity: parseFloat(r.releaseQuantity.toString())
-          })) || []
+          })) || [],
+          schedule.tunnel.fertilizerClientId || undefined,
+          schedule.tunnel.clientId || undefined
         );
 
         // Log warnings if any
