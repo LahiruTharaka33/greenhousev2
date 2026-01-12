@@ -22,7 +22,7 @@ const userNavigation: NavItem[] = [
 
 
   {
-    name: 'My Schedule',
+    name: 'Schedules',
     href: '/schedules-v2',
     icon: '🌱',
     description: 'Create and manage fertilizer schedules'

@@ -21,7 +21,7 @@ const navigation: NavItem[] = [
     description: 'Overview and statistics'
   },
   {
-    name: 'Controller',
+    name: 'Green House Monitor',
     href: '/controller',
     icon: '🎮',
     description: 'IoT device control and monitoring'
@@ -62,7 +62,7 @@ const navigation: NavItem[] = [
     roles: ['admin']
   },
   {
-    name: 'My Schedule',
+    name: 'Schedules',
     href: '/schedules-v2',
     icon: '📅',
     description: 'Schedule management system',

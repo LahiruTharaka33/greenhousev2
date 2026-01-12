@@ -646,7 +646,7 @@ export default function SchedulesV2Page() {
             <div className="flex flex-col space-y-2">
               <div>
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
-                  🌱 New Schedule System
+                  Schedule
                 </h1>
                 <p className="text-sm sm:text-base text-gray-600 mt-1">
                   Create and manage fertilizer schedules with improved interface
