@@ -1,11 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Layout from '@/components/Layout';
-import UserLayout from '@/components/UserLayout';
-import ScheduleResponseMonitor from '@/components/ScheduleResponseMonitor';
-import { useSession } from 'next-auth/react';
-import { redirect } from 'next/navigation';
+import { useState, useEffect } from "react";
+import Layout from "@/components/Layout";
+import UserLayout from "@/components/UserLayout";
+import ScheduleResponseMonitor from "@/components/ScheduleResponseMonitor";
+import SearchableSelect from "@/components/SearchableSelect";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 interface Customer {
   id: string;
@@ -78,44 +79,51 @@ export default function SchedulesV2Page() {
   const [schedules, setSchedules] = useState<ScheduleV2[]>([]);
 
   // Form state
-  const [selectedCustomerId, setSelectedCustomerId] = useState('');
-  const [selectedTunnelId, setSelectedTunnelId] = useState('');
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [selectedFertilizerTypeId, setSelectedFertilizerTypeId] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [water, setWater] = useState('');
-  const [notes, setNotes] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState("");
+  const [selectedTunnelId, setSelectedTunnelId] = useState("");
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [selectedFertilizerTypeId, setSelectedFertilizerTypeId] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [water, setWater] = useState("");
+  const [notes, setNotes] = useState("");
 
   // Release sub-list state
   const [releases, setReleases] = useState<Release[]>([
-    { time: '', releaseQuantity: '' }
+    { time: "", releaseQuantity: "" },
   ]);
 
   // UI state
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingAndPublishing, setSavingAndPublishing] = useState(false);
-  const [selectedFertilizerUnit, setSelectedFertilizerUnit] = useState('');
-  const [editingSchedule, setEditingSchedule] = useState<ScheduleV2 | null>(null);
-  const [activeTab, setActiveTab] = useState<'create' | 'view' | 'monitor'>('create');
+  const [selectedFertilizerUnit, setSelectedFertilizerUnit] = useState("");
+  const [editingSchedule, setEditingSchedule] = useState<ScheduleV2 | null>(
+    null
+  );
+  const [activeTab, setActiveTab] = useState<"create" | "view" | "monitor">(
+    "create"
+  );
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
-  const [openReleaseDropdownId, setOpenReleaseDropdownId] = useState<string | null>(null);
-  const [userCustomerName, setUserCustomerName] = useState('');
+  const [openReleaseDropdownId, setOpenReleaseDropdownId] = useState<
+    string | null
+  >(null);
+  const [userCustomerName, setUserCustomerName] = useState("");
 
   // Search and filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCustomer, setFilterCustomer] = useState('');
-  const [filterStatus, setFilterStatus] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCustomer, setFilterCustomer] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
 
   // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [customersResponse, fertilizerTypesResponse, schedulesResponse] = await Promise.all([
-          fetch('/api/customers'),
-          fetch('/api/items'),
-          fetch('/api/schedules-v2')
-        ]);
+        const [customersResponse, fertilizerTypesResponse, schedulesResponse] =
+          await Promise.all([
+            fetch("/api/customers"),
+            fetch("/api/items"),
+            fetch("/api/schedules-v2"),
+          ]);
 
         if (customersResponse.ok) {
           const customersData = await customersResponse.json();
@@ -125,21 +133,22 @@ export default function SchedulesV2Page() {
         if (fertilizerTypesResponse.ok) {
           const itemsData = await fertilizerTypesResponse.json();
           // Filter for fertilizer and related items
-          const filteredItems = itemsData.filter((item: FertilizerType) =>
-            item.itemCategory.toLowerCase().includes('fertilizer') ||
-            item.itemCategory.toLowerCase().includes('chemical') ||
-            item.itemCategory.toLowerCase().includes('nutrient')
+          const filteredItems = itemsData.filter(
+            (item: FertilizerType) =>
+              item.itemCategory.toLowerCase().includes("fertilizer") ||
+              item.itemCategory.toLowerCase().includes("chemical") ||
+              item.itemCategory.toLowerCase().includes("nutrient")
           );
           setFertilizerTypes(filteredItems);
         }
 
         if (schedulesResponse.ok) {
           const schedulesData = await schedulesResponse.json();
-          console.log('Fetched schedules data:', schedulesData);
+          console.log("Fetched schedules data:", schedulesData);
           setSchedules(schedulesData);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -150,14 +159,24 @@ export default function SchedulesV2Page() {
 
   // Auto-set customer for normal users
   useEffect(() => {
-    if (session?.user.role === 'user' && session.user.customerId && customers.length > 0) {
+    if (
+      session?.user.role === "user" &&
+      session.user.customerId &&
+      customers.length > 0
+    ) {
       // Auto-set customer for normal users
       setSelectedCustomerId(session.user.customerId);
 
       // Find and set customer name
-      const userCustomer = customers.find(c => c.id === session.user.customerId);
+      const userCustomer = customers.find(
+        (c) => c.id === session.user.customerId
+      );
       if (userCustomer) {
-        setUserCustomerName(`${userCustomer.customerName}${userCustomer.company ? ` (${userCustomer.company})` : ''}`);
+        setUserCustomerName(
+          `${userCustomer.customerName}${
+            userCustomer.company ? ` (${userCustomer.company})` : ""
+          }`
+        );
       }
     }
   }, [session, customers]);
@@ -167,18 +186,20 @@ export default function SchedulesV2Page() {
     const fetchTunnels = async () => {
       if (!selectedCustomerId) {
         setTunnels([]);
-        setSelectedTunnelId('');
+        setSelectedTunnelId("");
         return;
       }
 
       try {
-        const response = await fetch(`/api/tunnels/by-customer/${selectedCustomerId}`);
+        const response = await fetch(
+          `/api/tunnels/by-customer/${selectedCustomerId}`
+        );
         if (response.ok) {
           const tunnelsData = await response.json();
           setTunnels(tunnelsData);
         }
       } catch (error) {
-        console.error('Error fetching tunnels:', error);
+        console.error("Error fetching tunnels:", error);
       }
     };
 
@@ -188,28 +209,35 @@ export default function SchedulesV2Page() {
   // Update fertilizer unit when fertilizer type changes
   useEffect(() => {
     if (selectedFertilizerTypeId) {
-      const selectedFertilizer = fertilizerTypes.find(f => f.id === selectedFertilizerTypeId);
-      setSelectedFertilizerUnit(selectedFertilizer?.unit || '');
+      const selectedFertilizer = fertilizerTypes.find(
+        (f) => f.id === selectedFertilizerTypeId
+      );
+      setSelectedFertilizerUnit(selectedFertilizer?.unit || "");
 
       // Auto-set quantity to 0 if Water is selected
-      if (selectedFertilizer?.itemName.toLowerCase() === 'water') {
-        setQuantity('0');
+      if (selectedFertilizer?.itemName.toLowerCase() === "water") {
+        setQuantity("0");
       }
     } else {
-      setSelectedFertilizerUnit('');
+      setSelectedFertilizerUnit("");
     }
   }, [selectedFertilizerTypeId, fertilizerTypes]);
 
   // Check if selected fertilizer is Water
-  const isWaterSelected = fertilizerTypes.find(f => f.id === selectedFertilizerTypeId)?.itemName.toLowerCase() === 'water';
+  const isWaterSelected =
+    fertilizerTypes
+      .find((f) => f.id === selectedFertilizerTypeId)
+      ?.itemName.toLowerCase() === "water";
 
   // Calculate total release quantity (excluding cancelled releases)
   const totalReleaseQuantity = releases
-    .filter(release => !release.cancelled)
+    .filter((release) => !release.cancelled)
     .reduce((sum, release) => {
-      const quantity = typeof release.releaseQuantity === 'string' && release.releaseQuantity === ''
-        ? 0
-        : Number(release.releaseQuantity) || 0;
+      const quantity =
+        typeof release.releaseQuantity === "string" &&
+        release.releaseQuantity === ""
+          ? 0
+          : Number(release.releaseQuantity) || 0;
       return sum + quantity;
     }, 0);
 
@@ -219,13 +247,19 @@ export default function SchedulesV2Page() {
 
   // Determine if fields should be locked based on status
   // Sent and cancelled schedules can only edit releases
-  const isFieldsLocked = !!(editingSchedule && (editingSchedule.status === 'sent' || editingSchedule.status === 'cancelled'));
-  const canEditAllFields = !editingSchedule || editingSchedule.status === 'pending' || editingSchedule.status === 'failed';
-
+  const isFieldsLocked = !!(
+    editingSchedule &&
+    (editingSchedule.status === "sent" ||
+      editingSchedule.status === "cancelled")
+  );
+  const canEditAllFields =
+    !editingSchedule ||
+    editingSchedule.status === "pending" ||
+    editingSchedule.status === "failed";
 
   // Add new release row
   const addReleaseRow = () => {
-    setReleases([...releases, { time: '', releaseQuantity: '' }]);
+    setReleases([...releases, { time: "", releaseQuantity: "" }]);
   };
 
   // Remove release row
@@ -236,12 +270,16 @@ export default function SchedulesV2Page() {
   };
 
   // Update release row
-  const updateReleaseRow = (index: number, field: keyof Release, value: any) => {
+  const updateReleaseRow = (
+    index: number,
+    field: keyof Release,
+    value: any
+  ) => {
     const updatedReleases = [...releases];
     // For releaseQuantity, keep as string in the UI but convert to number for calculations
     updatedReleases[index] = {
       ...updatedReleases[index],
-      [field]: field === 'releaseQuantity' ? value : value
+      [field]: field === "releaseQuantity" ? value : value,
     };
     setReleases(updatedReleases);
   };
@@ -250,16 +288,26 @@ export default function SchedulesV2Page() {
     e.preventDefault();
 
     // Check if Water is selected (quantity can be 0 for Water)
-    const isWaterFertilizer = fertilizerTypes.find(f => f.id === selectedFertilizerTypeId)?.itemName.toLowerCase() === 'water';
+    const isWaterFertilizer =
+      fertilizerTypes
+        .find((f) => f.id === selectedFertilizerTypeId)
+        ?.itemName.toLowerCase() === "water";
 
-    if (!selectedCustomerId || !selectedTunnelId || !scheduledDate || !selectedFertilizerTypeId || (!isWaterFertilizer && !quantity) || !water) {
-      alert('Please fill in all required fields');
+    if (
+      !selectedCustomerId ||
+      !selectedTunnelId ||
+      !scheduledDate ||
+      !selectedFertilizerTypeId ||
+      (!isWaterFertilizer && !quantity) ||
+      !water
+    ) {
+      alert("Please fill in all required fields");
       return;
     }
 
     // Validate maximum 3 releases
     if (releases.length > 3) {
-      alert('Maximum 3 releases allowed per schedule');
+      alert("Maximum 3 releases allowed per schedule");
       return;
     }
 
@@ -267,7 +315,9 @@ export default function SchedulesV2Page() {
 
     // Validate release quantities
     if (totalReleaseQuantity > waterAmount) {
-      alert(`Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${waterAmount}L)`);
+      alert(
+        `Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${waterAmount}L)`
+      );
       return;
     }
 
@@ -280,31 +330,35 @@ export default function SchedulesV2Page() {
         fertilizerTypeId: selectedFertilizerTypeId,
         quantity: parseFloat(quantity),
         water: parseFloat(water),
-        notes: notes || '',
+        notes: notes || "",
         releases: releases
-          .filter(release => {
-            const qty = typeof release.releaseQuantity === 'string'
-              ? parseFloat(release.releaseQuantity) || 0
-              : Number(release.releaseQuantity) || 0;
+          .filter((release) => {
+            const qty =
+              typeof release.releaseQuantity === "string"
+                ? parseFloat(release.releaseQuantity) || 0
+                : Number(release.releaseQuantity) || 0;
             return release.time && qty > 0;
           })
-          .map(release => ({
+          .map((release) => ({
             id: release.id,
             time: release.time,
-            releaseQuantity: typeof release.releaseQuantity === 'string'
-              ? parseFloat(release.releaseQuantity) || 0
-              : Number(release.releaseQuantity) || 0,
-            cancelled: release.cancelled
-          }))
+            releaseQuantity:
+              typeof release.releaseQuantity === "string"
+                ? parseFloat(release.releaseQuantity) || 0
+                : Number(release.releaseQuantity) || 0,
+            cancelled: release.cancelled,
+          })),
       };
 
-      const url = editingSchedule ? `/api/schedules-v2/${editingSchedule.id}` : '/api/schedules-v2';
-      const method = editingSchedule ? 'PUT' : 'POST';
+      const url = editingSchedule
+        ? `/api/schedules-v2/${editingSchedule.id}`
+        : "/api/schedules-v2";
+      const method = editingSchedule ? "PUT" : "POST";
 
       const response = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(scheduleData),
       });
@@ -314,16 +368,21 @@ export default function SchedulesV2Page() {
         const scheduleData = result.schedule || result;
 
         // Build success message
-        let successMessage = '';
+        let successMessage = "";
         if (editingSchedule) {
-          successMessage = 'Schedule updated successfully!';
+          successMessage = "Schedule updated successfully!";
           // Update existing schedule in the list
-          setSchedules(schedules.map(s => s.id === editingSchedule.id ? scheduleData : s));
+          setSchedules(
+            schedules.map((s) =>
+              s.id === editingSchedule.id ? scheduleData : s
+            )
+          );
           // Switch back to view tab to see the updated schedule
-          setActiveTab('view');
+          setActiveTab("view");
         } else {
-          successMessage = 'Schedule created successfully!';
-          successMessage += '\n📅 Schedule will be sent to ESP32 at 12:00 PM UTC on the scheduled date.';
+          successMessage = "Schedule created successfully!";
+          successMessage +=
+            "\n📅 Schedule will be sent to ESP32 at 12:00 PM UTC on the scheduled date.";
           // Add new schedule to the list
           setSchedules([scheduleData, ...schedules]);
         }
@@ -334,12 +393,12 @@ export default function SchedulesV2Page() {
         resetForm();
       } else {
         const error = await response.json();
-        console.error('API Error:', error);
-        alert(error.details || error.error || 'Failed to save schedule');
+        console.error("API Error:", error);
+        alert(error.details || error.error || "Failed to save schedule");
       }
     } catch (error) {
-      console.error('Error saving schedule:', error);
-      alert('Failed to save schedule');
+      console.error("Error saving schedule:", error);
+      alert("Failed to save schedule");
     } finally {
       setSaving(false);
     }
@@ -349,16 +408,26 @@ export default function SchedulesV2Page() {
     e.preventDefault();
 
     // Check if Water is selected (quantity can be 0 for Water)
-    const isWaterFertilizer = fertilizerTypes.find(f => f.id === selectedFertilizerTypeId)?.itemName.toLowerCase() === 'water';
+    const isWaterFertilizer =
+      fertilizerTypes
+        .find((f) => f.id === selectedFertilizerTypeId)
+        ?.itemName.toLowerCase() === "water";
 
-    if (!selectedCustomerId || !selectedTunnelId || !scheduledDate || !selectedFertilizerTypeId || (!isWaterFertilizer && !quantity) || !water) {
-      alert('Please fill in all required fields');
+    if (
+      !selectedCustomerId ||
+      !selectedTunnelId ||
+      !scheduledDate ||
+      !selectedFertilizerTypeId ||
+      (!isWaterFertilizer && !quantity) ||
+      !water
+    ) {
+      alert("Please fill in all required fields");
       return;
     }
 
     // Validate maximum 3 releases
     if (releases.length > 3) {
-      alert('Maximum 3 releases allowed per schedule');
+      alert("Maximum 3 releases allowed per schedule");
       return;
     }
 
@@ -366,7 +435,9 @@ export default function SchedulesV2Page() {
 
     // Validate release quantities
     if (totalReleaseQuantity > waterAmount) {
-      alert(`Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${waterAmount}L)`);
+      alert(
+        `Total release quantity (${totalReleaseQuantity}L) cannot exceed water amount (${waterAmount}L)`
+      );
       return;
     }
 
@@ -379,26 +450,28 @@ export default function SchedulesV2Page() {
         fertilizerTypeId: selectedFertilizerTypeId,
         quantity: parseFloat(quantity),
         water: parseFloat(water),
-        notes: notes || '',
+        notes: notes || "",
         releases: releases
-          .filter(release => {
-            const qty = typeof release.releaseQuantity === 'string'
-              ? parseFloat(release.releaseQuantity) || 0
-              : Number(release.releaseQuantity) || 0;
+          .filter((release) => {
+            const qty =
+              typeof release.releaseQuantity === "string"
+                ? parseFloat(release.releaseQuantity) || 0
+                : Number(release.releaseQuantity) || 0;
             return release.time && qty > 0;
           })
-          .map(release => ({
+          .map((release) => ({
             time: release.time,
-            releaseQuantity: typeof release.releaseQuantity === 'string'
-              ? parseFloat(release.releaseQuantity) || 0
-              : Number(release.releaseQuantity) || 0
-          }))
+            releaseQuantity:
+              typeof release.releaseQuantity === "string"
+                ? parseFloat(release.releaseQuantity) || 0
+                : Number(release.releaseQuantity) || 0,
+          })),
       };
 
-      const response = await fetch('/api/schedules-v2/publish-now', {
-        method: 'POST',
+      const response = await fetch("/api/schedules-v2/publish-now", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(scheduleData),
       });
@@ -408,10 +481,14 @@ export default function SchedulesV2Page() {
         const scheduleData = result.schedule || result;
 
         // Build success message
-        let successMessage = 'Schedule created and sent to ESP32 successfully!';
+        let successMessage = "Schedule created and sent to ESP32 successfully!";
 
-        if (result.publishResult?.warnings && result.publishResult.warnings.length > 0) {
-          successMessage += '\n\n⚠️ Warnings:\n' + result.publishResult.warnings.join('\n');
+        if (
+          result.publishResult?.warnings &&
+          result.publishResult.warnings.length > 0
+        ) {
+          successMessage +=
+            "\n\n⚠️ Warnings:\n" + result.publishResult.warnings.join("\n");
         }
 
         alert(successMessage);
@@ -423,153 +500,187 @@ export default function SchedulesV2Page() {
         resetForm();
       } else {
         const error = await response.json();
-        console.error('API Error:', error);
+        console.error("API Error:", error);
 
         // If schedule was created but publishing failed, still show it in the list
         if (error.schedule) {
           setSchedules([error.schedule, ...schedules]);
         }
 
-        alert(error.details || error.error || 'Failed to create and publish schedule');
+        alert(
+          error.details ||
+            error.error ||
+            "Failed to create and publish schedule"
+        );
       }
     } catch (error) {
-      console.error('Error creating and publishing schedule:', error);
-      alert('Failed to create and publish schedule');
+      console.error("Error creating and publishing schedule:", error);
+      alert("Failed to create and publish schedule");
     } finally {
       setSavingAndPublishing(false);
     }
   };
 
   const resetForm = () => {
-    setSelectedCustomerId('');
-    setSelectedTunnelId('');
-    setScheduledDate('');
-    setSelectedFertilizerTypeId('');
-    setQuantity('');
-    setWater('');
-    setNotes('');
+    setSelectedCustomerId("");
+    setSelectedTunnelId("");
+    setScheduledDate("");
+    setSelectedFertilizerTypeId("");
+    setQuantity("");
+    setWater("");
+    setNotes("");
     setEditingSchedule(null);
-    setSelectedFertilizerUnit('');
-    setReleases([{ time: '', releaseQuantity: 0 }]);
+    setSelectedFertilizerUnit("");
+    setReleases([{ time: "", releaseQuantity: 0 }]);
   };
 
   const handleEdit = (schedule: ScheduleV2) => {
     setEditingSchedule(schedule);
     setSelectedCustomerId(schedule.customerId);
     setSelectedTunnelId(schedule.tunnelId);
-    setScheduledDate(schedule.scheduledDate.split('T')[0]);
+    setScheduledDate(schedule.scheduledDate.split("T")[0]);
     setSelectedFertilizerTypeId(schedule.fertilizerTypeId);
     setQuantity(schedule.quantity.toString());
     setWater(schedule.water.toString());
-    setNotes(schedule.notes || '');
+    setNotes(schedule.notes || "");
 
     // Ensure proper data type conversion for releases
     if (schedule.releases && schedule.releases.length > 0) {
-      const convertedReleases = schedule.releases.map(release => ({
+      const convertedReleases = schedule.releases.map((release) => ({
         id: release.id,
         time: release.time,
         releaseQuantity: parseFloat(release.releaseQuantity.toString()) || 0,
-        cancelled: release.cancelled
+        cancelled: release.cancelled,
       }));
       setReleases(convertedReleases);
     } else {
-      setReleases([{ time: '', releaseQuantity: 0 }]);
+      setReleases([{ time: "", releaseQuantity: 0 }]);
     }
   };
 
   const handleDelete = async (scheduleId: string) => {
-    if (!confirm('Are you sure you want to delete this schedule?')) {
+    if (!confirm("Are you sure you want to delete this schedule?")) {
       return;
     }
 
     try {
       const response = await fetch(`/api/schedules-v2/${scheduleId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (response.ok) {
-        setSchedules(schedules.filter(s => s.id !== scheduleId));
-        alert('Schedule deleted successfully');
+        setSchedules(schedules.filter((s) => s.id !== scheduleId));
+        alert("Schedule deleted successfully");
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to delete schedule');
+        alert(error.error || "Failed to delete schedule");
       }
     } catch (error) {
-      console.error('Error deleting schedule:', error);
-      alert('Failed to delete schedule');
+      console.error("Error deleting schedule:", error);
+      alert("Failed to delete schedule");
     }
   };
 
   const handleCancel = async (scheduleId: string) => {
-    if (!confirm('Are you sure you want to cancel this schedule? It will not be sent to the ESP32.')) {
+    if (
+      !confirm(
+        "Are you sure you want to cancel this schedule? It will not be sent to the ESP32."
+      )
+    ) {
       return;
     }
 
     try {
       const response = await fetch(`/api/schedules-v2/${scheduleId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ status: 'cancelled' }),
+        body: JSON.stringify({ status: "cancelled" }),
       });
 
       if (response.ok) {
         const updatedSchedule = await response.json();
-        setSchedules(schedules.map(s => s.id === scheduleId ? updatedSchedule : s));
+        setSchedules(
+          schedules.map((s) => (s.id === scheduleId ? updatedSchedule : s))
+        );
         setOpenDropdownId(null);
-        alert('Schedule cancelled successfully');
+        alert("Schedule cancelled successfully");
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to cancel schedule');
+        alert(error.error || "Failed to cancel schedule");
       }
     } catch (error) {
-      console.error('Error cancelling schedule:', error);
-      alert('Failed to cancel schedule');
+      console.error("Error cancelling schedule:", error);
+      alert("Failed to cancel schedule");
     }
   };
 
-  const handleRunReleaseNow = async (scheduleId: string, releaseIndex: number, releaseNumber: number) => {
-    if (!confirm(`Run Release ${releaseNumber} immediately?\n\nThis will trigger the release right now via MQTT.`)) {
+  const handleRunReleaseNow = async (
+    scheduleId: string,
+    releaseIndex: number,
+    releaseNumber: number
+  ) => {
+    if (
+      !confirm(
+        `Run Release ${releaseNumber} immediately?\n\nThis will trigger the release right now via MQTT.`
+      )
+    ) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/schedules-v2/${scheduleId}/run-release`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ releaseIndex }),
-      });
+      const response = await fetch(
+        `/api/schedules-v2/${scheduleId}/run-release`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ releaseIndex }),
+        }
+      );
 
       if (response.ok) {
         const result = await response.json();
         setOpenReleaseDropdownId(null);
-        alert(`✅ Release ${releaseNumber} triggered successfully!\n\nTime: ${result.release.time}\nVolume: ${result.release.volume}L\n\nMQTT Topic: ${result.topic}\nValue: ${result.value}`);
+        alert(
+          `✅ Release ${releaseNumber} triggered successfully!\n\nTime: ${result.release.time}\nVolume: ${result.release.volume}L\n\nMQTT Topic: ${result.topic}\nValue: ${result.value}`
+        );
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to run release');
+        alert(error.error || "Failed to run release");
       }
     } catch (error) {
-      console.error('Error running release:', error);
-      alert('Failed to run release');
+      console.error("Error running release:", error);
+      alert("Failed to run release");
     }
   };
 
-  const handleCancelRelease = async (scheduleId: string, releaseIndex: number, releaseNumber: number) => {
-    if (!confirm(`Cancel Release ${releaseNumber}?\n\nThis will send volume "0" to ESP32 to cancel this release.`)) {
+  const handleCancelRelease = async (
+    scheduleId: string,
+    releaseIndex: number,
+    releaseNumber: number
+  ) => {
+    if (
+      !confirm(
+        `Cancel Release ${releaseNumber}?\n\nThis will send volume "0" to ESP32 to cancel this release.`
+      )
+    ) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/schedules-v2/${scheduleId}/cancel-release`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ releaseIndex }),
-      });
+      const response = await fetch(
+        `/api/schedules-v2/${scheduleId}/cancel-release`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ releaseIndex }),
+        }
+      );
 
       if (response.ok) {
         const result = await response.json();
@@ -578,64 +689,106 @@ export default function SchedulesV2Page() {
         const scheduleResponse = await fetch(`/api/schedules-v2/${scheduleId}`);
         if (scheduleResponse.ok) {
           const updatedSchedule = await scheduleResponse.json();
-          setSchedules(schedules.map(s => s.id === scheduleId ? updatedSchedule : s));
+          setSchedules(
+            schedules.map((s) => (s.id === scheduleId ? updatedSchedule : s))
+          );
         }
 
         setOpenReleaseDropdownId(null);
-        alert(`✅ Release ${releaseNumber} cancelled successfully!\n\nTime: ${result.release.time}\nOriginal Volume: ${result.release.volume}L\n\nMQTT Topic: ${result.topics.volume}\nValue: ${result.values.volume} (Cancelled)`);
+        alert(
+          `✅ Release ${releaseNumber} cancelled successfully!\n\nTime: ${result.release.time}\nOriginal Volume: ${result.release.volume}L\n\nMQTT Topic: ${result.topics.volume}\nValue: ${result.values.volume} (Cancelled)`
+        );
       } else {
         const error = await response.json();
-        alert(error.error || 'Failed to cancel release');
+        alert(error.error || "Failed to cancel release");
       }
     } catch (error) {
-      console.error('Error cancelling release:', error);
-      alert('Failed to cancel release');
+      console.error("Error cancelling release:", error);
+      alert("Failed to cancel release");
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'sent':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'completed':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'failed':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 border-red-200';
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "sent":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "completed":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "failed":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "cancelled":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   // Authentication checks - moved after all hooks
-  if (status === 'loading') {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (status === "loading") {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
+      </div>
+    );
   }
 
   if (!session) {
-    redirect('/login');
+    redirect("/login");
   }
-  if (session.user.role !== 'admin' && session.user.role !== 'user') {
-    redirect('/login');
+  if (session.user.role !== "admin" && session.user.role !== "user") {
+    redirect("/login");
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        Loading...
+      </div>
+    );
   }
 
   // Use correct layout based on user role
-  const LayoutComponent = session.user.role === 'admin' ? Layout : UserLayout;
+  const LayoutComponent = session.user.role === "admin" ? Layout : UserLayout;
+
+  // Format options for dropdowns
+  const customerOptions = customers.map((c) => ({
+    value: c.id,
+    label: `${c.customerName}${c.company ? ` (${c.company})` : ""}`,
+  }));
+
+  const tunnelOptions = tunnels.map((t) => ({
+    value: t.id,
+    label: t.tunnelName,
+  }));
+
+  const fertilizerOptions = fertilizerTypes.map((f) => ({
+    value: f.id,
+    label: `${f.itemName} (${f.itemCategory})`,
+  }));
+
+  const filterCustomerOptions = [
+    { value: "", label: "All Customers" },
+    ...customerOptions,
+  ];
+
+  const filterStatusOptions = [
+    { value: "", label: "All Statuses" },
+    { value: "pending", label: "Pending" },
+    { value: "sent", label: "Sent" },
+    { value: "completed", label: "Completed" },
+    { value: "failed", label: "Failed" },
+    { value: "cancelled", label: "Cancelled" },
+  ];
 
   return (
     <LayoutComponent>
@@ -662,31 +815,34 @@ export default function SchedulesV2Page() {
             <div className="border-b border-gray-200">
               <nav className="-mb-px flex space-x-4 sm:space-x-8">
                 <button
-                  onClick={() => setActiveTab('create')}
-                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${activeTab === 'create'
-                    ? 'border-emerald-500 text-emerald-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
-                    }`}
+                  onClick={() => setActiveTab("create")}
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
+                    activeTab === "create"
+                      ? "border-emerald-500 text-emerald-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50"
+                  }`}
                 >
                   Create
                 </button>
                 <button
-                  onClick={() => setActiveTab('view')}
-                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${activeTab === 'view'
-                    ? 'border-emerald-500 text-emerald-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
-                    }`}
+                  onClick={() => setActiveTab("view")}
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
+                    activeTab === "view"
+                      ? "border-emerald-500 text-emerald-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50"
+                  }`}
                 >
                   <span className="hidden sm:inline">View Schedules</span>
                   <span className="sm:hidden">View</span>
                   <span className="ml-1">({schedules.length})</span>
                 </button>
                 <button
-                  onClick={() => setActiveTab('monitor')}
-                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${activeTab === 'monitor'
-                    ? 'border-emerald-500 text-emerald-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50'
-                    }`}
+                  onClick={() => setActiveTab("monitor")}
+                  className={`py-3 px-2 min-h-[44px] border-b-2 font-medium text-sm sm:text-base transition-colors ${
+                    activeTab === "monitor"
+                      ? "border-emerald-500 text-emerald-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 active:bg-gray-50"
+                  }`}
                 >
                   <span className="hidden sm:inline">📡 ESP32 Monitor</span>
                   <span className="sm:hidden">📡 Monitor</span>
@@ -700,10 +856,10 @@ export default function SchedulesV2Page() {
         <div className="pl-[72px] pr-4 lg:px-4 py-4 lg:py-6 animate-fade-in-up">
           <div className="max-w-7xl mx-auto space-y-4 lg:space-y-6">
             {/* Create Schedule Tab */}
-            {activeTab === 'create' && (
+            {activeTab === "create" && (
               <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">
-                  {editingSchedule ? 'Edit Schedule' : 'Create New Schedule'}
+                  {editingSchedule ? "Edit Schedule" : "Create New Schedule"}
                 </h2>
 
                 {/* Status Warning Banner for Sent/Cancelled Schedules */}
@@ -711,8 +867,18 @@ export default function SchedulesV2Page() {
                   <div className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg">
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0">
-                        <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <svg
+                          className="w-6 h-6 text-amber-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                          />
                         </svg>
                       </div>
                       <div className="flex-1">
@@ -720,44 +886,44 @@ export default function SchedulesV2Page() {
                           ⚠️ Limited Editing Mode
                         </h3>
                         <p className="text-sm text-amber-700">
-                          This schedule has status: <span className="font-semibold">{editingSchedule?.status}</span>.
-                          You can only edit <strong>release schedules</strong> (time and quantity).
-                          All other fields are locked to prevent changes to already-sent data.
+                          This schedule has status:{" "}
+                          <span className="font-semibold">
+                            {editingSchedule?.status}
+                          </span>
+                          . You can only edit <strong>release schedules</strong>{" "}
+                          (time and quantity). All other fields are locked to
+                          prevent changes to already-sent data.
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-4 sm:space-y-6"
+                >
                   {/* Header Section - Customer, Tunnel, Date */}
                   <div className="border-b border-gray-200 pb-4 sm:pb-6">
-                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Schedule Head</h3>
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">
+                      Schedule Head
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                       {/* Customer */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Customer *
-                        </label>
-                        {session.user.role === 'admin' ? (
+                        {session.user.role === "admin" ? (
                           // Admin: Dropdown (enabled)
-                          <select
+                          <SearchableSelect
+                            label="Customer *"
+                            options={customerOptions}
                             value={selectedCustomerId}
-                            onChange={(e) => {
-                              setSelectedCustomerId(e.target.value);
-                              setSelectedTunnelId(''); // Reset tunnel when customer changes
+                            onChange={(val) => {
+                              setSelectedCustomerId(val);
+                              setSelectedTunnelId(""); // Reset tunnel when customer changes
                             }}
                             disabled={isFieldsLocked}
-                            className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                            required
-                          >
-                            <option value="">Select Customer</option>
-                            {customers.map((customer) => (
-                              <option key={customer.id} value={customer.id}>
-                                {customer.customerName} {customer.company ? `(${customer.company})` : ''}
-                              </option>
-                            ))}
-                          </select>
+                            placeholder="Select Customer"
+                          />
                         ) : (
                           // User: Disabled input (read-only)
                           <>
@@ -769,13 +935,24 @@ export default function SchedulesV2Page() {
                                 className="w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md bg-gray-100 text-gray-700 cursor-not-allowed"
                               />
                               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                <svg
+                                  className="w-5 h-5 text-gray-400"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                  />
                                 </svg>
                               </div>
                             </div>
                             <p className="mt-1 text-xs text-gray-500">
-                              You can only create schedules for your assigned customer
+                              You can only create schedules for your assigned
+                              customer
                             </p>
                           </>
                         )}
@@ -783,23 +960,18 @@ export default function SchedulesV2Page() {
 
                       {/* Tunnel */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Tunnel *
-                        </label>
-                        <select
+                        <SearchableSelect
+                          label="Tunnel *"
+                          options={tunnelOptions}
                           value={selectedTunnelId}
-                          onChange={(e) => setSelectedTunnelId(e.target.value)}
+                          onChange={(val) => setSelectedTunnelId(val)}
                           disabled={isFieldsLocked || !selectedCustomerId}
-                          className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                          required
-                        >
-                          <option value="">Select Tunnel</option>
-                          {tunnels.map((tunnel) => (
-                            <option key={tunnel.id} value={tunnel.id}>
-                              {tunnel.tunnelName}
-                            </option>
-                          ))}
-                        </select>
+                          placeholder={
+                            !selectedCustomerId
+                              ? "Select a customer first"
+                              : "Select Tunnel"
+                          }
+                        />
                       </div>
 
                       {/* Date */}
@@ -812,7 +984,11 @@ export default function SchedulesV2Page() {
                           value={scheduledDate}
                           onChange={(e) => setScheduledDate(e.target.value)}
                           disabled={isFieldsLocked}
-                          className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                          className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base ${
+                            isFieldsLocked
+                              ? "bg-gray-100 cursor-not-allowed"
+                              : ""
+                          }`}
                           required
                         />
                       </div>
@@ -821,34 +997,34 @@ export default function SchedulesV2Page() {
 
                   {/* Details Section - Fertilizer, Quantity, Water */}
                   <div>
-                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Schedule Details</h3>
+                    <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">
+                      Schedule Details
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                       {/* Fertilizer Type */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Fertilizer Type *
-                        </label>
-                        <select
+                        <SearchableSelect
+                          label="Fertilizer Type *"
+                          options={fertilizerOptions}
                           value={selectedFertilizerTypeId}
-                          onChange={(e) => setSelectedFertilizerTypeId(e.target.value)}
+                          onChange={(val) => setSelectedFertilizerTypeId(val)}
                           disabled={isFieldsLocked}
-                          className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                          required
-                        >
-                          <option value="">Select Fertilizer</option>
-                          {fertilizerTypes.map((fertilizer) => (
-                            <option key={fertilizer.id} value={fertilizer.id}>
-                              {fertilizer.itemName} ({fertilizer.itemCategory})
-                            </option>
-                          ))}
-                        </select>
+                          placeholder="Select Fertilizer"
+                        />
                       </div>
 
                       {/* Quantity */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Quantity {selectedFertilizerUnit && `(${selectedFertilizerUnit})`} {!isWaterSelected && '*'}
-                          {isWaterSelected && <span className="text-xs text-gray-500 ml-1">(Not applicable for Water)</span>}
+                          Quantity{" "}
+                          {selectedFertilizerUnit &&
+                            `(${selectedFertilizerUnit})`}{" "}
+                          {!isWaterSelected && "*"}
+                          {isWaterSelected && (
+                            <span className="text-xs text-gray-500 ml-1">
+                              (Not applicable for Water)
+                            </span>
+                          )}
                         </label>
                         <div className="relative">
                           <input
@@ -858,8 +1034,18 @@ export default function SchedulesV2Page() {
                             value={quantity}
                             onChange={(e) => setQuantity(e.target.value)}
                             disabled={isFieldsLocked || isWaterSelected}
-                            className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base pr-12 ${(isFieldsLocked || isWaterSelected) ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                            placeholder={isWaterSelected ? 'N/A for Water' : (selectedFertilizerUnit ? `Enter in ${selectedFertilizerUnit}` : 'Enter quantity')}
+                            className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-gray-900 text-base pr-12 ${
+                              isFieldsLocked || isWaterSelected
+                                ? "bg-gray-100 cursor-not-allowed"
+                                : ""
+                            }`}
+                            placeholder={
+                              isWaterSelected
+                                ? "N/A for Water"
+                                : selectedFertilizerUnit
+                                ? `Enter in ${selectedFertilizerUnit}`
+                                : "Enter quantity"
+                            }
                             required={!isWaterSelected}
                           />
                           {selectedFertilizerUnit && (
@@ -885,12 +1071,18 @@ export default function SchedulesV2Page() {
                             value={water}
                             onChange={(e) => setWater(e.target.value)}
                             disabled={isFieldsLocked}
-                            className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base pr-8 ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                            className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base pr-8 ${
+                              isFieldsLocked
+                                ? "bg-gray-100 cursor-not-allowed"
+                                : ""
+                            }`}
                             placeholder="Enter water amount"
                             required
                           />
                           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                            <span className="text-gray-500 text-sm font-medium">L</span>
+                            <span className="text-gray-500 text-sm font-medium">
+                              L
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -901,20 +1093,31 @@ export default function SchedulesV2Page() {
                   <div>
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3 sm:mb-4">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-base sm:text-lg font-medium text-gray-900">Release Schedule</h3>
-                        <span className="text-sm text-gray-500">({releases.length}/3)</span>
+                        <h3 className="text-base sm:text-lg font-medium text-gray-900">
+                          Release Schedule
+                        </h3>
+                        <span className="text-sm text-gray-500">
+                          ({releases.length}/3)
+                        </span>
                       </div>
                       <button
                         type="button"
                         onClick={addReleaseRow}
                         disabled={releases.length >= 3}
-                        className={`px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors w-full sm:w-auto ${releases.length >= 3
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
-                          }`}
-                        title={releases.length >= 3 ? 'Maximum 3 releases allowed' : 'Add another release'}
+                        className={`px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors w-full sm:w-auto ${
+                          releases.length >= 3
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800"
+                        }`}
+                        title={
+                          releases.length >= 3
+                            ? "Maximum 3 releases allowed"
+                            : "Add another release"
+                        }
                       >
-                        {releases.length >= 3 ? 'Maximum 3 Releases' : '+ Add Release'}
+                        {releases.length >= 3
+                          ? "Maximum 3 Releases"
+                          : "+ Add Release"}
                       </button>
                     </div>
 
@@ -923,14 +1126,22 @@ export default function SchedulesV2Page() {
                       <div className="flex items-start gap-2">
                         <span className="text-blue-600 text-lg">ℹ️</span>
                         <p className="text-sm text-blue-800">
-                          <strong>Maximum 3 releases per schedule.</strong> ESP32 hardware supports up to 3 scheduled releases per day. Each release can have different time and water volume.
+                          <strong>Maximum 3 releases per schedule.</strong>{" "}
+                          ESP32 hardware supports up to 3 scheduled releases per
+                          day. Each release can have different time and water
+                          volume.
                         </p>
                       </div>
                     </div>
 
                     <div className="space-y-3 sm:space-y-4">
                       {releases.map((release, index) => (
-                        <div key={index} className={`flex flex-col sm:flex-row sm:items-end gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg ${release.cancelled ? 'bg-red-50' : 'bg-gray-50'}`}>
+                        <div
+                          key={index}
+                          className={`flex flex-col sm:flex-row sm:items-end gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg ${
+                            release.cancelled ? "bg-red-50" : "bg-gray-50"
+                          }`}
+                        >
                           <div className="flex-1">
                             <div className="flex justify-between items-center mb-2">
                               <label className="block text-sm font-medium text-gray-700">
@@ -945,9 +1156,15 @@ export default function SchedulesV2Page() {
                             <input
                               type="time"
                               value={release.time}
-                              onChange={(e) => updateReleaseRow(index, 'time', e.target.value)}
+                              onChange={(e) =>
+                                updateReleaseRow(index, "time", e.target.value)
+                              }
                               disabled={!!release.cancelled}
-                              className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base ${release.cancelled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                              className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base ${
+                                release.cancelled
+                                  ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                                  : ""
+                              }`}
                             />
                           </div>
                           <div className="flex-1">
@@ -960,13 +1177,25 @@ export default function SchedulesV2Page() {
                                 step="0.1"
                                 min="0"
                                 value={release.releaseQuantity}
-                                onChange={(e) => updateReleaseRow(index, 'releaseQuantity', parseFloat(e.target.value) || 0)}
+                                onChange={(e) =>
+                                  updateReleaseRow(
+                                    index,
+                                    "releaseQuantity",
+                                    parseFloat(e.target.value) || 0
+                                  )
+                                }
                                 disabled={!!release.cancelled}
-                                className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base pr-8 ${release.cancelled ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+                                className={`w-full px-3 py-3 min-h-[44px] border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 text-base pr-8 ${
+                                  release.cancelled
+                                    ? "bg-gray-100 text-gray-500 cursor-not-allowed"
+                                    : ""
+                                }`}
                                 placeholder="Enter quantity"
                               />
                               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                <span className="text-gray-500 text-sm font-medium">L</span>
+                                <span className="text-gray-500 text-sm font-medium">
+                                  L
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -996,8 +1225,14 @@ export default function SchedulesV2Page() {
                         <span className="text-sm sm:text-base font-medium text-gray-700">
                           Total Release Quantity:
                         </span>
-                        <span className={`text-base sm:text-lg font-bold ${isReleaseQuantityValid ? 'text-green-600' : 'text-red-600'}`}>
-                          {totalReleaseQuantity.toFixed(1)}L / {water || '0'}L
+                        <span
+                          className={`text-base sm:text-lg font-bold ${
+                            isReleaseQuantityValid
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {totalReleaseQuantity.toFixed(1)}L / {water || "0"}L
                         </span>
                       </div>
                       {!isReleaseQuantityValid && (
@@ -1017,7 +1252,9 @@ export default function SchedulesV2Page() {
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       disabled={isFieldsLocked}
-                      className={`w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-base ${isFieldsLocked ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                      className={`w-full px-3 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 text-base ${
+                        isFieldsLocked ? "bg-gray-100 cursor-not-allowed" : ""
+                      }`}
                       rows={3}
                       placeholder="Add any additional notes..."
                     />
@@ -1030,7 +1267,7 @@ export default function SchedulesV2Page() {
                       onClick={resetForm}
                       className="w-full sm:w-auto px-6 py-3 min-h-[44px] text-gray-700 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-md transition-colors font-medium"
                     >
-                      {editingSchedule ? 'Cancel' : 'Reset'}
+                      {editingSchedule ? "Cancel" : "Reset"}
                     </button>
                     {!editingSchedule && (
                       <button
@@ -1039,7 +1276,9 @@ export default function SchedulesV2Page() {
                         disabled={savingAndPublishing || saving}
                         className="w-full sm:w-auto px-6 py-3 min-h-[44px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                       >
-                        {savingAndPublishing ? 'Creating & Sending...' : 'Create Now'}
+                        {savingAndPublishing
+                          ? "Creating & Sending..."
+                          : "Create Now"}
                       </button>
                     )}
                     <button
@@ -1047,7 +1286,11 @@ export default function SchedulesV2Page() {
                       disabled={saving || savingAndPublishing}
                       className="w-full sm:w-auto px-6 py-3 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                     >
-                      {saving ? 'Saving...' : (editingSchedule ? 'Update Schedule' : 'Create Schedule')}
+                      {saving
+                        ? "Saving..."
+                        : editingSchedule
+                        ? "Update Schedule"
+                        : "Create Schedule"}
                     </button>
                   </div>
                 </form>
@@ -1055,9 +1298,11 @@ export default function SchedulesV2Page() {
             )}
 
             {/* View Schedules Tab */}
-            {activeTab === 'view' && (
+            {activeTab === "view" && (
               <div className="space-y-4 sm:space-y-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Saved Schedules</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+                  Saved Schedules
+                </h2>
 
                 {/* Search and Filter */}
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
@@ -1071,76 +1316,85 @@ export default function SchedulesV2Page() {
                     />
                   </div>
                   <div className="sm:w-48">
-                    <select
+                    <SearchableSelect
+                      options={filterCustomerOptions}
                       value={filterCustomer}
-                      onChange={(e) => setFilterCustomer(e.target.value)}
-                      disabled={session.user.role === 'user'}
-                      className={`w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 transition-all ${session.user.role === 'user' ? 'bg-gray-100 cursor-not-allowed' : ''
-                        }`}
-                    >
-                      <option value="">All Customers</option>
-                      {customers.map(customer => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.customerName}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(val) => setFilterCustomer(val)}
+                      disabled={session.user.role === "user"}
+                      placeholder="All Customers"
+                    />
                   </div>
                   <div className="sm:w-48">
-                    <select
+                    <SearchableSelect
+                      options={filterStatusOptions}
                       value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2.5 min-h-[44px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm sm:text-base text-gray-900 transition-all"
-                    >
-                      <option value="">All Statuses</option>
-                      <option value="pending">Pending</option>
-                      <option value="sent">Sent</option>
-                      <option value="completed">Completed</option>
-                      <option value="failed">Failed</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
+                      onChange={(val) => setFilterStatus(val)}
+                      placeholder="All Statuses"
+                    />
                   </div>
                 </div>
 
                 {(() => {
                   // Filter schedules based on search and filters
-                  const filteredSchedules = schedules.filter(schedule => {
+                  const filteredSchedules = schedules.filter((schedule) => {
                     // Search filter
-                    const matchesSearch = searchTerm === '' ||
-                      schedule.customer.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      schedule.tunnel.tunnelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      schedule.fertilizerType.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      schedule.notes?.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesSearch =
+                      searchTerm === "" ||
+                      schedule.customer.customerName
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase()) ||
+                      schedule.tunnel.tunnelName
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase()) ||
+                      schedule.fertilizerType.itemName
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase()) ||
+                      schedule.notes
+                        ?.toLowerCase()
+                        .includes(searchTerm.toLowerCase());
 
                     // Customer filter
-                    const matchesCustomer = filterCustomer === '' || schedule.customer.id === filterCustomer;
+                    const matchesCustomer =
+                      filterCustomer === "" ||
+                      schedule.customer.id === filterCustomer;
 
                     // Status filter
-                    const matchesStatus = filterStatus === '' || schedule.status === filterStatus;
+                    const matchesStatus =
+                      filterStatus === "" || schedule.status === filterStatus;
 
                     return matchesSearch && matchesCustomer && matchesStatus;
                   });
 
                   return filteredSchedules.length === 0 ? (
                     <div className="text-center py-12 bg-white rounded-lg border">
-                      <div className="text-gray-400 text-5xl sm:text-6xl mb-4">📅</div>
+                      <div className="text-gray-400 text-5xl sm:text-6xl mb-4">
+                        📅
+                      </div>
                       <p className="text-gray-600 text-base sm:text-lg font-medium">
-                        {schedules.length === 0 ? 'No schedules created yet.' : 'No schedules match your filters.'}
+                        {schedules.length === 0
+                          ? "No schedules created yet."
+                          : "No schedules match your filters."}
                       </p>
                       <p className="text-gray-500 text-sm sm:text-base mt-2 px-4">
-                        {schedules.length === 0 ? 'Create your first schedule using the "Create" tab.' : 'Try adjusting your search or filters.'}
+                        {schedules.length === 0
+                          ? 'Create your first schedule using the "Create" tab.'
+                          : "Try adjusting your search or filters."}
                       </p>
                     </div>
                   ) : (
                     <>
                       {/* Results count */}
                       <div className="text-sm text-gray-600">
-                        Showing {filteredSchedules.length} of {schedules.length} schedule{schedules.length !== 1 ? 's' : ''}
+                        Showing {filteredSchedules.length} of {schedules.length}{" "}
+                        schedule{schedules.length !== 1 ? "s" : ""}
                       </div>
 
                       <div className="space-y-4 sm:space-y-6">
                         {filteredSchedules.map((schedule) => (
-                          <div key={schedule.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                          <div
+                            key={schedule.id}
+                            className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                          >
                             {/* Card Header */}
                             <div className="bg-gradient-to-r from-emerald-50 to-blue-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -1148,38 +1402,76 @@ export default function SchedulesV2Page() {
                                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                                     {schedule.customer.customerName}
                                   </h3>
-                                  <p className="text-sm text-gray-600 truncate">{schedule.tunnel.tunnelName}</p>
+                                  <p className="text-sm text-gray-600 truncate">
+                                    {schedule.tunnel.tunnelName}
+                                  </p>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(schedule.status)} self-start sm:self-auto`}>
-                                    {schedule.status.charAt(0).toUpperCase() + schedule.status.slice(1)}
+                                  <span
+                                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                                      schedule.status
+                                    )} self-start sm:self-auto`}
+                                  >
+                                    {schedule.status.charAt(0).toUpperCase() +
+                                      schedule.status.slice(1)}
                                   </span>
                                   {/* Dropdown Menu */}
-                                  {(schedule.status === 'pending' || schedule.status === 'sent') && (
+                                  {(schedule.status === "pending" ||
+                                    schedule.status === "sent") && (
                                     <div className="relative">
                                       <button
-                                        onClick={() => setOpenDropdownId(openDropdownId === schedule.id ? null : schedule.id)}
+                                        onClick={() =>
+                                          setOpenDropdownId(
+                                            openDropdownId === schedule.id
+                                              ? null
+                                              : schedule.id
+                                          )
+                                        }
                                         className="p-2 hover:bg-white/50 rounded-lg transition-colors"
                                         aria-label="More options"
                                       >
-                                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                        <svg
+                                          className="w-5 h-5 text-gray-600"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                                          />
                                         </svg>
                                       </button>
                                       {openDropdownId === schedule.id && (
                                         <>
                                           <div
                                             className="fixed inset-0 z-10"
-                                            onClick={() => setOpenDropdownId(null)}
+                                            onClick={() =>
+                                              setOpenDropdownId(null)
+                                            }
                                           />
                                           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
                                             {/* Cancel Schedule */}
                                             <button
-                                              onClick={() => handleCancel(schedule.id)}
+                                              onClick={() =>
+                                                handleCancel(schedule.id)
+                                              }
                                               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
                                             >
-                                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                              <svg
+                                                className="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                              >
+                                                <path
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                  strokeWidth={2}
+                                                  d="M6 18L18 6M6 6l12 12"
+                                                />
                                               </svg>
                                               Cancel Schedule
                                             </button>
@@ -1198,77 +1490,104 @@ export default function SchedulesV2Page() {
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
                                 <div>
                                   <span className="text-gray-500">Date:</span>
-                                  <p className="font-medium text-gray-900">{formatDate(schedule.scheduledDate)}</p>
+                                  <p className="font-medium text-gray-900">
+                                    {formatDate(schedule.scheduledDate)}
+                                  </p>
                                 </div>
                                 <div>
-                                  <span className="text-gray-500">Fertilizer:</span>
-                                  <p className="font-medium text-gray-900">{schedule.fertilizerType.itemName}</p>
+                                  <span className="text-gray-500">
+                                    Fertilizer:
+                                  </span>
+                                  <p className="font-medium text-gray-900">
+                                    {schedule.fertilizerType.itemName}
+                                  </p>
                                 </div>
                                 <div>
-                                  <span className="text-gray-500">Quantity:</span>
-                                  <p className="font-medium text-gray-900">{schedule.quantity} {schedule.fertilizerType.unit}</p>
+                                  <span className="text-gray-500">
+                                    Quantity:
+                                  </span>
+                                  <p className="font-medium text-gray-900">
+                                    {schedule.quantity}{" "}
+                                    {schedule.fertilizerType.unit}
+                                  </p>
                                 </div>
                                 <div>
                                   <span className="text-gray-500">Water:</span>
-                                  <p className="font-medium text-gray-900">{schedule.water}L</p>
+                                  <p className="font-medium text-gray-900">
+                                    {schedule.water}L
+                                  </p>
                                 </div>
                               </div>
 
                               {/* Release Schedule */}
                               <div>
-                                <h4 className="text-sm font-medium text-gray-700 mb-3">Release Schedule</h4>
-                                {schedule.releases && schedule.releases.length > 0 ? (
+                                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                                  Release Schedule
+                                </h4>
+                                {schedule.releases &&
+                                schedule.releases.length > 0 ? (
                                   <div className="space-y-2">
                                     {schedule.releases.map((release, index) => {
                                       const releaseDropdownId = `${schedule.id}-${index}`;
                                       // Disable buttons if release is cancelled OR if schedule status doesn't allow it
-                                      const isRunNowEnabled = schedule.status === 'sent' && !release.cancelled;
+                                      const isRunNowEnabled =
+                                        schedule.status === "sent" &&
+                                        !release.cancelled;
 
                                       // Tooltip messages based on status
                                       const getTooltipMessage = () => {
                                         if (release.cancelled) {
-                                          return 'This release has been cancelled';
+                                          return "This release has been cancelled";
                                         }
                                         switch (schedule.status) {
-                                          case 'sent':
-                                            return 'Run this release immediately';
-                                          case 'pending':
+                                          case "sent":
+                                            return "Run this release immediately";
+                                          case "pending":
                                             return 'Only schedules with "Sent" status can be run immediately';
-                                          case 'cancelled':
-                                            return 'Cancelled schedules cannot be run';
-                                          case 'failed':
-                                            return 'Failed schedules cannot be run. Please check the schedule.';
+                                          case "cancelled":
+                                            return "Cancelled schedules cannot be run";
+                                          case "failed":
+                                            return "Failed schedules cannot be run. Please check the schedule.";
                                           default:
-                                            return 'This release cannot be run';
+                                            return "This release cannot be run";
                                         }
                                       };
 
                                       const getCancelTooltipMessage = () => {
                                         if (release.cancelled) {
-                                          return 'This release is already cancelled';
+                                          return "This release is already cancelled";
                                         }
                                         switch (schedule.status) {
-                                          case 'sent':
-                                            return 'Cancel this release by sending volume 0';
-                                          case 'pending':
+                                          case "sent":
+                                            return "Cancel this release by sending volume 0";
+                                          case "pending":
                                             return 'Only schedules with "Sent" status can be cancelled';
-                                          case 'cancelled':
-                                            return 'Schedule is already cancelled';
-                                          case 'failed':
-                                            return 'Failed schedules cannot be cancelled';
+                                          case "cancelled":
+                                            return "Schedule is already cancelled";
+                                          case "failed":
+                                            return "Failed schedules cannot be cancelled";
                                           default:
-                                            return 'This release cannot be cancelled';
+                                            return "This release cannot be cancelled";
                                         }
                                       };
 
-                                      const isCancelEnabled = schedule.status === 'sent' && !release.cancelled;
+                                      const isCancelEnabled =
+                                        schedule.status === "sent" &&
+                                        !release.cancelled;
 
                                       return (
-                                        <div key={index} className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
+                                        <div
+                                          key={index}
+                                          className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-md border border-blue-200"
+                                        >
                                           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
                                             <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                                            <span className="text-sm font-medium text-gray-900">{release.time}</span>
-                                            <span className="text-sm font-semibold text-blue-600">{release.releaseQuantity}L</span>
+                                            <span className="text-sm font-medium text-gray-900">
+                                              {release.time}
+                                            </span>
+                                            <span className="text-sm font-semibold text-blue-600">
+                                              {release.releaseQuantity}L
+                                            </span>
                                             {/* Cancelled Badge */}
                                             {release.cancelled && (
                                               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
@@ -1278,43 +1597,85 @@ export default function SchedulesV2Page() {
                                           </div>
                                           <div className="relative flex-shrink-0 ml-2">
                                             <button
-                                              onClick={() => setOpenReleaseDropdownId(
-                                                openReleaseDropdownId === releaseDropdownId ? null : releaseDropdownId
-                                              )}
+                                              onClick={() =>
+                                                setOpenReleaseDropdownId(
+                                                  openReleaseDropdownId ===
+                                                    releaseDropdownId
+                                                    ? null
+                                                    : releaseDropdownId
+                                                )
+                                              }
                                               className="p-1 hover:bg-blue-100 rounded transition-colors"
                                               aria-label="Release options"
                                             >
-                                              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                              <svg
+                                                className="w-4 h-4 text-gray-600"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                              >
+                                                <path
+                                                  strokeLinecap="round"
+                                                  strokeLinejoin="round"
+                                                  strokeWidth={2}
+                                                  d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                                                />
                                               </svg>
                                             </button>
-                                            {openReleaseDropdownId === releaseDropdownId && (
+                                            {openReleaseDropdownId ===
+                                              releaseDropdownId && (
                                               <>
                                                 <div
                                                   className="fixed inset-0 z-10"
-                                                  onClick={() => setOpenReleaseDropdownId(null)}
+                                                  onClick={() =>
+                                                    setOpenReleaseDropdownId(
+                                                      null
+                                                    )
+                                                  }
                                                 />
                                                 <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
                                                   <button
                                                     onClick={() => {
                                                       if (isRunNowEnabled) {
-                                                        handleRunReleaseNow(schedule.id, index, index + 1);
+                                                        handleRunReleaseNow(
+                                                          schedule.id,
+                                                          index,
+                                                          index + 1
+                                                        );
                                                       }
                                                     }}
                                                     disabled={!isRunNowEnabled}
-                                                    className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${isRunNowEnabled
-                                                      ? 'text-green-600 hover:bg-green-50 cursor-pointer'
-                                                      : 'text-gray-400 cursor-not-allowed bg-gray-50'
-                                                      }`}
+                                                    className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${
+                                                      isRunNowEnabled
+                                                        ? "text-green-600 hover:bg-green-50 cursor-pointer"
+                                                        : "text-gray-400 cursor-not-allowed bg-gray-50"
+                                                    }`}
                                                     title={getTooltipMessage()}
                                                   >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    <svg
+                                                      className="w-4 h-4"
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      viewBox="0 0 24 24"
+                                                    >
+                                                      <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                                      />
+                                                      <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                      />
                                                     </svg>
                                                     <span>Run Now</span>
                                                     {!isRunNowEnabled && (
-                                                      <span className="ml-auto text-xs text-gray-400">(Disabled)</span>
+                                                      <span className="ml-auto text-xs text-gray-400">
+                                                        (Disabled)
+                                                      </span>
                                                     )}
                                                   </button>
 
@@ -1325,22 +1686,39 @@ export default function SchedulesV2Page() {
                                                   <button
                                                     onClick={() => {
                                                       if (isCancelEnabled) {
-                                                        handleCancelRelease(schedule.id, index, index + 1);
+                                                        handleCancelRelease(
+                                                          schedule.id,
+                                                          index,
+                                                          index + 1
+                                                        );
                                                       }
                                                     }}
                                                     disabled={!isCancelEnabled}
-                                                    className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${isCancelEnabled
-                                                      ? 'text-red-600 hover:bg-red-50 cursor-pointer'
-                                                      : 'text-gray-400 cursor-not-allowed bg-gray-50'
-                                                      }`}
+                                                    className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2 ${
+                                                      isCancelEnabled
+                                                        ? "text-red-600 hover:bg-red-50 cursor-pointer"
+                                                        : "text-gray-400 cursor-not-allowed bg-gray-50"
+                                                    }`}
                                                     title={getCancelTooltipMessage()}
                                                   >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    <svg
+                                                      className="w-4 h-4"
+                                                      fill="none"
+                                                      stroke="currentColor"
+                                                      viewBox="0 0 24 24"
+                                                    >
+                                                      <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M6 18L18 6M6 6l12 12"
+                                                      />
                                                     </svg>
                                                     <span>Cancel Release</span>
                                                     {!isCancelEnabled && (
-                                                      <span className="ml-auto text-xs text-gray-400">(Disabled)</span>
+                                                      <span className="ml-auto text-xs text-gray-400">
+                                                        (Disabled)
+                                                      </span>
                                                     )}
                                                   </button>
                                                 </div>
@@ -1352,9 +1730,17 @@ export default function SchedulesV2Page() {
                                     })}
                                     <div className="mt-2 pt-2 border-t border-gray-200">
                                       <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Total Release:</span>
+                                        <span className="text-gray-500">
+                                          Total Release:
+                                        </span>
                                         <span className="font-semibold text-gray-900">
-                                          {schedule.releases.reduce((sum, r) => sum + (Number(r.releaseQuantity) || 0), 0)}L
+                                          {schedule.releases.reduce(
+                                            (sum, r) =>
+                                              sum +
+                                              (Number(r.releaseQuantity) || 0),
+                                            0
+                                          )}
+                                          L
                                         </span>
                                       </div>
                                     </div>
@@ -1370,7 +1756,9 @@ export default function SchedulesV2Page() {
                               {/* Notes */}
                               {schedule.notes && (
                                 <div>
-                                  <h4 className="text-sm font-medium text-gray-700 mb-2">Notes</h4>
+                                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                                    Notes
+                                  </h4>
                                   <p className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-md break-words">
                                     {schedule.notes}
                                   </p>
@@ -1383,24 +1771,26 @@ export default function SchedulesV2Page() {
                               <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
                                 <button
                                   onClick={() => {
-                                    setActiveTab('create');
+                                    setActiveTab("create");
                                     handleEdit(schedule);
                                   }}
-                                  disabled={schedule.status === 'cancelled'}
-                                  className={`w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors font-medium ${schedule.status === 'cancelled'
-                                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                                    : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 active:bg-blue-100'
-                                    }`}
+                                  disabled={schedule.status === "cancelled"}
+                                  className={`w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors font-medium ${
+                                    schedule.status === "cancelled"
+                                      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                                      : "text-blue-600 hover:text-blue-800 hover:bg-blue-50 active:bg-blue-100"
+                                  }`}
                                 >
                                   Edit
                                 </button>
                                 <button
                                   onClick={() => handleDelete(schedule.id)}
-                                  disabled={schedule.status === 'cancelled'}
-                                  className={`w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors font-medium ${schedule.status === 'cancelled'
-                                    ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                                    : 'text-red-600 hover:text-red-800 hover:bg-red-50 active:bg-red-100'
-                                    }`}
+                                  disabled={schedule.status === "cancelled"}
+                                  className={`w-full sm:w-auto px-4 py-2 min-h-[44px] text-sm sm:text-base rounded-md transition-colors font-medium ${
+                                    schedule.status === "cancelled"
+                                      ? "text-gray-400 bg-gray-100 cursor-not-allowed"
+                                      : "text-red-600 hover:text-red-800 hover:bg-red-50 active:bg-red-100"
+                                  }`}
                                 >
                                   Delete
                                 </button>
@@ -1416,14 +1806,13 @@ export default function SchedulesV2Page() {
             )}
 
             {/* ESP32 Monitor Tab */}
-            {activeTab === 'monitor' && (
+            {activeTab === "monitor" && (
               <div className="space-y-4 sm:space-y-6">
                 <ScheduleResponseMonitor />
               </div>
             )}
           </div>
         </div>
-
       </main>
     </LayoutComponent>
   );
